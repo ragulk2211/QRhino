@@ -2,13 +2,37 @@ import { useEffect, useState } from "react"
 import Header from "../components/Header"
 import CategoryTabs from "../components/CategoryTabs"
 import FoodCard from "../components/FoodCard"
-import menuData from "../data/menuData"
 
 import "../styles/menu.css"
 
 function Menu(){
 
 const [active,setActive] = useState("burgers")
+const [menuData,setMenuData] = useState({})
+
+useEffect(()=>{
+
+fetch("http://localhost:5000/menu")
+.then(res=>res.json())
+.then(data=>{
+
+const grouped = {}
+
+data.forEach(item => {
+
+if(!grouped[item.category]){
+grouped[item.category] = []
+}
+
+grouped[item.category].push(item)
+
+})
+
+setMenuData(grouped)
+
+})
+
+},[])
 
 useEffect(()=>{
 
@@ -54,7 +78,7 @@ return(
 <h1 className="menu-title">Burgers</h1>
 
 <div className="menu-grid">
-{menuData.burgers.map((food,i)=>(
+{menuData.burgers?.map((food,i)=>(
 <FoodCard key={i} food={food}/>
 ))}
 </div>
@@ -67,7 +91,7 @@ return(
 <h1 className="menu-title">Arabic Food</h1>
 
 <div className="menu-grid">
-{menuData["arabic-food"].map((food,i)=>(
+{menuData["arabic-food"]?.map((food,i)=>(
 <FoodCard key={i} food={food}/>
 ))}
 </div>
@@ -80,7 +104,7 @@ return(
 <h1 className="menu-title">Starters</h1>
 
 <div className="menu-grid">
-{menuData.starters.map((food,i)=>(
+{menuData.starters?.map((food,i)=>(
 <FoodCard key={i} food={food}/>
 ))}
 </div>
@@ -93,7 +117,7 @@ return(
 <h1 className="menu-title">Soups</h1>
 
 <div className="menu-grid">
-{menuData.soups.map((food,i)=>(
+{menuData.soups?.map((food,i)=>(
 <FoodCard key={i} food={food}/>
 ))}
 </div>
@@ -106,7 +130,7 @@ return(
 <h1 className="menu-title">Salad</h1>
 
 <div className="menu-grid">
-{menuData.salad.map((food,i)=>(
+{menuData.salad?.map((food,i)=>(
 <FoodCard key={i} food={food}/>
 ))}
 </div>

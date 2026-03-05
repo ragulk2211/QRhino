@@ -1,39 +1,27 @@
-const http = require("http")
+require("dotenv").config()
+const express = require("express")
+const cors = require("cors")
+const path = require("path")
 const { connectDB } = require("./db")
 const menuRoutes = require("./routes/menuRoutes")
 
-const server = http.createServer(async (req,res)=>{
+const app = express()
+const PORT = process.env.PORT || 5000
 
-try{
+app.use(cors())
+app.use(express.json())
 
-if(await menuRoutes(req,res)) return
+// Serve uploaded images statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
-res.writeHead(404,{
-"Content-Type":"application/json"
-})
+app.use("/", menuRoutes)
 
-res.end(JSON.stringify({message:"Route not found"}))
-
-}catch(error){
-
-res.writeHead(500,{
-"Content-Type":"application/json"
-})
-
-res.end(JSON.stringify({error:"Server error"}))
-
-}
-
-})
-
-async function startServer(){
-
-await connectDB()
-
-server.listen(5000,()=>{
-console.log("Server running on port 5000")
-})
-
+async function startServer() {
+  console.log("Starting server...")
+  await connectDB()
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`)
+  })
 }
 
 startServer()

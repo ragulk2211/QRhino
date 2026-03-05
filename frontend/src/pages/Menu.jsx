@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import Header from "../components/Header"
 import CategoryTabs from "../components/CategoryTabs"
 import FoodCard from "../components/FoodCard"
@@ -7,6 +8,7 @@ import "../styles/menu.css"
 
 function Menu(){
 
+const navigate = useNavigate()
 const [active,setActive] = useState("burgers")
 const [menuData,setMenuData] = useState({})
 
@@ -139,6 +141,10 @@ return(
 
 <button className="expert-btn">
 Talk to a menu expert →
+</button>
+
+<button className="add-item-btn" onClick={() => navigate("/add-item")}>
++ Add Menu Item
 </button>
 
 </div>

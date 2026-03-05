@@ -368,4 +368,5 @@ html {
 .expert-btn:focus-visible {
     outline: 3px solid #e19000;
     outline-offset: 3px;
-}
+}  
+.add-item-btn { display: block; margin: 16px auto 40px; padding: 14px 32px; background: #e8b86d; color: #000; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; } 

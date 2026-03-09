@@ -25,7 +25,7 @@ const menuItems = [
   { category: "soups", name: "Mushroom Soup", desc: "Creamy mushroom broth", price: "3.00", kcal: "180", time: "10 min", img: "/images/mushroom.jpg" },
   { category: "soups", name: "Chicken Broth", desc: "Classic chicken soup", price: "3.00", kcal: "160", time: "10 min", img: "/images/broth.jpg" },
 
-  // Salad
+  // Salad   
   { category: "salad", name: "Italian Salad", desc: "Fresh vegetable salad", price: "3.00", kcal: "150", time: "5 min", img: "/images/salad.jpg" },
   { category: "salad", name: "Caesar Salad", desc: "Romaine lettuce with caesar dressing", price: "3.50", kcal: "180", time: "5 min", img: "/images/caesar.jpg" },
   { category: "salad", name: "Greek Salad", desc: "Tomato, cucumber, feta cheese", price: "3.50", kcal: "170", time: "5 min", img: "/images/greek.jpg" },

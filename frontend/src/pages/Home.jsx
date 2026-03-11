@@ -24,25 +24,29 @@ function Home() {
     {
       title: "Breakfast",
       desc: "Morning favorites to start fresh",
-      img: breakfastImg
+      img: breakfastImg,
+      page: "/breakfast"
     },
 
     {
       title: "Pizza",
       desc: "Hand tossed pies with bold toppings",
-      img: pizzaImg
+      img: pizzaImg,
+      page: "/pizza"
     },
 
     {
       title: "Desserts",
       desc: "Sweet bites to treat yourself",
-      img: dessertImg
+      img: dessertImg,
+      page: "/desserts"
     },
 
     {
       title: "Beverages",
       desc: "Cool drinks to refresh your day",
-      img: drinksImg
+      img: drinksImg,
+      page: "/beverages"
     }
 
   ]
@@ -60,7 +64,7 @@ function Home() {
           <div
             key={i}
             className="card"
-            onClick={() => cat.page && navigate(cat.page)}
+            onClick={() => navigate(cat.page)}
           >
 
             <img src={cat.img} alt={cat.title} />

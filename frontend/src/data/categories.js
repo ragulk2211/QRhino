@@ -1,28 +1,19 @@
+import mainImg from "/images/maincourse.webp"
+import breakfastImg from "/images/breakfast.webp"
+
 const categories = [
   {
-    id: 1,
+    image: mainImg,
     title: "Main courses",
     desc: "Hearty plates for every craving",
-    image: "/src/assets/images/maincourse.webp"
+    path: "/burgers"
   },
   {
-    id: 2,
+    image: breakfastImg,
     title: "Breakfast",
     desc: "Morning favorites to start fresh",
-    image: "/src/assets/images/breakfast.webp"
-  },
-  {
-    id: 3,
-    title: "Pizza",
-    desc: "Hand tossed pies with bold toppings",
-    image: "/src/assets/images/pizza.webp"
-  },
-  {
-    id: 4,
-    title: "Desserts",
-    desc: "Sweet bites to treat yourself",
-    image: "/src/assets/images/desserts.webp"
+    path: "/breakfast"
   }
-];
+]
 
-export default categories;
+export default categories

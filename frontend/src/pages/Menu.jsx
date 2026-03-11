@@ -1,156 +1,173 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+
 import Header from "../components/Header"
 import CategoryTabs from "../components/CategoryTabs"
 import FoodCard from "../components/FoodCard"
 
 import "../styles/menu.css"
 
-function Menu(){
+function Menu() {
+  const navigate = useNavigate()
 
-const navigate = useNavigate()
-const [active,setActive] = useState("burgers")
-const [menuData,setMenuData] = useState({})
+  const [active, setActive] = useState("burgers")
+  const [menuData, setMenuData] = useState({})
 
-useEffect(()=>{
+  useEffect(() => {
+    fetchMenu()
+  }, [])
 
-fetch("http://localhost:5000/menu")
-.then(res=>res.json())
-.then(data=>{
+  const fetchMenu = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/menu")
+      const data = await res.json()
 
-const grouped = {}
+      const grouped = {}
 
-data.forEach(item => {
+      data.forEach(item => {
+        if (!grouped[item.category]) {
+          grouped[item.category] = []
+        }
 
-if(!grouped[item.category]){
-grouped[item.category] = []
-}
+        grouped[item.category].push(item)
+      })
 
-grouped[item.category].push(item)
+      setMenuData(grouped)
 
-})
+    } catch (error) {
+      console.error("Error loading menu:", error)
+    }
+  }
 
-setMenuData(grouped)
+  const deleteItem = async (id) => {
+    try {
+      await fetch(`http://localhost:5000/menu/${id}`, {
+        method: "DELETE"
+      })
 
-})
+      fetchMenu()
 
-},[])
+    } catch (error) {
+      console.error("Delete failed:", error)
+    }
+  }
 
-useEffect(()=>{
+  useEffect(() => {
+    const sections = document.querySelectorAll("section")
 
-const sections = document.querySelectorAll("section")
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setActive(entry.target.id)
+          }
+        })
+      },
+      {
+        threshold: 0.4
+      }
+    )
 
-const observer = new IntersectionObserver(
+    sections.forEach(section => observer.observe(section))
 
-(entries)=>{
+    return () => observer.disconnect()
+  }, [])
 
-entries.forEach(entry=>{
+  return (
+    <div className="menu-page">
 
-if(entry.isIntersecting){
-setActive(entry.target.id)
-}
+      <Header />
 
-})
+      <CategoryTabs active={active} setActive={setActive} />
 
-},
+      {/* BURGERS */}
+      <section id="burgers">
+        <h1 className="menu-title">Burgers</h1>
 
-{
-threshold:0.4
-}
+        <div className="menu-grid">
+          {menuData.burgers?.map(food => (
+            <FoodCard
+              key={food._id}
+              item={food}
+              onDelete={deleteItem}
+            />
+          ))}
+        </div>
+      </section>
 
-)
+      {/* ARABIC FOOD */}
+      <section id="arabic-food">
+        <h1 className="menu-title">Arabic Food</h1>
 
-sections.forEach(section=>observer.observe(section))
+        <div className="menu-grid">
+          {menuData["arabic-food"]?.map(food => (
+            <FoodCard
+              key={food._id}
+              item={food}
+              onDelete={deleteItem}
+            />
+          ))}
+        </div>
+      </section>
 
-return ()=>observer.disconnect()
+      {/* STARTERS */}
+      <section id="starters">
+        <h1 className="menu-title">Starters</h1>
 
-},[])
+        <div className="menu-grid">
+          {menuData.starters?.map(food => (
+            <FoodCard
+              key={food._id}
+              item={food}
+              onDelete={deleteItem}
+            />
+          ))}
+        </div>
+      </section>
 
-return(
+      {/* SOUPS */}
+      <section id="soups">
+        <h1 className="menu-title">Soups</h1>
 
-<div className="menu-page">
+        <div className="menu-grid">
+          {menuData.soups?.map(food => (
+            <FoodCard
+              key={food._id}
+              item={food}
+              onDelete={deleteItem}
+            />
+          ))}
+        </div>
+      </section>
 
-<Header/>
+      {/* SALAD */}
+      <section id="salad">
+        <h1 className="menu-title">Salad</h1>
 
-<CategoryTabs active={active} setActive={setActive}/>
+        <div className="menu-grid">
+          {menuData.salad?.map(food => (
+            <FoodCard
+              key={food._id}
+              item={food}
+              onDelete={deleteItem}
+            />
+          ))}
+        </div>
+      </section>
 
-{/* BURGERS */}
-<section id="burgers">
+      <button className="expert-btn">
+        Talk to a menu expert →
+      </button>
 
-<h1 className="menu-title">Burgers</h1>
+      <button
+        className="add-item-btn"
+        onClick={() => navigate("/add-item")}
+      >
+        + Add Menu Item
+      </button>
 
-<div className="menu-grid">
-{menuData.burgers?.map((food,i)=>(
-<FoodCard key={i} food={food}/>
-))}
-</div>
-
-</section>
-
-{/* ARABIC FOOD */}
-<section id="arabic-food">
-
-<h1 className="menu-title">Arabic Food</h1>
-
-<div className="menu-grid">
-{menuData["arabic-food"]?.map((food,i)=>(
-<FoodCard key={i} food={food}/>
-))}
-</div>
-
-</section>
-
-{/* STARTERS */}
-<section id="starters">
-
-<h1 className="menu-title">Starters</h1>
-
-<div className="menu-grid">
-{menuData.starters?.map((food,i)=>(
-<FoodCard key={i} food={food}/>
-))}
-</div>
-
-</section>
-
-{/* SOUPS */}
-<section id="soups">
-
-<h1 className="menu-title">Soups</h1>
-
-<div className="menu-grid">
-{menuData.soups?.map((food,i)=>(
-<FoodCard key={i} food={food}/>
-))}
-</div>
-
-</section>
-
-{/* SALAD */}
-<section id="salad">
-
-<h1 className="menu-title">Salad</h1>
-
-<div className="menu-grid">
-{menuData.salad?.map((food,i)=>(
-<FoodCard key={i} food={food}/>
-))}
-</div>
-
-</section>
-
-<button className="expert-btn">
-Talk to a menu expert →
-</button>
-
-<button className="add-item-btn" onClick={() => navigate("/add-item")}>
-+ Add Menu Item
-</button>
-
-</div>
-
-)
-
+    </div>
+  )
 }
 
 export default Menu

@@ -1,24 +1,47 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import Header from "../components/Header"
 import "../styles/addmenu.css"
-
-const CATEGORIES = ["burgers", "arabic-food", "starters", "soups", "salad"]
+import "../styles/AddFoodMenu.css"
 
 function AddMenuItem() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const restaurantId = searchParams.get("restaurantId")
+
   const [form, setForm] = useState({
     name: "",
     desc: "",
     price: "",
     kcal: "",
     time: "",
-    category: "burgers"
+    category: ""
   })
+  const [categories, setCategories] = useState([])
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
+  const [done, setDone] = useState(false)
+
+  useEffect(() => {
+    const url = restaurantId
+      ? `http://localhost:5000/api/categories?restaurantId=${restaurantId}`
+      : "http://localhost:5000/api/categories"
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        setCategories(data)
+        if (data.length > 0) {
+          setForm(prev => ({ ...prev, category: data[0].name }))
+        }
+      })
+      .catch(() => {
+        const fallback = ["burgers", "arabic-food", "starters", "soups", "salad"]
+        setCategories(fallback.map(n => ({ name: n })))
+        setForm(prev => ({ ...prev, category: "burgers" }))
+      })
+  }, [restaurantId])
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -45,6 +68,9 @@ function AddMenuItem() {
       formData.append("kcal", form.kcal)
       formData.append("time", form.time)
       formData.append("category", form.category)
+      if (restaurantId) {
+        formData.append("restaurantId", restaurantId)
+      }
       if (imageFile) {
         formData.append("image", imageFile)
       }
@@ -58,9 +84,10 @@ function AddMenuItem() {
 
       if (res.ok) {
         setMessage("✅ Menu item added successfully!")
-        setForm({ name: "", desc: "", price: "", kcal: "", time: "", category: "burgers" })
+        setForm({ name: "", desc: "", price: "", kcal: "", time: "", category: categories[0]?.name || "" })
         setImageFile(null)
         setImagePreview(null)
+        setDone(true)
       } else {
         setMessage("❌ Error: " + data.error)
       }
@@ -105,13 +132,13 @@ function AddMenuItem() {
 
           <div className="form-row">
             <div className="form-group">
-              <label>Price ($)</label>
+              <label>Price (₹)</label>
               <input
                 type="text"
                 name="price"
                 value={form.price}
                 onChange={handleChange}
-                placeholder="e.g. 5.99"
+                placeholder="e.g. 199"
               />
             </div>
 
@@ -140,10 +167,10 @@ function AddMenuItem() {
 
           <div className="form-group">
             <label>Category *</label>
-            <select name="category" value={form.category} onChange={handleChange}>
-              {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>
-                  {cat.charAt(0).toUpperCase() + cat.slice(1).replace("-", " ")}
+            <select name="category" value={form.category} onChange={handleChange} required>
+              {categories.map((cat, i) => (
+                <option key={i} value={cat.name}>
+                  {cat.name.charAt(0).toUpperCase() + cat.name.slice(1).replace(/-/g, " ")}
                 </option>
               ))}
             </select>
@@ -175,8 +202,13 @@ function AddMenuItem() {
             <button type="submit" className="btn-submit" disabled={loading}>
               {loading ? "Adding..." : "Add Item"}
             </button>
-            <button type="button" className="btn-back" onClick={() => navigate("/menu/main")}>
-              Back to Menu
+            {done && (
+              <button type="button" className="btn-submit" style={{ background: "#27ae60" }} onClick={() => navigate(`/admin/qr-generator?restaurantId=${restaurantId || ""}`)}>
+                Next: Generate QR →
+              </button>
+            )}
+            <button type="button" className="btn-back" onClick={() => navigate(-1)}>
+              Back
             </button>
           </div>
         </form>

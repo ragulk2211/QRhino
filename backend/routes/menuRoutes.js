@@ -3,43 +3,26 @@ const router = express.Router()
 const multer = require("multer")
 const path = require("path")
 
-const fs = require("fs")
-const { getDB } = require("../db")
-
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, "../uploads")
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true })
-}
+const Menu = require("../models/Menu")
 
 // Multer storage config
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir)
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, "../uploads"))
   },
-  filename: (req, file, cb) => {
-    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9)
-    cb(null, unique + path.extname(file.originalname))
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + Math.round(Math.random() * 1e9) + path.extname(file.originalname))
   }
 })
 
-const upload = multer({
-  storage,
-  fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|webp|gif/
-    const ext = allowed.test(path.extname(file.originalname).toLowerCase())
-    const mime = allowed.test(file.mimetype)
-    if (ext && mime) cb(null, true)
-    else cb(new Error("Only image files are allowed"))
-  },
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
-})
+const upload = multer({ storage })
 
-// GET all menu items
+// GET all menu items (optionally filter by restaurantId)
 router.get("/menu", async (req, res) => {
   try {
-    const db = getDB()
-    const menu = await db.collection("menu").find().toArray()
+    const { restaurantId } = req.query
+    const filter = restaurantId ? { restaurantId } : {}
+    const menu = await Menu.find(filter).sort({ createdAt: -1 })
     res.json(menu)
   } catch (error) {
     console.error("Error fetching menu:", error.message)
@@ -47,36 +30,61 @@ router.get("/menu", async (req, res) => {
   }
 })
 
-// POST add a new menu item (with optional image upload)
+// POST create menu item with optional image upload
 router.post("/menu", upload.single("image"), async (req, res) => {
   try {
-    const db = getDB()
-    const { name, desc, price, kcal, time, category } = req.body
+    const { name, desc, price, category, kcal, time, restaurantId } = req.body
+    const image = req.file ? req.file.filename : null
 
-    if (!name || !category) {
-      return res.status(400).json({ error: "name and category are required" })
-    }
+    const menuItem = new Menu({ name, desc, price, category, kcal, time, image, restaurantId: restaurantId || null })
+    await menuItem.save()
 
-    const imgUrl = req.file
-      ? `http://localhost:5000/uploads/${req.file.filename}`
-      : ""
-
-    const newItem = {
-      name,
-      desc: desc || "",
-      price: price || "0.00",
-      kcal: kcal || "0",
-      time: time || "N/A",
-      category,
-      img: imgUrl,
-      createdAt: new Date()
-    }
-
-    const result = await db.collection("menu").insertOne(newItem)
-    res.status(201).json({ message: "Item added", id: result.insertedId, item: newItem })
+    res.status(201).json(menuItem)
   } catch (error) {
-    console.error("Error adding menu item:", error.message)
-    res.status(500).json({ error: "Failed to add menu item" })
+    console.error("Error creating menu item:", error.message)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// PUT update menu item
+router.put("/menu/:id", upload.single("image"), async (req, res) => {
+  try {
+    const { name, desc, price, category, kcal, time, restaurantId } = req.body
+    const image = req.file ? req.file.filename : undefined
+
+    const updateData = { name, desc, price, category, kcal, time, restaurantId }
+    if (image) {
+      updateData.image = image
+    }
+
+    const menuItem = await Menu.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    )
+
+    if (!menuItem) {
+      return res.status(404).json({ error: "Menu item not found" })
+    }
+
+    res.json(menuItem)
+  } catch (error) {
+    console.error("Error updating menu item:", error.message)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// DELETE menu item
+router.delete("/menu/:id", async (req, res) => {
+  try {
+    const menuItem = await Menu.findByIdAndDelete(req.params.id)
+    if (!menuItem) {
+      return res.status(404).json({ error: "Menu item not found" })
+    }
+    res.json({ message: "Menu item deleted successfully" })
+  } catch (error) {
+    console.error("Error deleting menu item:", error.message)
+    res.status(500).json({ error: error.message })
   }
 })
 

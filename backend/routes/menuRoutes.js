@@ -2,10 +2,15 @@ const express = require("express")
 const router = express.Router()
 const multer = require("multer")
 const path = require("path")
+const fs = require("fs")
 
 const Menu = require("../models/Menu")
 
-// Multer storage config
+const uploadsDir = path.join(__dirname, "../uploads")
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true })
+}
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.join(__dirname, "../uploads"))
@@ -27,6 +32,17 @@ router.get("/menu", async (req, res) => {
   } catch (error) {
     console.error("Error fetching menu:", error.message)
     res.status(500).json({ error: "Failed to fetch menu" })
+  }
+})
+
+// GET featured menu items
+router.get("/menu/featured", async (req, res) => {
+  try {
+    const menu = await Menu.find().sort({ createdAt: -1 }).limit(8)
+    res.json(menu)
+  } catch (error) {
+    console.error("Error fetching featured items:", error.message)
+    res.status(500).json({ error: "Failed to fetch featured items" })
   }
 })
 

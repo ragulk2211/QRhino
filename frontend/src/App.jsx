@@ -10,12 +10,18 @@ import QRGenerator from "./pages/QRGenerator"
 import EditRestaurant from "./pages/EditRestaurant"
 import Kitchen from "./pages/Kitchen"
 import Cart from "./pages/Cart";
+import Breakfast from "./pages/Breakfast"
+import Burgers from "./pages/Burgers"
+import EditMenuItem from "./pages/EditMenuItem"
+
 function App() {
   return (
     <BrowserRouter>
+
       <Routes>
+
         <Route path="/" element={<Home />} />
-        <Route path="/menu" element={<Menu />} />
+
         <Route path="/menu/main" element={<Menu />} />
 
         <Route path="/cart" element={<Cart />} />
@@ -29,7 +35,15 @@ function App() {
         <Route path="/admin/qr-generator" element={<QRGenerator />} />
         
         <Route path="/add-item" element={<AddMenuItem />} />
+
+        <Route path="/breakfast" element={<Breakfast />} />
+
+        <Route path="/burgers" element={<Burgers />} />
+
+        <Route path="/edit-item/:id" element={<EditMenuItem />} />
+
       </Routes>
+
     </BrowserRouter>
   )
 }

@@ -13,6 +13,11 @@ const orderSchema = new mongoose.Schema({
 
  total:Number,
 
+ tokenNumber: {
+  type: Number,
+  default: () => Math.floor(1000 + Math.random() * 9000) // 4-digit token
+ },
+
  status:{
   type:String,
   default:"Pending"

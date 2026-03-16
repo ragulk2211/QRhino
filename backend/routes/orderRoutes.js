@@ -26,4 +26,25 @@ router.get("/all", async (req,res)=>{
 
 })
 
+// Update Order Status
+router.put("/:id", async (req,res)=>{
+
+ try{
+
+  const { status } = req.body
+
+  const order = await Order.findByIdAndUpdate(
+   req.params.id,
+   { status },
+   { new: true }
+  )
+
+  res.json(order)
+
+ }catch(err){
+  res.status(500).json({error:err.message})
+ }
+
+})
+
 module.exports = router

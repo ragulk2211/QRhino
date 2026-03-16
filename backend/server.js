@@ -9,9 +9,9 @@ const menuRoutes = require("./routes/menuRoutes")
 const restaurantRoutes = require("./routes/restaurantRoutes")
 const paymentRoutes = require("./routes/paymentRoutes")
 const categoryRoutes = require("./routes/categoryRoutes")
-
 const Restaurant = require("./models/Restaurant")
 const Menu = require("./models/Menu")
+const orderRoutes = require("./routes/orderRoutes")
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -27,7 +27,7 @@ app.use("/", menuRoutes)
 app.use("/api/restaurants", restaurantRoutes)
 app.use("/api/payments", paymentRoutes)
 app.use("/api/categories", categoryRoutes)
-
+app.use("/api/orders", orderRoutes)
 // 404 handler for unmatched routes
 app.use((req, res) => {
   console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`)

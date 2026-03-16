@@ -2,7 +2,7 @@ const express = require("express")
 const router = express.Router()
 
 const { ObjectId } = require("mongodb")
-const { getDB } = require("../db")
+const { getDB } = require("../config/db")
 
 
 router.get("/categories", async (req, res) => {

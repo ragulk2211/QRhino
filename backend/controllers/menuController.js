@@ -1,5 +1,5 @@
 const { ObjectId } = require("mongodb")
-const { getDB } = require("../db")
+const { getDB } = require("../config/db")
 
 exports.getMenu = async (req, res) => {
   try {

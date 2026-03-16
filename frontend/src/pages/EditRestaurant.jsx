@@ -18,7 +18,12 @@ function EditRestaurant() {
 
   useEffect(() => {
     fetch(`${API_BASE}/api/restaurants/${id}`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) {
+          throw new Error(`HTTP ${r.status}`)
+        }
+        return r.json()
+      })
       .then(data => {
         if (data.name) {
           setForm({ name: data.name, location: data.location || "", phone: data.phone || "" })
@@ -28,8 +33,9 @@ function EditRestaurant() {
         }
         setLoading(false)
       })
-      .catch(() => {
-        setMessage("❌ Failed to load restaurant")
+      .catch((err) => {
+        console.error("Failed to load restaurant:", err)
+        setMessage("❌ Restaurant not found or may have been deleted")
         setLoading(false)
       })
   }, [id])

@@ -15,7 +15,8 @@ const storage = multer.diskStorage({
   }
 })
 
-const upload = multer({ storage })
+// Single multer instance used as middleware directly on routes
+const upload = multer({ storage }).single("image")
 
 // GET all restaurants
 router.get("/", async (req, res) => {
@@ -28,7 +29,7 @@ router.get("/", async (req, res) => {
   }
 })
 
-// GET single restaurant
+// GET single restaurant by ID
 router.get("/:id", async (req, res) => {
   try {
     const restaurant = await Restaurant.findById(req.params.id)
@@ -37,15 +38,15 @@ router.get("/:id", async (req, res) => {
     }
     res.json(restaurant)
   } catch (error) {
-    console.error("Error fetching restaurant:", error.message)
+    console.error(error)
     res.status(500).json({ error: "Failed to fetch restaurant" })
   }
 })
 
-// POST create restaurant (with optional image)
-router.post("/", upload.single("image"), async (req, res) => {
+// POST create restaurant — multer runs BEFORE the handler, so req.body is always ready
+router.post("/", upload, async (req, res) => {
   try {
-    const { name, location, phone } = req.body
+    const { name = "", location = "", phone = "" } = req.body
     const image = req.file ? req.file.filename : null
 
     const restaurant = new Restaurant({ name, location, phone, image })
@@ -53,19 +54,20 @@ router.post("/", upload.single("image"), async (req, res) => {
 
     res.status(201).json(restaurant)
   } catch (error) {
+    console.error("Error creating restaurant:", error.message)
     res.status(500).json({ error: error.message })
   }
 })
 
-// PUT update restaurant (with optional image)
-router.put("/:id", upload.single("image"), async (req, res) => {
+// PUT update restaurant
+router.put("/:id", upload, async (req, res) => {
   try {
-    const { name, location, phone } = req.body
-    const image = req.file ? req.file.filename : undefined
-
+    const { name = "", location = "", phone = "" } = req.body
     const updateData = { name, location, phone }
-    if (image) {
-      updateData.image = image
+
+    // Only update image if a new file was uploaded
+    if (req.file) {
+      updateData.image = req.file.filename
     }
 
     const restaurant = await Restaurant.findByIdAndUpdate(
@@ -80,6 +82,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
 
     res.json(restaurant)
   } catch (error) {
+    console.error("Error updating restaurant:", error.message)
     res.status(500).json({ error: error.message })
   }
 })
@@ -93,6 +96,7 @@ router.delete("/:id", async (req, res) => {
     }
     res.json({ message: "Restaurant deleted successfully" })
   } catch (error) {
+    console.error("Error deleting restaurant:", error.message)
     res.status(500).json({ error: error.message })
   }
 })

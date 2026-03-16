@@ -71,6 +71,19 @@ function Menu() {
 
   return (
     <div className="menu-page">
+      <button
+  onClick={() => navigate(-1)}
+  style={{
+    margin: "10px",
+    padding: "6px 12px",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+    background: "#fff",
+    cursor: "pointer"
+  }}
+>
+  ← Back
+</button>
       <Header />
 
       {/* Restaurant Header with Image */}

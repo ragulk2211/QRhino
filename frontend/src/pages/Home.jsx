@@ -98,7 +98,7 @@ function Home() {
   const fetchFeaturedItems = async () => {
     try {
       setLoading(true)
-      const res = await fetch("http://localhost:5000/menu/featured")
+      const res = await fetch("http://localhost:5000/api/menu/featured")
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`)
       }

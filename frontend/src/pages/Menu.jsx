@@ -24,7 +24,7 @@ function Menu() {
   const fetchMenu = async () => {
     try {
       // Show all menu items for now (restaurant filter data not properly set in DB)
-      const res = await fetch("http://localhost:5000/menu")
+      const res = await fetch("http://localhost:5000/api/menu")
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`)
       }
@@ -99,7 +99,7 @@ function Menu() {
 
   const deleteItem = async (id) => {
     try {
-      await fetch(`http://localhost:5000/menu/${id}`, {
+      await fetch(`http://localhost:5000/api/menu/${id}`, {
         method: "DELETE"
       })
 

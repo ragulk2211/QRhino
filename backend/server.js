@@ -23,7 +23,7 @@ app.use(express.json())
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
 /* Routes */
-app.use("/", menuRoutes)
+app.use("/api/menu", menuRoutes)
 app.use("/api/restaurants", restaurantRoutes)
 app.use("/api/payments", paymentRoutes)
 app.use("/api/categories", categoryRoutes)

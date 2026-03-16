@@ -23,7 +23,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage })
 
 // GET all menu items (optionally filter by restaurantId)
-router.get("/menu", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const { restaurantId } = req.query
     const filter = restaurantId ? { restaurantId } : {}
@@ -36,7 +36,7 @@ router.get("/menu", async (req, res) => {
 })
 
 // GET featured menu items
-router.get("/menu/featured", async (req, res) => {
+router.get("/featured", async (req, res) => {
   try {
     const menu = await Menu.find().sort({ createdAt: -1 }).limit(8)
     res.json(menu)
@@ -47,7 +47,7 @@ router.get("/menu/featured", async (req, res) => {
 })
 
 // POST create menu item with optional image upload
-router.post("/menu", upload.single("image"), async (req, res) => {
+router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { name, desc, price, category, kcal, time, restaurantId } = req.body
     const image = req.file ? req.file.filename : null
@@ -63,7 +63,7 @@ router.post("/menu", upload.single("image"), async (req, res) => {
 })
 
 // PUT update menu item
-router.put("/menu/:id", upload.single("image"), async (req, res) => {
+router.put("/:id", upload.single("image"), async (req, res) => {
   try {
     const { name, desc, price, category, kcal, time, restaurantId } = req.body
     const image = req.file ? req.file.filename : undefined
@@ -91,7 +91,7 @@ router.put("/menu/:id", upload.single("image"), async (req, res) => {
 })
 
 // DELETE menu item
-router.delete("/menu/:id", async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const menuItem = await Menu.findByIdAndDelete(req.params.id)
     if (!menuItem) {

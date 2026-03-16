@@ -6,7 +6,7 @@ function Kitchen(){
 
  useEffect(()=>{
 
-  fetch("http://localhost:5000/orders")
+  fetch("http://localhost:5000/api/orders")
   .then(res=>res.json())
   .then(data=>setOrders(data))
 

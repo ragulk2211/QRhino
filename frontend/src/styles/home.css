@@ -164,6 +164,76 @@ body {
   transform: translateY(-2px);
 }
 
+/* Restaurants Section */
+.restaurants-section {
+  padding: 4rem 2rem;
+  background: #f8f9fa;
+}
+
+.restaurants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.restaurant-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.restaurant-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.restaurant-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.restaurant-image-placeholder {
+  width: 100%;
+  height: 180px;
+  background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.restaurant-image-placeholder span {
+  font-size: 4rem;
+}
+
+.restaurant-content {
+  padding: 1.5rem;
+}
+
+.restaurant-content h3 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 1.25rem;
+}
+
+.restaurant-content p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.restaurant-phone {
+  display: block;
+  margin-top: 0.5rem;
+  color: #b88c4a;
+  font-weight: 500;
+}
+
 /* Hero Stats */
 .hero-stats {
   display: flex;

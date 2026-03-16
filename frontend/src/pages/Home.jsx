@@ -12,6 +12,7 @@ import drinksImg from "../assets/images/drinks.webp"
 function Home() {
   const navigate = useNavigate()
   const [featuredItems, setFeaturedItems] = useState([])
+  const [restaurants, setRestaurants] = useState([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [showExpertModal, setShowExpertModal] = useState(false)
@@ -22,6 +23,29 @@ function Home() {
     message: ""
   })
   const [formSubmitted, setFormSubmitted] = useState(false)
+
+  // Fetch restaurants from backend
+  useEffect(() => {
+    fetchRestaurants()
+    fetchFeaturedItems()
+  }, [])
+
+  const fetchRestaurants = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch("http://localhost:5000/api/restaurants")
+      if (!res.ok) throw new Error("Failed to fetch")
+      const data = await res.json()
+      setRestaurants(data)
+    } catch (error) {
+      console.error("Error fetching restaurants:", error)
+      if (window.toast) {
+        window.toast.error("Backend server is not connected. Please start the backend server and try again.")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const categories = [
     {
@@ -182,7 +206,8 @@ function Home() {
         </div>
       </section>
 
-      {/* Categories Section */}
+      {/* Categories Section - Hidden, showing only restaurants */}
+      {/*}
       <section id="categories" className="categories-section">
         <div className="section-header">
           <h2 className="section-title">Our Categories</h2>
@@ -216,6 +241,48 @@ function Home() {
             </div>
           ))}
         </div>
+      </section>
+      {/* */}
+
+      {/* Restaurants Section - Main focus */}
+      <section className="restaurants-section" style={{ paddingTop: '2rem' }}>
+        <div className="section-header">
+          <h2 className="section-title">Choose a Restaurant</h2>
+          <p className="section-subtitle">Select a restaurant to view its menu and order</p>
+        </div>
+
+        {loading ? (
+          <p style={{ textAlign: 'center' }}>Loading restaurants...</p>
+        ) : restaurants.length === 0 ? (
+          <p style={{ textAlign: 'center' }}>No restaurants found. Please add a restaurant from the Admin Panel.</p>
+        ) : (
+          <div className="restaurants-grid">
+            {restaurants.map((restaurant) => (
+              <div 
+                key={restaurant._id} 
+                className="restaurant-card"
+                onClick={() => navigate(`/menu/main?restaurant=${restaurant._id}`)}
+              >
+                {restaurant.image ? (
+                  <img 
+                    src={restaurant.image.startsWith('http') ? restaurant.image : `http://localhost:5000/uploads/${restaurant.image}`}
+                    alt={restaurant.name}
+                    className="restaurant-image"
+                  />
+                ) : (
+                  <div className="restaurant-image-placeholder">
+                    <span>🍽️</span>
+                  </div>
+                )}
+                <div className="restaurant-content">
+                  <h3>{restaurant.name}</h3>
+                  <p>{restaurant.location || 'View menu'}</p>
+                  {restaurant.phone && <span className="restaurant-phone">{restaurant.phone}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Featured Items Section */}

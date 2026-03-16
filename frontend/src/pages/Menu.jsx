@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 
 import Header from "../components/Header"
 import CategoryTabs from "../components/CategoryTabs"
@@ -9,22 +9,39 @@ import "../styles/menu.css"
 
 function Menu() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const restaurantId = searchParams.get("restaurant")
 
   const [active, setActive] = useState("")
   const [menuData, setMenuData] = useState({})
   const [originalData, setOriginalData] = useState({})
+  const [restaurantName, setRestaurantName] = useState("")
 
   useEffect(() => {
     fetchMenu()
-  }, [])
+  }, [restaurantId])
 
   const fetchMenu = async () => {
     try {
+      // Show all menu items for now (restaurant filter data not properly set in DB)
       const res = await fetch("http://localhost:5000/menu")
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`)
       }
       const data = await res.json()
+
+      // Fetch restaurant name if URL has restaurant param
+      if (restaurantId) {
+        try {
+          const restaurantRes = await fetch(`http://localhost:5000/api/restaurants/${restaurantId}`)
+          if (restaurantRes.ok) {
+            const restaurant = await restaurantRes.json()
+            setRestaurantName(restaurant.name)
+          }
+        } catch (e) {
+          console.error("Error fetching restaurant:", e)
+        }
+      }
 
       const grouped = {}
 
@@ -120,6 +137,18 @@ function Menu() {
     <div className="menu-page">
 
       <Header onSearch={handleSearch} />
+
+      {restaurantName && (
+        <div className="restaurant-header" style={{ padding: '1rem 2rem', background: '#f8f9fa', textAlign: 'center' }}>
+          <h2 style={{ margin: 0, color: '#333' }}>{restaurantName}</h2>
+          <button 
+            onClick={() => navigate('/')}
+            style={{ marginTop: '0.5rem', padding: '0.5rem 1rem', cursor: 'pointer' }}
+          >
+            ← Back to Restaurants
+          </button>
+        </div>
+      )}
 
       <CategoryTabs
         categories={Object.keys(menuData)}

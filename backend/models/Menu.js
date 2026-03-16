@@ -1,10 +1,22 @@
-const { getDB } = require("../db")
+const mongoose = require("mongoose")
 
-async function getMenu() {
-  const db = getDB()
-  if (!db) throw new Error("Database not connected")
-  const menu = await db.collection("menu").find().toArray()
-  return menu
-}
+const MenuSchema = new mongoose.Schema({
+  name: String,
+  desc: String,
+  price: Number,
+  category: String,
+  image: String,
+  kcal: String,
+  time: String,
+  restaurantId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Restaurant",
+    default: null
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+})
 
-module.exports = { getMenu }
+module.exports = mongoose.model("Menu", MenuSchema)

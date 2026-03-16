@@ -1,56 +1,107 @@
 require("dotenv").config()
-const { MongoClient } = require("mongodb")
 
-const url = process.env.MONGO_URI
-const client = new MongoClient(url)
-
-const menuItems = [
-  // Burgers
-  { category: "burgers", name: "Swedish Burger", desc: "Meat patty, mushroom sauce, tomato", price: "4.20", kcal: "350", time: "15 min", img: "/images/burger1.jpg" },
-  { category: "burgers", name: "Loaded Crispy Chicken Burger", desc: "Crispy thai chicken burger", price: "2.80", kcal: "290", time: "20 min", img: "/images/burger2.jpg" },
-  { category: "burgers", name: "American Burger", desc: "Beef grilled steak burger", price: "3.50", kcal: "410", time: "15 min", img: "/images/burger3.jpg" },
-
-  // Arabic Food
-  { category: "arabic-food", name: "Laham Mansaf", desc: "Lamb with rice", price: "50.00", kcal: "400", time: "35 min", img: "/images/arabic1.jpg" },
-  { category: "arabic-food", name: "Chicken Kabsa", desc: "Spiced chicken with rice", price: "45.00", kcal: "380", time: "40 min", img: "/images/arabic2.jpg" },
-  { category: "arabic-food", name: "Shawarma Plate", desc: "Grilled meat with bread and sauce", price: "20.00", kcal: "350", time: "20 min", img: "/images/arabic3.jpg" },
-
-  // Starters
-  { category: "starters", name: "Dynamite Shrimps", desc: "Crispy shrimp with sauce", price: "3.50", kcal: "250", time: "15 min", img: "/images/shrimp.jpg" },
-  { category: "starters", name: "Chicken Wings", desc: "Spicy grilled wings", price: "4.00", kcal: "300", time: "20 min", img: "/images/wings.jpg" },
-  { category: "starters", name: "Spring Rolls", desc: "Crispy vegetable rolls", price: "2.50", kcal: "200", time: "10 min", img: "/images/springrolls.jpg" },
-
-  // Soups
-  { category: "soups", name: "Italian Soup", desc: "Tomato ravioli soup", price: "3.50", kcal: "210", time: "10 min", img: "/images/soup.jpg" },
-  { category: "soups", name: "Mushroom Soup", desc: "Creamy mushroom broth", price: "3.00", kcal: "180", time: "10 min", img: "/images/mushroom.jpg" },
-  { category: "soups", name: "Chicken Broth", desc: "Classic chicken soup", price: "3.00", kcal: "160", time: "10 min", img: "/images/broth.jpg" },
-
-  // Salad   
-  { category: "salad", name: "Italian Salad", desc: "Fresh vegetable salad", price: "3.00", kcal: "150", time: "5 min", img: "/images/salad.jpg" },
-  { category: "salad", name: "Caesar Salad", desc: "Romaine lettuce with caesar dressing", price: "3.50", kcal: "180", time: "5 min", img: "/images/caesar.jpg" },
-  { category: "salad", name: "Greek Salad", desc: "Tomato, cucumber, feta cheese", price: "3.50", kcal: "170", time: "5 min", img: "/images/greek.jpg" },
-]
+const { connectDB } = require("./config/db")
+const Restaurant = require("./models/Restaurant")
+const Menu = require("./models/Menu")
+const Payment = require("./models/payment")
 
 async function seed() {
-  try {
-    await client.connect()
-    console.log("✅ Connected to MongoDB")
 
-    const db = client.db("foodmenu")
-    const collection = db.collection("menu")
+  await connectDB()
 
-    await collection.deleteMany({})
-    console.log("🗑️  Cleared existing menu data")
+  console.log("Seeding database...")
 
-    await collection.insertMany(menuItems)
-    console.log(`✅ Inserted ${menuItems.length} menu items`)
+  // RESTAURANTS
+  const restaurantCount = await Restaurant.countDocuments()
 
-    await client.close()
-    console.log("Done!")
-  } catch (err) {
-    console.error("❌ Seed error:", err.message)
-    process.exit(1)
+  if (restaurantCount === 0) {
+
+    await Restaurant.insertMany([
+      {
+        name: "Pizza Palace",
+        location: "Bangalore",
+        phone: "9876543210"
+      },
+      {
+        name: "Burger Barn",
+        location: "Mumbai",
+        phone: "9123456789"
+      }
+    ])
+
+    console.log("✅ Restaurants seeded")
+
+  } else {
+
+    console.log("ℹ️  Restaurants already exist, skipping")
+
   }
+
+  // MENU
+  const menuCount = await Menu.countDocuments()
+
+  if (menuCount === 0) {
+
+    await Menu.insertMany([
+      {
+        name: "Margherita Pizza",
+        desc: "Classic cheese pizza",
+        price: 250,
+        category: "burgers",
+        image: ""
+      },
+      {
+        name: "Chicken Burger",
+        desc: "Juicy chicken with lettuce",
+        price: 180,
+        category: "burgers",
+        image: ""
+      },
+      {
+        name: "Veg Starter Platter",
+        desc: "Assorted vegetarian starters",
+        price: 220,
+        category: "starters",
+        image: ""
+      },
+      {
+        name: "Tomato Soup",
+        desc: "Creamy tomato soup",
+        price: 120,
+        category: "soups",
+        image: ""
+      },
+      {
+        name: "Caesar Salad",
+        desc: "Fresh romaine with caesar dressing",
+        price: 160,
+        category: "salad",
+        image: ""
+      },
+      {
+        name: "Shawarma Wrap",
+        desc: "Middle Eastern spiced wrap",
+        price: 200,
+        category: "arabic-food",
+        image: ""
+      }
+    ])
+
+    console.log("✅ Menu seeded")
+
+  } else {
+
+    console.log("ℹ️  Menu already exists, skipping")
+
+  }
+
+  console.log("✅ Database seeding complete")
+
+  process.exit(0)
+
 }
 
-seed()
+seed().catch(err => {
+  console.error("Seed error:", err.message)
+  process.exit(1)
+})

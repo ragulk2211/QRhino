@@ -1,0 +1,175 @@
+/* CreateRestaurant.css — dedicated styles for the Create Restaurant page */
+
+.admin-page {
+  min-height: 100vh;
+  background: #0f0f0f;
+  color: #fff;
+  padding: 2rem;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ── Header ── */
+.admin-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #2a2a2a;
+  padding-bottom: 1.2rem;
+}
+
+.admin-header h1 {
+  font-size: 1.9rem;
+  margin: 0;
+}
+
+/* ── Back Button ── */
+.btn-back {
+  background: #222;
+  color: #ccc;
+  border: 1px solid #444;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.btn-back:hover {
+  background: #333;
+  color: #fff;
+}
+
+/* ── Progress Hint ── */
+.flow-hint {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: #666;
+}
+
+.flow-hint .step {
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid #333;
+}
+
+.flow-hint .step.active {
+  background: #e8c96b;
+  color: #000;
+  border-color: #e8c96b;
+  font-weight: 600;
+}
+
+.flow-hint .arrow {
+  color: #555;
+}
+
+/* ── Message ── */
+.admin-message {
+  padding: 0.75rem 1.2rem;
+  border-radius: 8px;
+  background: #1c1c1c;
+  border: 1px solid #3a3a3a;
+  margin-bottom: 1.5rem;
+  max-width: 520px;
+  font-size: 0.92rem;
+}
+
+/* ── Form Card ── */
+.admin-form {
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  padding: 2rem 2.2rem;
+  max-width: 520px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.form-group {
+  margin-bottom: 1.3rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #b0b0b0;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.72rem 1rem;
+  background: #222;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.97rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #e8c96b;
+  box-shadow: 0 0 0 3px rgba(232, 201, 107, 0.12);
+}
+
+.form-group input::placeholder {
+  color: #555;
+}
+
+/* ── Actions ── */
+.form-actions {
+  margin-top: 1.8rem;
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.btn-submit {
+  background: #e8c96b;
+  color: #000;
+  border: none;
+  padding: 0.78rem 2rem;
+  border-radius: 10px;
+  font-size: 0.97rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-submit:hover {
+  background: #f0d87a;
+  transform: translateY(-1px);
+}
+
+.btn-submit:disabled {
+  background: #555;
+  color: #888;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .admin-page {
+    padding: 1.2rem;
+  }
+
+  .admin-form {
+    padding: 1.5rem;
+  }
+
+  .admin-header h1 {
+    font-size: 1.4rem;
+  }
+}

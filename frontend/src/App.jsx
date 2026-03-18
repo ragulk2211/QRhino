@@ -13,6 +13,7 @@ import Cart from "./pages/Cart";
 import Breakfast from "./pages/Breakfast"
 import Burgers from "./pages/Burgers"
 import EditMenuItem from "./pages/EditMenuItem"
+import RestaurantMenu from "./pages/RestaurantMenu";
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
         <Route path="/burgers" element={<Burgers />} />
 
         <Route path="/edit-item/:id" element={<EditMenuItem />} />
+        <Route path="/restaurant/menu" element={<RestaurantMenu />} />
 
       </Routes>
 

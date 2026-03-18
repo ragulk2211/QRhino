@@ -247,7 +247,7 @@ function AddMenuItem() {
         formData.append("image", imageFile)
       }
 
-      const res = await fetch("http://localhost:5000/menu", {
+      const res = await fetch("http://localhost:5000/api/menu", {
         method: "POST",
         body: formData
       })

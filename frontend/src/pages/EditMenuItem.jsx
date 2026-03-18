@@ -22,7 +22,7 @@ function EditMenuItem() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    fetch("http://localhost:5000/menu")
+    fetch("http://localhost:5000/api/menu")
       .then(res => res.json())
       .then(data => {
         const item = data.find(food => food._id === id)
@@ -84,7 +84,7 @@ function EditMenuItem() {
         formData.append("image", image)
       }
 
-      const response = await fetch(`http://localhost:5000/menu/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/menu/${id}`, {
         method: "PUT",
         body: formData
       })

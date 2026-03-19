@@ -21,7 +21,6 @@ function Home() {
   const [formErrors, setFormErrors] = useState({});
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(null);
   const [hoveredCard, setHoveredCard] = useState(null);
 
   // Intersection Observer for scroll animations
@@ -158,12 +157,13 @@ function Home() {
     [validateForm]
   );
 
-  const handleRestaurantClick = useCallback(
-    (id) => {
-      navigate(`/menu/main?restaurant=${id}`);
-    },
-    [navigate]
-  );
+  // Replace the handleRestaurantClick function
+const handleRestaurantClick = useCallback(
+  (id) => {
+    navigate(`/restaurant/menu?restaurant=${id}`);
+  },
+  [navigate]
+);
 
   // Loading skeletons
   const renderRestaurantSkeleton = () => (
@@ -349,9 +349,7 @@ function Home() {
               restaurants.map((restaurant, index) => (
                 <article
                   key={restaurant._id}
-                  className={`restaurant-card hover-style-${index % 6 + 1} ${
-                    hoveredCard === `restaurant-${index}` ? "hover-active" : ""
-                  }`}
+                  className="restaurant-card restaurant-hover-style"
                   onClick={() => handleRestaurantClick(restaurant._id)}
                   onMouseEnter={() => setHoveredCard(`restaurant-${index}`)}
                   onMouseLeave={() => setHoveredCard(null)}
@@ -430,9 +428,7 @@ function Home() {
               featuredItems.map((item, index) => (
                 <article 
                   key={item._id} 
-                  className={`featured-card featured-hover-${index % 4 + 1} ${
-                    hoveredCard === `featured-${index}` ? "hover-active" : ""
-                  }`}
+                  className="featured-card featured-hover-style"
                   onMouseEnter={() => setHoveredCard(`featured-${index}`)}
                   onMouseLeave={() => setHoveredCard(null)}
                 >
@@ -490,9 +486,7 @@ function Home() {
             ].map((feature, index) => (
               <div 
                 key={index} 
-                className={`feature-card feature-card-hover-${index + 1} ${
-                  hoveredCard === `feature-${index}` ? "hover-active" : ""
-                }`}
+                className="feature-card feature-hover-style"
                 onMouseEnter={() => setHoveredCard(`feature-${index}`)}
                 onMouseLeave={() => setHoveredCard(null)}
               >

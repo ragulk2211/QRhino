@@ -16,10 +16,29 @@ function Menu() {
   const [menuData, setMenuData] = useState({})
   const [originalData, setOriginalData] = useState({})
   const [restaurantName, setRestaurantName] = useState("")
+  const [foodTypeFilter, setFoodTypeFilter] = useState("all")
 
   useEffect(() => {
     fetchMenu()
   }, [restaurantId])
+
+  // Filter by food type when foodTypeFilter changes
+  useEffect(() => {
+    if (foodTypeFilter === "all") {
+      setMenuData(originalData)
+    } else {
+      const filtered = {}
+      Object.keys(originalData).forEach(category => {
+        const matchedItems = originalData[category].filter(item =>
+          item.foodType === foodTypeFilter
+        )
+        if (matchedItems.length > 0) {
+          filtered[category] = matchedItems
+        }
+      })
+      setMenuData(filtered)
+    }
+  }, [foodTypeFilter, originalData])
 
   const fetchMenu = async () => {
     try {
@@ -155,6 +174,58 @@ function Menu() {
         active={active}
         setActive={setActive}
       />
+
+      {/* Food Type Filter */}
+      <div className="food-type-filter" style={{ padding: '0.75rem 2rem', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+        <button
+          onClick={() => setFoodTypeFilter('all')}
+          style={{
+            padding: '0.5rem 1rem',
+            border: foodTypeFilter === 'all' ? '2px solid #2e7d32' : '1px solid #ccc',
+            borderRadius: '20px',
+            background: foodTypeFilter === 'all' ? '#2e7d32' : 'white',
+            color: foodTypeFilter === 'all' ? 'white' : '#333',
+            cursor: 'pointer',
+            fontWeight: '500'
+          }}
+        >
+          All
+        </button>
+        <button
+          onClick={() => setFoodTypeFilter('veg')}
+          style={{
+            padding: '0.5rem 1rem',
+            border: foodTypeFilter === 'veg' ? '2px solid #22c55e' : '1px solid #ccc',
+            borderRadius: '20px',
+            background: foodTypeFilter === 'veg' ? '#22c55e' : 'white',
+            color: foodTypeFilter === 'veg' ? 'white' : '#333',
+            cursor: 'pointer',
+            fontWeight: '500',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.25rem'
+          }}
+        >
+          <span>●</span> Veg
+        </button>
+        <button
+          onClick={() => setFoodTypeFilter('non-veg')}
+          style={{
+            padding: '0.5rem 1rem',
+            border: foodTypeFilter === 'non-veg' ? '2px solid #dc2626' : '1px solid #ccc',
+            borderRadius: '20px',
+            background: foodTypeFilter === 'non-veg' ? '#dc2626' : 'white',
+            color: foodTypeFilter === 'non-veg' ? 'white' : '#333',
+            cursor: 'pointer',
+            fontWeight: '500',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.25rem'
+          }}
+        >
+          <span>●</span> Non-Veg
+        </button>
+      </div>
 
       {Object.keys(menuData).map(category => (
         <section key={category} id={category}>

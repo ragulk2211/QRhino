@@ -12,9 +12,11 @@ function EditMenuItem() {
     name: "",
     desc: "",
     price: "",
+    discount: "0",
     kcal: "",
     time: "",
-    category: ""
+    category: "",
+    foodType: "veg"
   })
 
   const [image, setImage] = useState(null)
@@ -32,9 +34,11 @@ function EditMenuItem() {
             name: item.name || "",
             desc: item.desc || "",
             price: item.price || "",
+            discount: item.discount || 0,
             kcal: item.kcal || "",
             time: item.time || "",
-            category: item.category || ""
+            category: item.category || "",
+            foodType: item.foodType || "veg"
           })
           // Set current image URL
           if (item.image) {
@@ -78,6 +82,8 @@ function EditMenuItem() {
       formData.append("kcal", form.kcal)
       formData.append("time", form.time)
       formData.append("category", form.category)
+      formData.append("foodType", form.foodType)
+      formData.append("discount", form.discount)
       
       // Only append image if a new one was selected
       if (image) {
@@ -188,6 +194,52 @@ function EditMenuItem() {
             onChange={handleChange}
             placeholder="Category"
           />
+
+          {/* Discount */}
+          <div className="form-group">
+            <label htmlFor="discount">Discount (%)</label>
+            <input
+              type="number"
+              name="discount"
+              value={form.discount}
+              onChange={handleChange}
+              placeholder="0"
+              min="0"
+              max="100"
+              style={{ width: '100%', padding: '0.75rem', border: '1.5px solid #e2e8f0', borderRadius: '8px' }}
+            />
+          </div>
+
+          {/* Food Type (Veg/Non-Veg) */}
+          <div className="form-group">
+            <label htmlFor="foodType">
+              Food Type
+            </label>
+            <div className="food-type-selector">
+              <label className={`food-type-option ${form.foodType === 'veg' ? 'selected' : ''}`}>
+                <input
+                  type="radio"
+                  name="foodType"
+                  value="veg"
+                  checked={form.foodType === 'veg'}
+                  onChange={handleChange}
+                />
+                <span className="veg-indicator">●</span>
+                <span>Vegetarian</span>
+              </label>
+              <label className={`food-type-option ${form.foodType === 'non-veg' ? 'selected' : ''}`}>
+                <input
+                  type="radio"
+                  name="foodType"
+                  value="non-veg"
+                  checked={form.foodType === 'non-veg'}
+                  onChange={handleChange}
+                />
+                <span className="non-veg-indicator">●</span>
+                <span>Non-Vegetarian</span>
+              </label>
+            </div>
+          </div>
 
           <button className="submit-btn" disabled={loading}>
             {loading ? "Saving..." : "Save Changes"}

@@ -13,9 +13,11 @@ function AddMenuItem() {
     name: "",
     desc: "",
     price: "",
+    discount: "0",
     kcal: "",
     time: "",
-    category: "burgers"
+    category: "burgers",
+    foodType: "veg"
   })
 
   // UI state
@@ -263,9 +265,11 @@ function AddMenuItem() {
           name: "",
           desc: "",
           price: "",
+          discount: "0",
           kcal: "",
           time: "",
-          category: "burgers"
+          category: "burgers",
+          foodType: "veg"
         })
         handleRemoveImage()
         setErrors({})
@@ -370,7 +374,7 @@ function AddMenuItem() {
             </span>
           </div>
 
-          {/* Price, Calories, Prep Time Row */}
+          {/* Price, Discount, Calories Row */}
           <div className="row-3">
             <div className="form-group">
               <label htmlFor="price">
@@ -396,6 +400,23 @@ function AddMenuItem() {
             </div>
 
             <div className="form-group">
+              <label htmlFor="discount">
+                Discount (%)
+              </label>
+              <input
+                id="discount"
+                name="discount"
+                type="number"
+                min="0"
+                max="100"
+                placeholder="0"
+                value={form.discount}
+                onChange={handleChange}
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div className="form-group">
               <label htmlFor="kcal">
                 Calories <span className="required">*</span>
               </label>
@@ -414,28 +435,6 @@ function AddMenuItem() {
               />
               {touched.kcal && errors.kcal && (
                 <span className="error-text">{errors.kcal}</span>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="time">
-                Prep Time (min) <span className="required">*</span>
-              </label>
-              <input
-                id="time"
-                name="time"
-                type="number"
-                min="0"
-                max="240"
-                placeholder="e.g., 30"
-                value={form.time}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className={touched.time && errors.time ? "error" : ""}
-                disabled={isSubmitting}
-              />
-              {touched.time && errors.time && (
-                <span className="error-text">{errors.time}</span>
               )}
             </div>
           </div>
@@ -458,6 +457,39 @@ function AddMenuItem() {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Food Type (Veg/Non-Veg) */}
+          <div className="form-group">
+            <label htmlFor="foodType">
+              Food Type <span className="required">*</span>
+            </label>
+            <div className="food-type-selector">
+              <label className={`food-type-option ${form.foodType === 'veg' ? 'selected' : ''}`}>
+                <input
+                  type="radio"
+                  name="foodType"
+                  value="veg"
+                  checked={form.foodType === 'veg'}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                />
+                <span className="veg-indicator">●</span>
+                <span>Vegetarian</span>
+              </label>
+              <label className={`food-type-option ${form.foodType === 'non-veg' ? 'selected' : ''}`}>
+                <input
+                  type="radio"
+                  name="foodType"
+                  value="non-veg"
+                  checked={form.foodType === 'non-veg'}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                />
+                <span className="non-veg-indicator">●</span>
+                <span>Non-Vegetarian</span>
+              </label>
+            </div>
           </div>
 
           {/* Image Upload */}

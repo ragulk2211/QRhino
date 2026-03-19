@@ -235,6 +235,12 @@
   flex-shrink: 0;
 }
 
+.food-badges {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
 /* Food Description */
 .food-description {
   color: var(--color-text-muted);

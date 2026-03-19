@@ -74,7 +74,25 @@ function FoodCard({ item, onDelete }) {
         <div className="food-content">
           <div className="food-header">
             <h3 className="food-title">{item.name}</h3>
-            <span className="food-badge">{item.category}</span>
+            <div className="food-badges">
+              <span className="food-badge">{item.category}</span>
+              {item.foodType && (
+                <span 
+                  className={`food-type-badge ${item.foodType}`}
+                  style={{
+                    background: item.foodType === 'veg' ? '#22c55e' : '#dc2626',
+                    color: 'white',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    fontSize: '0.7rem',
+                    fontWeight: '600',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  {item.foodType === 'veg' ? '● Veg' : '● Non-Veg'}
+                </span>
+              )}
+            </div>
           </div>
 
           <p className="food-description">{item.desc}</p>
@@ -82,7 +100,16 @@ function FoodCard({ item, onDelete }) {
           <div className="food-meta">
             <div className="meta-item">
               <span className="meta-icon"></span>
-              <span className="meta-value">₹{item.price}</span>
+              <div className="price-display">
+                {item.discount && item.discount > 0 ? (
+                  <>
+                    <span className="original-price" style={{ textDecoration: 'line-through', color: '#999', fontSize: '0.8rem' }}>₹{item.price}</span>
+                    <span className="discounted-price" style={{ color: '#22c55e', fontWeight: 'bold' }}>₹{Math.round(item.price - (item.price * item.discount / 100))}</span>
+                  </>
+                ) : (
+                  <span className="meta-value">₹{item.price}</span>
+                )}
+              </div>
             </div>
             <div className="meta-item">
               <span className="meta-icon"></span>

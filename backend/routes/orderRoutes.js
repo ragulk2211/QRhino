@@ -4,17 +4,17 @@ const Order = require("../models/Order")
 
 // Create Order
 router.post("/create", async (req,res)=>{
-
  try{
+  console.log("Incoming Order:", req.body)
 
   const order = await Order.create(req.body)
 
   res.json(order)
 
  }catch(err){
+  console.error("Order Error:", err)
   res.status(500).json({error:err.message})
  }
-
 })
 
 // Get All Orders (Kitchen)
@@ -31,11 +31,16 @@ router.put("/:id", async (req,res)=>{
 
  try{
 
-  const { status } = req.body
+  const { status, preparingTime } = req.body
+
+  const updateData = { status }
+  if (preparingTime !== undefined) {
+   updateData.preparingTime = preparingTime
+  }
 
   const order = await Order.findByIdAndUpdate(
    req.params.id,
-   { status },
+   updateData,
    { new: true }
   )
 

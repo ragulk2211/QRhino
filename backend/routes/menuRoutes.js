@@ -22,11 +22,13 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage })
 
-// GET all menu items (optionally filter by restaurantId)
+// GET all menu items (optionally filter by restaurantId and foodType)
 router.get("/", async (req, res) => {
   try {
-    const { restaurantId } = req.query
-    const filter = restaurantId ? { restaurantId } : {}
+    const { restaurantId, foodType } = req.query
+    const filter = {}
+    if (restaurantId) filter.restaurantId = restaurantId
+    if (foodType) filter.foodType = foodType
     const menu = await Menu.find(filter).sort({ createdAt: -1 })
     res.json(menu)
   } catch (error) {
@@ -49,10 +51,21 @@ router.get("/featured", async (req, res) => {
 // POST create menu item with optional image upload
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { name, desc, price, category, kcal, time, restaurantId } = req.body
+    const { name, desc, price, discount, category, kcal, time, restaurantId, foodType } = req.body
     const image = req.file ? req.file.filename : null
 
-    const menuItem = new Menu({ name, desc, price, category, kcal, time, image, restaurantId: restaurantId || null })
+    const menuItem = new Menu({ 
+      name, 
+      desc, 
+      price, 
+      discount: discount || 0, 
+      category, 
+      kcal, 
+      time, 
+      image, 
+      restaurantId: restaurantId || null, 
+      foodType: foodType || 'veg' 
+    })
     await menuItem.save()
 
     res.status(201).json(menuItem)
@@ -65,10 +78,10 @@ router.post("/", upload.single("image"), async (req, res) => {
 // PUT update menu item
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
-    const { name, desc, price, category, kcal, time, restaurantId } = req.body
+    const { name, desc, price, discount, category, kcal, time, restaurantId, foodType } = req.body
     const image = req.file ? req.file.filename : undefined
 
-    const updateData = { name, desc, price, category, kcal, time, restaurantId }
+    const updateData = { name, desc, price, discount, category, kcal, time, restaurantId, foodType }
     if (image) {
       updateData.image = image
     }

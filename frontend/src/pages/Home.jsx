@@ -170,6 +170,11 @@ function Home() {
     [navigate]
   );
 
+  // Handle back to home
+  const handleBackToHome = useCallback(() => {
+    navigate("/");
+  }, [navigate]);
+
   // Loading skeletons
   const renderRestaurantSkeleton = () => (
     Array(3).fill(0).map((_, i) => (
@@ -329,6 +334,14 @@ function Home() {
       </section>
 
       <main className="main-content">
+        {/* Back to Home Button - Added without affecting styles */}
+        <div className="back-to-home-wrapper">
+          <button className="back-to-home-btn" onClick={handleBackToHome}>
+            <span className="back-icon">←</span>
+            <span>Back to Restaurants</span>
+          </button>
+        </div>
+
         {/* Restaurants Section */}
         <section className="restaurants-section animate-on-scroll" ref={featuredRef}>
           <div className="section-header">
@@ -446,8 +459,11 @@ function Home() {
                         e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Available";
                       }}
                     />
-                    {item.isVegetarian && (
-                      <span className="veg-badge">🌱 Veg</span>
+                    {/* Veg/Non-Veg Badge */}
+                    {item.isVegetarian !== undefined && (
+                      <span className={`veg-nonveg-badge ${item.isVegetarian ? 'veg' : 'non-veg'}`}>
+                        {item.isVegetarian ? '🌱 Veg' : '🍖 Non-Veg'}
+                      </span>
                     )}
                     <div className="card-image-overlay"></div>
                   </div>

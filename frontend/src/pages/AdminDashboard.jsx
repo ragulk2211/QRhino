@@ -10,6 +10,7 @@ function AdminDashboard() {
     { label: "📂 Create Category",   path: "/admin/create-category",   desc: "Add a new menu category" },
     { label: "🍔 Add Food Menu",     path: "/add-item",                 desc: "Add a new food item with image" },
     { label: "📱 Generate QR Code",  path: "/admin/qr-generator",       desc: "Generate QR code for a menu page" },
+    { label: "🎟️ Manage Coupons",    path: "/admin/coupons",           desc: "Create and manage discount coupons" },
   ]
 
   return (

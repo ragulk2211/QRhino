@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom"
+import API_BASE_URL from "../config"
 import "../styles/foodmodal.css"
 
 function FoodModal({ item, onClose, onDelete }) {
@@ -25,7 +26,7 @@ function FoodModal({ item, onClose, onDelete }) {
           <img
             src={
               item.image
-                ? `http://localhost:5000${item.image}`
+                ? `${API_BASE_URL}${item.image}`
                 : "/images/default-food.png"
             }
             alt={item.name}

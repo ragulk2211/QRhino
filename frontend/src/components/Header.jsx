@@ -1,9 +1,11 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
+import API_BASE_URL from "../config"
+import { calculateDiscountedPrice } from "../utils/priceUtils"
 import "../styles/header.css"
 
-function Header({ onSearch = () => {} }) {
+function Header({ onSearch = () => { } }) {
   const navigate = useNavigate()
 
   const [searchTerm, setSearchTerm] = useState("")
@@ -50,7 +52,8 @@ function Header({ onSearch = () => {} }) {
     setCartItems(cart)
 
     const total = cart.reduce((sum, item) => {
-      return sum + Number(item.price || 0) * (item.quantity || 1)
+      const price = calculateDiscountedPrice(item.price, item.discount);
+      return sum + price * (item.quantity || 1)
     }, 0)
 
     setCartTotal(total)
@@ -72,7 +75,8 @@ function Header({ onSearch = () => {} }) {
     setCartItems(updated)
 
     const total = updated.reduce((sum, item) => {
-      return sum + Number(item.price || 0) * (item.quantity || 1)
+      const price = calculateDiscountedPrice(item.price, item.discount);
+      return sum + price * (item.quantity || 1)
     }, 0)
 
     setCartTotal(total)
@@ -85,7 +89,8 @@ function Header({ onSearch = () => {} }) {
     setCartItems(updated)
 
     const total = updated.reduce((sum, item) => {
-      return sum + Number(item.price || 0) * (item.quantity || 1)
+      const price = calculateDiscountedPrice(item.price, item.discount);
+      return sum + price * (item.quantity || 1)
     }, 0)
 
     setCartTotal(total)
@@ -98,7 +103,8 @@ function Header({ onSearch = () => {} }) {
       <div className="header-container">
 
         <div className="logo" onClick={() => navigate("/")}>
-          <h1>Food Menu</h1>
+          <span className="logo-icon">🍽️</span>
+          <span className="logo-text">QRhino</span>
         </div>
 
         <div className="header-right">
@@ -143,7 +149,7 @@ function Header({ onSearch = () => {} }) {
                         <img
                           src={
                             item.image
-                              ? (item.image.startsWith('http') ? item.image : `http://localhost:5000/uploads/${item.image}`)
+                              ? (item.image.startsWith('http') ? item.image : `${API_BASE_URL}/uploads/${item.image}`)
                               : "/default-food.jpg"
                           }
                           alt={item.name}
@@ -190,6 +196,9 @@ function Header({ onSearch = () => {} }) {
 
           <button className="admin-button" onClick={() => navigate("/admin")}>
             ⚙️ Admin
+          </button>
+          <button className="admin-button" onClick={() => navigate("/kitchen")}>
+            🍳 Kitchen
           </button>
 
         </div>

@@ -1,13 +1,18 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import Header from "../components/Header"
+import API_BASE_URL from "../config"
 import "../styles/addmenu.css"
 
-const CATEGORIES = ["burgers", "arabic-food", "starters", "soups", "salad", "pizza", "pasta", "desserts", "beverages"]
+const CATEGORIES = ["burgers",  "soups", "salad", "pizza", "pasta", "desserts", "beverages"]
 
 function AddMenuItem() {
   const navigate = useNavigate()
-  
+
+  // Restaurants list
+  const [restaurants, setRestaurants] = useState([])
+  // Categories list from database
+  const [categories, setCategories] = useState([])
+
   // Form state
   const [form, setForm] = useState({
     name: "",
@@ -17,7 +22,9 @@ function AddMenuItem() {
     kcal: "",
     time: "",
     category: "burgers",
-    foodType: "veg"
+    categoryId: "",
+    foodType: "veg",
+    restaurantId: ""
   })
 
   // UI state
@@ -30,6 +37,18 @@ function AddMenuItem() {
 
   // Cleanup image preview on unmount
   useEffect(() => {
+    // Fetch restaurants for dropdown
+    fetch(`${API_BASE_URL}/api/restaurants`)
+      .then(res => res.json())
+      .then(data => setRestaurants(data))
+      .catch(err => console.error("Failed to fetch restaurants:", err))
+
+    // Fetch categories from database
+    fetch(`${API_BASE_URL}/api/categories`)
+      .then(res => res.json())
+      .then(data => setCategories(data))
+      .catch(err => console.error("Failed to fetch categories:", err))
+
     return () => {
       if (imagePreview) {
         URL.revokeObjectURL(imagePreview)
@@ -44,7 +63,7 @@ function AddMenuItem() {
       ...prev,
       [name]: value
     }))
-    
+
     // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -67,8 +86,8 @@ function AddMenuItem() {
   // Validate single field
   function validateField(name, value) {
     let error = ""
-    
-    switch(name) {
+
+    switch (name) {
       case "name":
         if (!value.trim()) error = "Item name is required"
         else if (value.length < 3) error = "Name must be at least 3 characters"
@@ -97,12 +116,12 @@ function AddMenuItem() {
       default:
         break
     }
-    
+
     setErrors(prev => ({
       ...prev,
       [name]: error
     }))
-    
+
     return !error
   }
 
@@ -110,6 +129,12 @@ function AddMenuItem() {
   function validateForm() {
     const newErrors = {}
     let isValid = true
+
+    // Validate restaurant selection
+    if (!form.restaurantId) {
+      newErrors.restaurantId = "Please select a restaurant"
+      isValid = false
+    }
 
     // Validate each field
     if (!form.name.trim()) {
@@ -164,7 +189,7 @@ function AddMenuItem() {
   // Handle image selection
   function handleImageChange(e) {
     const file = e.target.files[0]
-    
+
     if (file) {
       // Validate file type
       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
@@ -175,7 +200,7 @@ function AddMenuItem() {
         })
         return
       }
-      
+
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setMessage({
@@ -186,13 +211,13 @@ function AddMenuItem() {
       }
 
       setImageFile(file)
-      
+
       // Create preview URL
       if (imagePreview) {
         URL.revokeObjectURL(imagePreview)
       }
       setImagePreview(URL.createObjectURL(file))
-      
+
       // Clear image error if any
       if (errors.image) {
         setErrors(prev => ({
@@ -215,21 +240,21 @@ function AddMenuItem() {
   // Handle form submission
   async function handleSubmit(e) {
     e.preventDefault()
-    
+
     // Validate form
     if (!validateForm()) {
       setMessage({
         text: "Please fix the errors in the form",
         type: "error"
       })
-      
+
       // Mark all fields as touched to show errors
       const allTouched = {}
       Object.keys(form).forEach(key => {
         allTouched[key] = true
       })
       setTouched(allTouched)
-      
+
       return
     }
 
@@ -238,7 +263,7 @@ function AddMenuItem() {
 
     try {
       const formData = new FormData()
-      
+
       // Append form fields
       Object.keys(form).forEach(key => {
         formData.append(key, form[key])
@@ -249,10 +274,12 @@ function AddMenuItem() {
         formData.append("image", imageFile)
       }
 
-      const res = await fetch("http://localhost:5000/api/menu", {
+      const res = await fetch(`${API_BASE_URL}/api/menu`, {
         method: "POST",
         body: formData
       })
+      const data = await res.json()
+      console.log("SERVER RESPONSE:", data)
 
       if (res.ok) {
         setMessage({
@@ -269,7 +296,9 @@ function AddMenuItem() {
           kcal: "",
           time: "",
           category: "burgers",
-          foodType: "veg"
+          categoryId: "",
+          foodType: "veg",
+          restaurantId: ""
         })
         handleRemoveImage()
         setErrors({})
@@ -302,7 +331,6 @@ function AddMenuItem() {
 
   return (
     <div className="add-menu-page">
-      <Header />
 
       <div className="add-menu-container">
         <div className="add-menu-header">
@@ -314,7 +342,7 @@ function AddMenuItem() {
         {message.text && (
           <div className={`message ${message.type}`}>
             <span>{message.text}</span>
-            <button 
+            <button
               className="close-btn"
               onClick={() => setMessage({ text: "", type: "" })}
             >
@@ -324,6 +352,28 @@ function AddMenuItem() {
         )}
 
         <form onSubmit={handleSubmit} className="add-menu-form">
+          {/* Restaurant Selection */}
+          <div className="form-group">
+            <label htmlFor="restaurantId">
+              Restaurant <span className="required">*</span>
+            </label>
+            <select
+              id="restaurantId"
+              name="restaurantId"
+              value={form.restaurantId}
+              onChange={handleChange}
+              required
+              disabled={isSubmitting}
+            >
+              <option value="">Select a restaurant</option>
+              {restaurants.map(restaurant => (
+                <option key={restaurant._id} value={restaurant._id}>
+                  {restaurant.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Item Name */}
           <div className="form-group">
             <label htmlFor="name">
@@ -398,6 +448,27 @@ function AddMenuItem() {
                 <span className="error-text">{errors.price}</span>
               )}
             </div>
+            <div className="form-group">
+              <label htmlFor="time">
+                Prep Time (minutes) <span className="required">*</span>
+              </label>
+              <input
+                id="time"
+                name="time"
+                type="number"
+                min="1"
+                max="240"
+                placeholder="e.g., 20"
+                value={form.time}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={touched.time && errors.time ? "error" : ""}
+                disabled={isSubmitting}
+              />
+              {touched.time && errors.time && (
+                <span className="error-text">{errors.time}</span>
+              )}
+            </div>
 
             <div className="form-group">
               <label htmlFor="discount">
@@ -459,6 +530,28 @@ function AddMenuItem() {
             </select>
           </div>
 
+          {/* Category ID Selection (from database) */}
+          <div className="form-group">
+            <label htmlFor="categoryId">
+              Link to Category (Optional)
+            </label>
+            <select
+              id="categoryId"
+              name="categoryId"
+              value={form.categoryId}
+              onChange={handleChange}
+              disabled={isSubmitting}
+            >
+              <option value="">-- Select a category --</option>
+              {categories.map(cat => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            <span className="hint-text">Link this menu item to a category for better organization</span>
+          </div>
+
           {/* Food Type (Veg/Non-Veg) */}
           <div className="form-group">
             <label htmlFor="foodType">
@@ -507,12 +600,12 @@ function AddMenuItem() {
                 className={errors.image ? "error" : ""}
                 disabled={isSubmitting}
               />
-              
+
               {imagePreview ? (
                 <div className="image-preview-container">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
                     className="image-preview"
                   />
                   <button

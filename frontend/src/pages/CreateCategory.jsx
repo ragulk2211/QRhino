@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
+import API_BASE_URL from "../config"
 import "../styles/admin.css"
 import "../styles/CreateCategory.css"
 
@@ -15,8 +16,8 @@ function CreateCategory() {
 
   useEffect(() => {
     const url = restaurantId
-      ? `http://localhost:5000/api/categories?restaurantId=${restaurantId}`
-      : "http://localhost:5000/api/categories"
+      ? `${API_BASE_URL}/api/categories?restaurantId=${restaurantId}`
+      : `${API_BASE_URL}/api/categories`
     fetch(url)
       .then(r => r.json())
       .then(setCategories)
@@ -28,7 +29,7 @@ function CreateCategory() {
     setLoading(true)
     setMessage("")
     try {
-      const res = await fetch("http://localhost:5000/api/categories", {
+      const res = await fetch(`${API_BASE_URL}/api/categories`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, restaurantId })
@@ -51,7 +52,7 @@ function CreateCategory() {
   async function handleDelete(id) {
     if (!window.confirm("Delete this category?")) return
     try {
-      const res = await fetch(`http://localhost:5000/api/categories/${id}`, { method: "DELETE" })
+      const res = await fetch(`${API_BASE_URL}/api/categories/${id}`, { method: "DELETE" })
       if (res.ok) {
         setCategories(categories.filter(c => c._id !== id))
         setMessage("✅ Category deleted")
@@ -67,7 +68,7 @@ function CreateCategory() {
     const newName = prompt("Edit category name:", currentName)
     if (!newName || newName === currentName) return
     try {
-      const res = await fetch(`http://localhost:5000/api/categories/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/categories/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newName })

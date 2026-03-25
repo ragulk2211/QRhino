@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import API_BASE_URL from "../config"
 import "../styles/admin.css"
 import "../styles/CreateRestaurant.css"
 
@@ -36,7 +37,7 @@ function CreateRestaurant() {
         formData.append("image", imageFile)
       }
 
-      const res = await fetch("http://localhost:5000/api/restaurants", {
+      const res = await fetch(`${API_BASE_URL}/api/restaurants`, {
         method: "POST",
         body: formData
       })

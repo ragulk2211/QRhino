@@ -1,37 +1,103 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { CartContext } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../config";
+import { calculateDiscountedPrice } from "../utils/priceUtils";
 
-function Cart(){
+function Cart() {
 
-  const { cart, setCart } = useContext(CartContext);
+  const { cart, removeFromCart, updateQuantity, clearCart, applyCoupon, removeCoupon, getFinalTotal, appliedCoupon, couponDiscount } = useContext(CartContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponMessage, setCouponMessage] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
 
-  // Calculate total with discount
+  // Fetch available coupons
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/coupons`);
+        const data = await response.json();
+        if (data.success) {
+          setAvailableCoupons(data.coupons.filter(c => c.isActive));
+        }
+      } catch (error) {
+        console.error("Error fetching coupons:", error);
+      }
+    };
+    if (cart.length > 0) {
+      fetchCoupons();
+    }
+  }, [cart.length]);
+
+  // ✅ Calculate total
   const calculateTotal = () => {
     return cart.reduce((sum, item) => {
-      const price = item.discount && item.discount > 0 
-        ? item.price - (item.price * item.discount / 100) 
-        : item.price;
-      return sum + (price * (item.quantity || 1));
+      const price = calculateDiscountedPrice(item.price, item.discount);
+      return sum + price * (item.quantity || 1);
     }, 0);
   };
 
   const total = calculateTotal();
+  const finalTotal = getFinalTotal();
 
-  const removeItem = (index) => {
-    const updatedCart = cart.filter((_,i)=> i !== index);
-    setCart(updatedCart);
+  // ✅ Handle coupon application
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponMessage("Please enter a coupon code");
+      return;
+    }
+
+    setCouponLoading(true);
+    setCouponMessage("");
+
+    try {
+      const result = await applyCoupon(couponCode.trim());
+      setCouponMessage(result.message);
+    } catch (error) {
+      setCouponMessage("Failed to apply coupon");
+    } finally {
+      setCouponLoading(false);
+    }
   };
 
-  const updateQuantity = (index, newQuantity) => {
-    if (newQuantity < 1) return;
-    const updatedCart = [...cart];
-    updatedCart[index] = { ...updatedCart[index], quantity: newQuantity };
-    setCart(updatedCart);
+  // ✅ Handle coupon removal
+  const handleRemoveCoupon = () => {
+    removeCoupon();
+    setCouponCode("");
+    setCouponMessage("");
   };
 
+  // ✅ Quick select coupon from available list
+  const handleSelectCoupon = async (code) => {
+    setCouponCode(code);
+    setCouponLoading(true);
+    setCouponMessage("");
+
+    try {
+      const result = await applyCoupon(code);
+      setCouponMessage(result.message);
+    } catch (error) {
+      setCouponMessage("Failed to apply coupon");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  // ✅ Remove item
+  const handleRemove = (itemId) => {
+    removeFromCart(itemId);
+  };
+
+  // ✅ Update quantity
+  const handleQuantity = (itemId, qty) => {
+    if (qty < 1) return;
+    updateQuantity(itemId, qty);
+  };
+
+  // ✅ Payment handler
   const handlePayment = async () => {
     if (cart.length === 0) {
       alert("Your cart is empty!");
@@ -42,18 +108,23 @@ function Cart(){
 
     try {
       const orderData = {
-        tableNumber: 1, // Can be made dynamic based on QR code
+        tableNumber: 1,
         items: cart.map(item => ({
           name: item.name,
-          price: item.discount && item.discount > 0 
-            ? item.price - (item.price * item.discount / 100) 
-            : item.price,
+          price: calculateDiscountedPrice(item.price, item.discount),
+          quantity: item.quantity || 1,
           foodType: item.foodType
         })),
-        total: total
+        total: finalTotal,
+        couponCode: appliedCoupon ? appliedCoupon.code : null,
+        discountPercent: appliedCoupon ? appliedCoupon.discountPercent : 0,
+        discountAmount: couponDiscount
       };
 
-      const response = await fetch("http://localhost:5000/api/orders/create", {
+      console.log("API URL:", `${API_BASE_URL}/api/orders/create`);
+      console.log("Order Data:", orderData);
+
+      const response = await fetch(`${API_BASE_URL}/api/orders/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -63,153 +134,158 @@ function Cart(){
 
       if (response.ok) {
         const order = await response.json();
-        alert(`Payment Successful! Order placed with Token Number: ${order.tokenNumber}`);
-        setCart([]); // Clear cart after successful order
+
+        alert(
+          `✅ Order placed!\nToken: ${order.tokenNumber}\nTime: ${order.preparingTime || 15} mins`
+        );
+
+        clearCart(); // ✅ FIXED (no setCart error)
         navigate("/");
       } else {
-        alert("Failed to place order. Please try again.");
+        alert("❌ Failed to place order");
       }
+
     } catch (error) {
       console.error("Error placing order:", error);
-      alert("Error placing order. Please try again.");
+      alert("❌ Error placing order");
     } finally {
       setLoading(false);
     }
   };
 
-  return(
+  return (
     <div style={{ padding: "15px", maxWidth: "600px", margin: "0 auto" }}>
+      <h2 style={{ textAlign: "center" }}>Your Cart</h2>
 
-      <h2 style={{ marginBottom: "15px", textAlign: "center", fontSize: "1.5rem" }}>Your Cart</h2>
+      {cart.length === 0 && (
+        <>
+          <p style={{ textAlign: "center" }}>Cart is empty</p>
+        </>
+      )}
 
-      {cart.length === 0 && <p style={{ textAlign: "center" }}>Cart is empty</p>}
+      {cart.map((item) => (
+        <div key={item._id} style={{
+          border: "1px solid #ddd",
+          padding: "10px",
+          marginBottom: "10px",
+          borderRadius: "8px"
+        }}>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-        {cart.map((item,index)=>(
-          <div 
-            key={index} 
-            style={{
-              border: "1px solid #ddd",
-              padding: "12px",
-              borderRadius: "8px",
-              display: "flex",
-              gap: "15px",
-              backgroundColor: "#fff",
-              alignItems: "center"
-            }}
+          <h4>{item.name}</h4>
+
+          <p>
+            ₹{calculateDiscountedPrice(item.price, item.discount)} × {item.quantity || 1}
+          </p>
+
+          <div>
+            <button onClick={() => handleQuantity(item._id, (item.quantity || 1) - 1)}>-</button>
+            <span style={{ margin: "0 10px" }}>{item.quantity || 1}</span>
+            <button onClick={() => handleQuantity(item._id, (item.quantity || 1) + 1)}>+</button>
+          </div>
+
+          <button
+            onClick={() => handleRemove(item._id)}
+            style={{ marginTop: "5px", background: "red", color: "white" }}
           >
-            {/* Image - Normal Size */}
-            <div style={{ flexShrink: 0 }}>
-              <img 
-                src={item.image ? (item.image.startsWith('http') ? item.image : `http://localhost:5000/uploads/${item.image}`) : "/images/default-food.png"}
-                alt={item.name}
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  objectFit: "cover",
-                  borderRadius: "6px"
-                }}
-              />
-            </div>
+            Remove
+          </button>
+        </div>
+      ))}
 
-            {/* Item Details */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <h4 style={{ margin: 0, fontSize: "1rem" }}>{item.name}</h4>
-                {item.foodType && (
-                  <span 
+      {/* Coupon Section */}
+      {cart.length > 0 && (
+        <div style={{ margin: "15px 0", padding: "15px", border: "1px solid #ddd", borderRadius: "8px" }}>
+          {/* Available Coupons */}
+          {availableCoupons.length > 0 && !appliedCoupon && (
+            <div style={{ marginBottom: "15px" }}>
+              <h4 style={{ margin: "0 0 10px" }}>🎟️ Available Offers</h4>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {availableCoupons.map((coupon) => (
+                  <button
+                    key={coupon._id}
+                    onClick={() => handleSelectCoupon(coupon.code)}
+                    disabled={couponLoading || total < coupon.minOrderAmount}
                     style={{
-                      background: item.foodType === 'veg' ? '#22c55e' : '#dc2626',
-                      color: 'white',
-                      padding: '1px 6px',
-                      borderRadius: '4px',
-                      fontSize: '0.65rem',
-                      fontWeight: '600'
+                      padding: "8px 12px",
+                      border: "1px solid #2e7d32",
+                      borderRadius: "20px",
+                      background: total >= coupon.minOrderAmount ? "#e8f5e9" : "#f5f5f5",
+                      color: total >= coupon.minOrderAmount ? "#2e7d32" : "#999",
+                      cursor: total >= coupon.minOrderAmount ? "pointer" : "not-allowed",
+                      fontSize: "12px",
+                      fontWeight: "bold"
                     }}
                   >
-                    {item.foodType === 'veg' ? '● Veg' : '● Non-Veg'}
-                  </span>
-                )}
-              </div>
-              
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.9rem" }}>
-                {item.discount && item.discount > 0 ? (
-                  <>
-                    <span style={{ textDecoration: "line-through", color: "#999", fontSize: "0.8rem" }}>₹{item.price}</span>
-                    <span style={{ color: "#22c55e", fontWeight: "bold" }}>
-                      ₹{Math.round(item.price - (item.price * item.discount / 100))}
-                    </span>
-                    <span style={{ background: "#22c55e", color: "white", padding: "1px 4px", borderRadius: "4px", fontSize: "0.65rem" }}>
-                      {item.discount}%
-                    </span>
-                  </>
-                ) : (
-                  <span style={{ fontWeight: "bold" }}>₹{item.price}</span>
-                )}
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", border: "1px solid #ddd", borderRadius: "6px", padding: "2px 8px" }}>
-                  <button 
-                    onClick={() => updateQuantity(index, (item.quantity || 1) - 1)}
-                    style={{ border: "none", background: "transparent", cursor: "pointer", fontSize: "1rem", padding: "0" }}
-                  >
-                    -
+                    {coupon.code} - {coupon.discountPercent}% OFF
                   </button>
-                  <span style={{ minWidth: "15px", textAlign: "center", fontSize: "0.9rem" }}>{item.quantity || 1}</span>
-                  <button 
-                    onClick={() => updateQuantity(index, (item.quantity || 1) + 1)}
-                    style={{ border: "none", background: "transparent", cursor: "pointer", fontSize: "1rem", padding: "0" }}
-                  >
-                    +
-                  </button>
-                </div>
-
-                <span style={{ fontWeight: "bold", fontSize: "0.9rem" }}>₹{Math.round((item.discount && item.discount > 0 ? item.price - (item.price * item.discount / 100) : item.price) * (item.quantity || 1))}</span>
-
-                <button 
-                  onClick={()=>removeItem(index)}
-                  style={{
-                    background: "#dc2626",
-                    color: "white",
-                    border: "none",
-                    padding: "4px 10px",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontSize: "0.8rem"
-                  }}
-                >
-                  ✕
-                </button>
+                ))}
               </div>
+              <p style={{ fontSize: "11px", color: "#666", marginTop: "5px" }}>
+                * Tap an offer to apply it
+              </p>
             </div>
-          </div>
-        ))}
-      </div>
+          )}
 
-      <div style={{ marginTop: "20px", textAlign: "center" }}>
-        <h3>Total: ₹{Math.round(total)}</h3>
+          <h4 style={{ margin: "0 0 10px" }}>Have a coupon?</h4>
+          {appliedCoupon ? (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ color: "green", fontWeight: "bold" }}>
+                ✓ {appliedCoupon.code} applied (-₹{couponDiscount})
+              </span>
+              <button
+                onClick={handleRemoveCoupon}
+                style={{ background: "red", color: "white", border: "none", padding: "5px 10px", borderRadius: "4px" }}
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: "10px" }}>
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                placeholder="Enter coupon code"
+                style={{ flex: 1, padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
+              />
+              <button
+                onClick={handleApplyCoupon}
+                disabled={couponLoading}
+                style={{ padding: "8px 15px", background: "#2e7d32", color: "white", border: "none", borderRadius: "4px" }}
+              >
+                {couponLoading ? "Applying..." : "Apply"}
+              </button>
+            </div>
+          )}
+          {couponMessage && (
+            <p style={{ margin: "10px 0 0", color: couponMessage.includes("save") ? "green" : "red", fontSize: "14px" }}>
+              {couponMessage}
+            </p>
+          )}
+        </div>
+      )}
 
-        <button 
-          onClick={handlePayment} 
-          disabled={loading}
-          style={{ 
-            padding: "12px 25px", 
-            fontSize: "1rem", 
-            cursor: loading ? "not-allowed" : "pointer",
-            background: "#2e7d32",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            marginTop: "10px"
-          }}
-        >
-          {loading ? "Processing..." : "Proceed to Pay ₹" + Math.round(total)}
-        </button>
-      </div>
+      <h3 style={{ textAlign: "center" }}>
+        Total: <s>₹{Math.round(total)}</s> ₹{Math.round(finalTotal)}
+        {couponDiscount > 0 && <span style={{ color: "green", marginLeft: "10px" }}>(You save ₹{couponDiscount})</span>}
+      </h3>
 
+      <button
+        onClick={handlePayment}
+        disabled={loading}
+        style={{
+          width: "100%",
+          padding: "12px",
+          background: "#2e7d32",
+          color: "white",
+          border: "none",
+          borderRadius: "8px"
+        }}
+      >
+        {loading ? "Processing..." : `Pay ₹${Math.round(finalTotal)}`}
+      </button>
     </div>
-  )
+  );
 }
 
-export default Cart
+export default Cart;

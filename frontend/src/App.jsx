@@ -9,14 +9,17 @@ import CreateCategory from "./pages/CreateCategory"
 import QRGenerator from "./pages/QRGenerator"
 import EditRestaurant from "./pages/EditRestaurant"
 import Kitchen from "./pages/Kitchen"
-import Cart from "./pages/Cart";
+import Cart from "./pages/cart";
 import Breakfast from "./pages/Breakfast"
 import Burgers from "./pages/Burgers"
 import EditMenuItem from "./pages/EditMenuItem"
+import CouponManagement from "./pages/CouponManagement"
+import { CartProvider } from "./context/CartContext"
 
 function App() {
   return (
     <BrowserRouter>
+      <CartProvider>
 
       <Routes>
 
@@ -35,6 +38,7 @@ function App() {
         <Route path="/admin/create-category" element={<CreateCategory />} />
         <Route path="/admin/add-item" element={<AddMenuItem />} />
         <Route path="/admin/qr-generator" element={<QRGenerator />} />
+        <Route path="/admin/coupons" element={<CouponManagement />} />
         
         <Route path="/add-item" element={<AddMenuItem />} />
 
@@ -46,6 +50,7 @@ function App() {
 
       </Routes>
 
+      </CartProvider>
     </BrowserRouter>
   )
 }

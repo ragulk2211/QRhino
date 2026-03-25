@@ -1,18 +1,13 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import Header from "../components/Header"
+import API_BASE_URL from "../config"
 import "../styles/home.css"
-
-import mainImg from "../assets/images/maincourse.webp"
-import breakfastImg from "../assets/images/breakfast.webp"
-import pizzaImg from "../assets/images/pizza.webp"
-import dessertImg from "../assets/images/desserts.webp"
-import drinksImg from "../assets/images/drinks.webp"
+import Advertisement from "../components/Advertisement"
 
 function Home() {
   const navigate = useNavigate()
-  const [featuredItems, setFeaturedItems] = useState([])
   const [restaurants, setRestaurants] = useState([])
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [showExpertModal, setShowExpertModal] = useState(false)
@@ -24,16 +19,83 @@ function Home() {
   })
   const [formSubmitted, setFormSubmitted] = useState(false)
 
+  // Category icons mapping
+  const categoryIcons = {
+    'salad': '🥗',
+    'soups': '🍲',
+    'starters': '🍟',
+    'burgers': '🍔',
+    'pizza': '🍕',
+    'maincourse': '🍖',
+    'biryani': '🍚',
+    'desserts': '🍰',
+    'beverages': '🥤',
+    'drinks': '🍹',
+    'breakfast': '🍳',
+    'lunch': '🥘',
+    'dinner': '🍝',
+    'arabic-food': '🥙',
+    'ice-cream': '🍦',
+    'shakes': '🥤',
+    'others': '🍽️'
+  }
+
+  const categoryColors = {
+    'salad': '#22c55e',
+    'soups': '#f59e0b',
+    'starters': '#ef4444',
+    'burgers': '#8b5cf6',
+    'pizza': '#ec4899',
+    'maincourse': '#f97316',
+    'biryani': '#eab308',
+    'desserts': '#a855f7',
+    'beverages': '#06b6d4',
+    'drinks': '#14b8a6',
+    'breakfast': '#f59e0b',
+    'lunch': '#84cc16',
+    'dinner': '#6366f1',
+    'arabic-food': '#f43f5e',
+    'ice-cream': '#e879f9',
+    'shakes': '#38bdf8',
+    'others': '#6b7280'
+  }
+
   // Fetch restaurants from backend
   useEffect(() => {
     fetchRestaurants()
-    fetchFeaturedItems()
+    fetchCategories()
   }, [])
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/menu`)
+      const data = await res.json()
+      
+      // Group menu items by category and count them
+      const categoryCount = {}
+      data.forEach(item => {
+        const cat = item.category?.toLowerCase() || 'others'
+        categoryCount[cat] = (categoryCount[cat] || 0) + 1
+      })
+      
+      // Create category list with counts
+      const categoryList = Object.keys(categoryCount).map(cat => ({
+        name: cat,
+        count: categoryCount[cat],
+        icon: categoryIcons[cat] || '🍽️',
+        color: categoryColors[cat] || '#6b7280'
+      }))
+      
+      setCategories(categoryList)
+    } catch (error) {
+      console.error("Error fetching categories:", error)
+    }
+  }
 
   const fetchRestaurants = async () => {
     try {
       setLoading(true)
-      const res = await fetch("http://localhost:5000/api/restaurants")
+      const res = await fetch(`${API_BASE_URL}/api/restaurants`)
       if (!res.ok) throw new Error("Failed to fetch")
       const data = await res.json()
       setRestaurants(data)
@@ -47,69 +109,9 @@ function Home() {
     }
   }
 
-  const categories = [
-    {
-      title: "Main Courses",
-      desc: "Hearty plates for every craving",
-      img: mainImg,
-      page: "/menu/main",
-      color: "#c49a6c",
-      icon: "🍖"
-    },
-    {
-      title: "Breakfast",
-      desc: "Morning favorites to start fresh",
-      img: breakfastImg,
-      page: "/breakfast",
-      color: "#f39c12",
-      icon: "🍳"
-    },
-    {
-      title: "Pizza",
-      desc: "Hand tossed pies with bold toppings",
-      img: pizzaImg,
-      page: "/pizza",
-      color: "#e74c3c",
-      icon: "🍕"
-    },
-    {
-      title: "Desserts",
-      desc: "Sweet bites to treat yourself",
-      img: dessertImg,
-      page: "/desserts",
-      color: "#e67e22",
-      icon: "🍰"
-    },
-    {
-      title: "Beverages",
-      desc: "Cool drinks to refresh your day",
-      img: drinksImg,
-      page: "/beverages",
-      color: "#3498db",
-      icon: "🥤"
-    }
-  ]
-
-  // Fetch featured items
-  useEffect(() => {
-    fetchFeaturedItems()
-  }, [])
-
-  const fetchFeaturedItems = async () => {
-    try {
-      setLoading(true)
-      const res = await fetch("http://localhost:5000/api/menu/featured")
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`)
-      }
-      const data = await res.json()
-      setFeaturedItems(data.slice(0, 4))
-    } catch (error) {
-      console.error("Error fetching featured items:", error)
-      alert("Backend server is not connected. Please start the backend server and try again.")
-    } finally {
-      setLoading(false)
-    }
+  // Handle category click - navigate to menu with category filter
+  const handleCategoryClick = (categoryName) => {
+    navigate(`/menu/main?category=${categoryName}`)
   }
 
   // Handle expert consultation form
@@ -146,18 +148,17 @@ function Home() {
     }
   }
 
-  // Handle category click with animation
-  const handleCategoryClick = (page) => {
-    navigate(page)
-  }
-
   return (
     <div className="home-container">
-      <Header onSearch={handleSearch} />
 
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
+          {/* Logo */}
+          <div className="hero-logo">
+            <span className="logo-icon">🍽️</span>
+            <span className="logo-text">QRhino</span>
+          </div>
           <h1 className="hero-title">
             <span className="hero-title-main">Discover</span>
             <span className="hero-title-accent">Extraordinary Flavors</span>
@@ -168,11 +169,7 @@ function Home() {
           <div className="hero-buttons">
             <button 
               className="hero-btn primary"
-              onClick={() => {
-                document.getElementById('categories').scrollIntoView({ 
-                  behavior: 'smooth' 
-                })
-              }}
+              onClick={() => navigate('/menu/main')}
             >
               Explore Menu
             </button>
@@ -206,43 +203,14 @@ function Home() {
         </div>
       </section>
 
-      {/* Categories Section - Hidden, showing only restaurants */}
-      {/*}
-      <section id="categories" className="categories-section">
-        <div className="section-header">
-          <h2 className="section-title">Our Categories</h2>
-          <p className="section-subtitle">Explore our diverse range of culinary delights</p>
-        </div>
-
-        <div className="categories-grid">
-          {categories.map((cat, i) => (
-            <div
-              key={i}
-              className="category-card"
-              onClick={() => handleCategoryClick(cat.page)}
-              style={{ '--category-color': cat.color }}
-            >
-              <div className="category-image-wrapper">
-                <img 
-                  src={cat.img} 
-                  alt={cat.title} 
-                  className="category-image"
-                  loading="lazy"
-                />
-                <div className="category-overlay">
-                  <span className="category-icon">{cat.icon}</span>
-                  <span className="category-explore">Explore →</span>
-                </div>
-              </div>
-              <div className="category-content">
-                <h3 className="category-title">{cat.title}</h3>
-                <p className="category-desc">{cat.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Active Coupons/Offers Section */}
+      <section style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+        <Advertisement 
+          useBackend={true} 
+          animation="slideUp"
+          showScanner={false}
+        />
       </section>
-      {/* */}
 
       {/* Restaurants Section - Main focus */}
       <section className="restaurants-section" style={{ paddingTop: '2rem' }}>
@@ -265,7 +233,7 @@ function Home() {
               >
                 {restaurant.image ? (
                   <img 
-                    src={restaurant.image.startsWith('http') ? restaurant.image : `http://localhost:5000/uploads/${restaurant.image}`}
+                    src={restaurant.image.startsWith('http') ? restaurant.image : `${API_BASE_URL}/uploads/${restaurant.image}`}
                     alt={restaurant.name}
                     className="restaurant-image"
                   />
@@ -285,41 +253,7 @@ function Home() {
         )}
       </section>
 
-      {/* Featured Items Section */}
-      {featuredItems.length > 0 && (
-        <section className="featured-section">
-          <div className="section-header">
-            <h2 className="section-title">Featured Dishes</h2>
-            <p className="section-subtitle">Most popular items from our menu</p>
-          </div>
-
-          <div className="featured-grid">
-            {featuredItems.map((item) => (
-              <div 
-                key={item._id} 
-                className="featured-card"
-                onClick={() => navigate(`/menu/item/${item._id}`)}
-              >
-                <img 
-                  src={item.image ? `http://localhost:5000${item.image}` : '/default-food.jpg'} 
-                  alt={item.name}
-                  className="featured-image"
-                />
-                <div className="featured-content">
-                  <h3>{item.name}</h3>
-                  <p>{item.desc.substring(0, 60)}...</p>
-                  <div className="featured-meta">
-                    <span className="featured-price">₹{item.price}</span>
-                    <span className="featured-category">{item.category}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Expert Consultation Modal */}
+      {/* Featured Restaurants Section - continues below */}
       {showExpertModal && (
         <div className="modal-overlay" onClick={() => setShowExpertModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -430,6 +364,69 @@ function Home() {
       >
         ↑
       </button>
+
+      {/* Footer with Animation */}
+      <footer className="home-footer">
+        <div className="footer-wave">
+          <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="footer-wave-shape"></path>
+          </svg>
+        </div>
+        <div className="footer-content">
+          <div className="footer-logo">
+            <span className="logo-icon">🍽️</span>
+            <span className="logo-text">QRhino</span>
+          </div>
+          <p className="footer-tagline">
+            ✨ Scan • Order • Enjoy ✨
+          </p>
+          
+          <div className="footer-grid">
+            <div className="footer-section">
+              <h4>📞 Contact Us</h4>
+              <p>Phone: +91 98765 43210</p>
+              <p>WhatsApp: +91 98765 43211</p>
+              <p>Email: support@qrhino.com</p>
+            </div>
+            <div className="footer-section">
+              <h4>🕐 Operating Hours</h4>
+              <p>Monday - Friday: 9AM - 11PM</p>
+              <p>Saturday - Sunday: 10AM - 12AM</p>
+              <p> Holidays: 10AM - 10PM</p>
+            </div>
+            <div className="footer-section">
+              <h4>📍 Our Locations</h4>
+              <p>Main Branch: Downtown</p>
+              <p>Branch 2: Westside Mall</p>
+              <p>Branch 3: Airport Road</p>
+            </div>
+            <div className="footer-section">
+              <h4>🍕 Popular Categories</h4>
+              <p>Burgers • Pizzas • Biryani</p>
+              <p>Desserts • Beverages</p>
+              <p>Starters • Main Course</p>
+            </div>
+          </div>
+          
+          <div className="footer-social">
+            <span className="social-icon">📘</span>
+            <span className="social-icon">📸</span>
+            <span className="social-icon">🐦</span>
+            <span className="social-icon">💼</span>
+          </div>
+          
+          <div className="footer-links">
+            <button onClick={() => navigate("/menu/main")}>🍴 Menu</button>
+            <button onClick={() => navigate("/cart")}>🛒 Cart</button>
+            <button onClick={() => navigate("/kitchen")}>👨‍🍳 Kitchen</button>
+            <button onClick={() => navigate("/admin")}>⚙️ Admin</button>
+          </div>
+          
+          <p className="footer-copyright">
+            © 2024 QRhino. All rights reserved. Made with ❤️
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }

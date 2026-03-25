@@ -2,26 +2,26 @@
 
 /* CSS Variables with better organization */
 :root {
-  /* Colors - Cream/Gold Theme */
+  /* Colors - Primary - Warm Gold Theme */
   --color-primary: #b88b4a;
   --color-primary-dark: #9c6e3d;
-  --color-primary-light: #e6d5b8;
+  --color-primary-light: #d4a373;
   --color-primary-alpha: rgba(184, 139, 74, 0.1);
   --color-primary-alpha-medium: rgba(184, 139, 74, 0.2);
   --color-primary-alpha-strong: rgba(184, 139, 74, 0.3);
   
   /* Colors - Text */
-  --color-text-dark: #5e4b3c;
-  --color-text-muted: #8b7a6b;
-  --color-text-light: #b8a99a;
+  --color-text-dark: #374151;
+  --color-text-muted: #6b7280;
+  --color-text-light: #9ca3af;
   --color-text-white: #ffffff;
   
   /* Colors - Background */
-  --color-bg-white: #fffaf2;
-  --color-bg-light: #fdf5e6;
-  --color-bg-soft: #faf7f2;
-  --color-bg-overlay: rgba(94, 75, 60, 0.95);
-  --color-bg-scrolled: rgba(255, 250, 242, 0.98);
+  --color-bg-white: #ffffff;
+  --color-bg-light: #f9fafb;
+  --color-bg-soft: #f3f4f6;
+  --color-bg-overlay: rgba(0, 0, 0, 0.95);
+  --color-bg-scrolled: rgba(255, 255, 255, 0.98);
   
   /* Colors - Border */
   --color-border: #f0e5d8;
@@ -85,15 +85,12 @@
 /* Header Styles */
 .header {
   width: 100%;
-  background: var(--color-bg-white);
-  box-shadow: var(--shadow-sm);
-  z-index: 100;
+  background: #1a1a2e;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  position: sticky;
+  top: 0;
   transition: var(--transition-default);
-  border-bottom: 1px solid var(--color-border);
-  /* Performance optimization */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  transform: translateZ(0);
 }
 
 .header.scrolled {
@@ -118,10 +115,20 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
+  gap: 0.5rem;
   transition: var(--transition-default);
   flex-shrink: 0;
   text-decoration: none;
+}
+
+.logo-icon {
+  font-size: 1.5rem;
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
 }
 
 .logo:focus-visible {
@@ -142,10 +149,6 @@
   color: var(--color-text-dark);
   margin: 0;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, var(--color-text-dark), var(--color-primary));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 @supports not (background-clip: text) {
@@ -238,7 +241,6 @@
 
 .search-input::placeholder {
   color: var(--color-text-muted);
-  opacity: 0.7;
 }
 
 .clear-search {
@@ -311,20 +313,22 @@
   align-items: center;
   gap: var(--spacing-md);
   padding: var(--spacing-md) var(--spacing-xl);
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  color: var(--color-text-white);
+  background: #e94560 !important;
+  color: #ffffff !important;
   border: none;
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: var(--transition-default);
   font-weight: 600;
   font-size: var(--font-size-md);
-  box-shadow: var(--shadow-primary);
+  box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
   position: relative;
   line-height: 1;
   white-space: nowrap;
   min-width: 90px;
   justify-content: center;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .cart-button:focus-visible {
@@ -368,8 +372,8 @@
   position: absolute;
   top: -8px;
   right: -8px;
-  background: var(--color-primary-dark);
-  color: var(--color-text-white);
+  background: #ffffff !important;
+  color: #e94560 !important;
   font-size: var(--font-size-xs);
   font-weight: 700;
   min-width: 20px;
@@ -378,10 +382,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--color-bg-white);
+  border: 2px solid #1a1a2e;
   padding: 0 4px;
   box-sizing: content-box;
   animation: popIn 0.3s ease;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 @keyframes popIn {

@@ -150,6 +150,88 @@
   box-shadow: 0 4px 16px rgba(232, 201, 107, 0.2);
 }
 
+/* ── All QR Codes Section ── */
+.all-qr-container {
+  margin-top: 2.5rem;
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.all-qr-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.all-qr-header h2 {
+  font-size: 1.4rem;
+  margin: 0;
+  color: #e8c96b;
+}
+
+.qr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.qr-card {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.qr-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.qr-card .qr-image {
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 1rem;
+  border: 3px solid #e8c96b;
+  border-radius: 8px;
+}
+
+.qr-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.3rem;
+  color: #fff;
+}
+
+.qr-location {
+  font-size: 0.8rem;
+  color: #888;
+  margin: 0 0 0.8rem;
+}
+
+.btn-download-link {
+  display: inline-block;
+  background: #e8c96b;
+  color: #000;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.btn-download-link:hover {
+  background: #f0d87a;
+}
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .admin-page {
@@ -166,5 +248,19 @@
 
   .qr-container {
     max-width: 100%;
+  }
+
+  .all-qr-container {
+    padding: 1rem;
+  }
+
+  .qr-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .qr-card .qr-image {
+    width: 120px;
+    height: 120px;
   }
 }

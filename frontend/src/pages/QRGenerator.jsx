@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
+import API_BASE_URL from "../config"
 import "../styles/admin.css"
 import "../styles/QRCodeGenerator.css"
 
@@ -12,9 +13,11 @@ function QRGenerator() {
   const [selectedId, setSelectedId] = useState(preselectedId || "")
   const [qrSrc, setQrSrc] = useState(null)
   const [menuUrl, setMenuUrl] = useState("")
+  const [showAllQRCodes, setShowAllQRCodes] = useState(false)
+  const [allQRCodes, setAllQRCodes] = useState([])
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/restaurants")
+    fetch(`${API_BASE_URL}/api/restaurants`)
       .then(r => r.json())
       .then(data => {
         setRestaurants(data)
@@ -45,6 +48,34 @@ function QRGenerator() {
     link.click()
   }
 
+  function generateAllQRCodes() {
+    const baseUrl = window.location.origin
+    const qrData = restaurants.map(restaurant => {
+      const url = `${baseUrl}/menu?restaurantId=${restaurant._id}`
+      const encoded = encodeURIComponent(url)
+      return {
+        id: restaurant._id,
+        name: restaurant.name,
+        location: restaurant.location,
+        url: url,
+        qrSrc: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encoded}`
+      }
+    })
+    setAllQRCodes(qrData)
+    setShowAllQRCodes(true)
+  }
+
+  function downloadAllQRCodes() {
+    allQRCodes.forEach((qr, index) => {
+      setTimeout(() => {
+        const link = document.createElement("a")
+        link.href = qr.qrSrc
+        link.download = `${qr.name.replace(/\s+/g, '-')}-menu-qr.png`
+        link.click()
+      }, index * 500)
+    })
+  }
+
   return (
     <div className="admin-page">
       <div className="admin-header">
@@ -63,6 +94,9 @@ function QRGenerator() {
         </div>
         <div className="form-actions">
           <button className="btn-submit" onClick={generateQR} disabled={!selectedId}>Generate QR</button>
+          <button className="btn-submit" onClick={generateAllQRCodes} disabled={restaurants.length === 0}>
+            Generate All QR Codes
+          </button>
         </div>
       </div>
 
@@ -73,6 +107,27 @@ function QRGenerator() {
           <img src={qrSrc} alt="QR Code" className="qr-image" />
           <br />
           <button className="btn-submit" onClick={downloadQR}>⬇ Download QR</button>
+        </div>
+      )}
+
+      {showAllQRCodes && (
+        <div className="all-qr-container">
+          <div className="all-qr-header">
+            <h2>All Restaurant QR Codes</h2>
+            <button className="btn-submit" onClick={downloadAllQRCodes}>⬇ Download All</button>
+          </div>
+          <div className="qr-grid">
+            {allQRCodes.map(qr => (
+              <div key={qr.id} className="qr-card">
+                <img src={qr.qrSrc} alt={`${qr.name} QR Code`} className="qr-image" />
+                <p className="qr-name">{qr.name}</p>
+                <p className="qr-location">{qr.location}</p>
+                <a href={qr.qrSrc} download={`${qr.name.replace(/\s+/g, '-')}-menu-qr.png`} className="btn-download-link">
+                  Download
+                </a>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

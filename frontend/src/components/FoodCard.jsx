@@ -1,8 +1,12 @@
-import { useState } from "react"
+import { useState, useContext } from "react"
 import FoodModal from "./FoodModal"
+import { CartContext } from "../context/CartContext"
+import API_BASE_URL from "../config"
+import { calculateDiscountedPrice } from "../utils/priceUtils"
 import "../styles/foodcard.css"
 
 function FoodCard({ item, onDelete }) {
+  const { addToCart } = useContext(CartContext)
   const [added, setAdded] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -12,20 +16,9 @@ function FoodCard({ item, onDelete }) {
   function handleCart(e) {
     e.stopPropagation()
     setAdded(true)
-
-    // Get existing cart from localStorage
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]")
     
-    // Check if item already in cart
-    const existingItem = cart.find(i => i._id === item._id)
-    
-    if (existingItem) {
-      existingItem.quantity = (existingItem.quantity || 1) + 1
-    } else {
-      cart.push({ ...item, quantity: 1 })
-    }
-    
-    localStorage.setItem("cart", JSON.stringify(cart))
+    // Use context to add to cart
+    addToCart(item)
 
     setTimeout(() => {
       setAdded(false)
@@ -33,16 +26,16 @@ function FoodCard({ item, onDelete }) {
   }
 
   const getImageUrl = () => {
-    if (imageError) return "/images/default-food.png"
+    if (imageError) return "/images/burger2.webp"
     // Check if it's a full URL already
     if (item.image && item.image.startsWith('http')) {
       return item.image
     }
     // Check if it's a stored filename (without path)
     if (item.image) {
-      return `http://localhost:5000/uploads/${item.image}`
+      return `${API_BASE_URL}/uploads/${item.image}`
     }
-    return "/images/default-food.png"
+    return "/images/burger2.webp"
   }
 
   return (
@@ -104,7 +97,7 @@ function FoodCard({ item, onDelete }) {
                 {item.discount && item.discount > 0 ? (
                   <>
                     <span className="original-price" style={{ textDecoration: 'line-through', color: '#999', fontSize: '0.8rem' }}>₹{item.price}</span>
-                    <span className="discounted-price" style={{ color: '#22c55e', fontWeight: 'bold' }}>₹{Math.round(item.price - (item.price * item.discount / 100))}</span>
+                    <span className="discounted-price" style={{ color: '#22c55e', fontWeight: 'bold' }}>₹{Math.round(calculateDiscountedPrice(item.price, item.discount))}</span>
                   </>
                 ) : (
                   <span className="meta-value">₹{item.price}</span>

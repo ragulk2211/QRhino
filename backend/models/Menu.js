@@ -11,9 +11,14 @@ const MenuSchema = new mongoose.Schema({
     max: 100
   },
   category: String,
+  categoryId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category",
+    default: null
+  },
   image: String,
-  kcal: String,
-  time: String,
+  kcal: Number,
+  time: Number,
   foodType: {
     type: String,
     enum: ['veg', 'non-veg'],

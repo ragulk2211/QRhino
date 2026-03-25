@@ -22,13 +22,14 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage })
 
-// GET all menu items (optionally filter by restaurantId and foodType)
+// GET all menu items (optionally filter by restaurantId, category and foodType)
 router.get("/", async (req, res) => {
   try {
-    const { restaurantId, foodType } = req.query
+    const { restaurantId, foodType, category } = req.query
     const filter = {}
     if (restaurantId) filter.restaurantId = restaurantId
     if (foodType) filter.foodType = foodType
+    if (category) filter.category = new RegExp(category, 'i') // Case-insensitive match
     const menu = await Menu.find(filter).sort({ createdAt: -1 })
     res.json(menu)
   } catch (error) {
@@ -51,26 +52,53 @@ router.get("/featured", async (req, res) => {
 // POST create menu item with optional image upload
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { name, desc, price, discount, category, kcal, time, restaurantId, foodType } = req.body
+    let {
+      name,
+      desc,
+      price,
+      discount,
+      category,
+      categoryId,
+      kcal,
+      time,
+      restaurantId,
+      foodType
+    } = req.body
+
+    // ✅ FIX: Convert types with validation (prevents NaN)
+    price = Number(price) || 0
+    discount = Number(discount) || 0
+    kcal = Number(kcal) || 0
+    time = Number(time) || 0
+
+    // Debug log (only in development)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("BODY:", req.body)
+      console.log("FILE:", req.file)
+    }
+
     const image = req.file ? req.file.filename : null
 
-    const menuItem = new Menu({ 
-      name, 
-      desc, 
-      price, 
-      discount: discount || 0, 
-      category, 
-      kcal, 
-      time, 
-      image, 
-      restaurantId: restaurantId || null, 
-      foodType: foodType || 'veg' 
+    const menuItem = new Menu({
+      name,
+      desc,
+      price,
+      discount,
+      category,
+      categoryId: categoryId || null,
+      kcal,
+      time,
+      image,
+      restaurantId: restaurantId || null,
+      foodType: foodType || "veg"
     })
+
     await menuItem.save()
 
     res.status(201).json(menuItem)
+
   } catch (error) {
-    console.error("Error creating menu item:", error.message)
+    console.error("❌ FULL ERROR:", error) // 👈 VERY IMPORTANT
     res.status(500).json({ error: error.message })
   }
 })
@@ -78,10 +106,10 @@ router.post("/", upload.single("image"), async (req, res) => {
 // PUT update menu item
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
-    const { name, desc, price, discount, category, kcal, time, restaurantId, foodType } = req.body
+    const { name, desc, price, discount, category, categoryId, kcal, time, restaurantId, foodType } = req.body
     const image = req.file ? req.file.filename : undefined
 
-    const updateData = { name, desc, price, discount, category, kcal, time, restaurantId, foodType }
+    const updateData = { name, desc, price, discount, category, categoryId, kcal, time, restaurantId, foodType }
     if (image) {
       updateData.image = image
     }

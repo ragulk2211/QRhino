@@ -13,6 +13,7 @@ const categoryRoutes = require("./routes/categoryRoutes")
 const Restaurant = require("./models/Restaurant")
 const Menu = require("./models/Menu")
 const orderRoutes = require("./routes/orderRoutes")
+const couponRoutes = require("./routes/couponRoutes")
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -29,6 +30,7 @@ app.use("/api/restaurants", restaurantRoutes)
 app.use("/api/payments", paymentRoutes)
 app.use("/api/categories", categoryRoutes)
 app.use("/api/orders", orderRoutes)
+app.use("/api/coupons", couponRoutes)
 
 /* 404 */
 app.use((req, res) => {

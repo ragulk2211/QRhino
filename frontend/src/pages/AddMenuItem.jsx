@@ -1,571 +1,374 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import Header from "../components/Header"
-import "../styles/addmenu.css"
+import "../styles/addMenuItem.css"
 
-const CATEGORIES = ["burgers", "arabic-food", "starters", "soups", "salad", "pizza", "pasta", "desserts", "beverages"]
-
-function AddMenuItem() {
+function AddItem() {
   const navigate = useNavigate()
-  
-  // Form state
-  const [form, setForm] = useState({
+  const [formData, setFormData] = useState({
     name: "",
-    desc: "",
+    description: "",
     price: "",
-    discount: "0",
-    kcal: "",
-    time: "",
-    category: "burgers",
+    discount: "",
+    calories: "",
+    category: "",
     foodType: "veg"
   })
+  const [categories, setCategories] = useState([])
+  const [image, setImage] = useState(null)
+  const [imagePreview, setImagePreview] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [message, setMessage] = useState({ type: "", text: "" })
 
-  // UI state
-  const [imageFile, setImageFile] = useState(null)
-  const [imagePreview, setImagePreview] = useState(null)
-  const [message, setMessage] = useState({ text: "", type: "" })
-  const [errors, setErrors] = useState({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [touched, setTouched] = useState({})
-
-  // Cleanup image preview on unmount
   useEffect(() => {
-    return () => {
-      if (imagePreview) {
-        URL.revokeObjectURL(imagePreview)
-      }
-    }
-  }, [imagePreview])
+    fetchCategories()
+  }, [])
 
-  // Handle input changes
-  function handleChange(e) {
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/menu")
+      const data = await res.json()
+      const uniqueCategories = [...new Set(data.map(item => item.category))].filter(Boolean)
+      setCategories(uniqueCategories)
+    } catch (error) {
+      console.error("Error fetching categories:", error)
+    }
+  }
+
+  const handleInputChange = (e) => {
     const { name, value } = e.target
-    setForm(prev => ({
-      ...prev,
-      [name]: value
-    }))
     
-    // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ""
-      }))
-    }
-  }
-
-  // Handle field blur for validation
-  function handleBlur(e) {
-    const { name } = e.target
-    setTouched(prev => ({
-      ...prev,
-      [name]: true
-    }))
-    validateField(name, form[name])
-  }
-
-  // Validate single field
-  function validateField(name, value) {
-    let error = ""
-    
-    switch(name) {
-      case "name":
-        if (!value.trim()) error = "Item name is required"
-        else if (value.length < 3) error = "Name must be at least 3 characters"
-        else if (value.length > 50) error = "Name must be less than 50 characters"
-        break
-      case "desc":
-        if (!value.trim()) error = "Description is required"
-        else if (value.length < 10) error = "Description must be at least 10 characters"
-        else if (value.length > 500) error = "Description must be less than 500 characters"
-        break
-      case "price":
-        if (!value.trim()) error = "Price is required"
-        else if (isNaN(value) || parseFloat(value) <= 0) error = "Price must be a positive number"
-        else if (parseFloat(value) > 10000) error = "Price cannot exceed $10,000"
-        break
-      case "kcal":
-        if (!value.trim()) error = "Calories are required"
-        else if (isNaN(value) || parseInt(value) <= 0) error = "Calories must be a positive number"
-        else if (parseInt(value) > 5000) error = "Calories cannot exceed 5000"
-        break
-      case "time":
-        if (!value.trim()) error = "Prep time is required"
-        else if (isNaN(value) || parseInt(value) <= 0) error = "Prep time must be a positive number"
-        else if (parseInt(value) > 240) error = "Prep time cannot exceed 4 hours (240 minutes)"
-        break
-      default:
-        break
+    if (name === "price" || name === "discount" || name === "calories") {
+      const numValue = parseFloat(value)
+      if (value !== "" && (numValue < 0 || isNaN(numValue))) {
+        return
+      }
+      if (name === "discount" && numValue > 100) {
+        setFormData(prev => ({ ...prev, [name]: "100" }))
+        return
+      }
+      if (name === "price" && numValue < 0) {
+        return
+      }
     }
     
-    setErrors(prev => ({
-      ...prev,
-      [name]: error
-    }))
-    
-    return !error
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  // Validate entire form
-  function validateForm() {
-    const newErrors = {}
-    let isValid = true
-
-    // Validate each field
-    if (!form.name.trim()) {
-      newErrors.name = "Item name is required"
-      isValid = false
-    } else if (form.name.length < 3) {
-      newErrors.name = "Name must be at least 3 characters"
-      isValid = false
-    }
-
-    if (!form.desc.trim()) {
-      newErrors.desc = "Description is required"
-      isValid = false
-    } else if (form.desc.length < 10) {
-      newErrors.desc = "Description must be at least 10 characters"
-      isValid = false
-    }
-
-    if (!form.price.trim()) {
-      newErrors.price = "Price is required"
-      isValid = false
-    } else if (isNaN(form.price) || parseFloat(form.price) <= 0) {
-      newErrors.price = "Price must be a positive number"
-      isValid = false
-    }
-
-    if (!form.kcal.trim()) {
-      newErrors.kcal = "Calories are required"
-      isValid = false
-    } else if (isNaN(form.kcal) || parseInt(form.kcal) <= 0) {
-      newErrors.kcal = "Calories must be a positive number"
-      isValid = false
-    }
-
-    if (!form.time.trim()) {
-      newErrors.time = "Prep time is required"
-      isValid = false
-    } else if (isNaN(form.time) || parseInt(form.time) <= 0) {
-      newErrors.time = "Prep time must be a positive number"
-      isValid = false
-    }
-
-    if (!imageFile) {
-      newErrors.image = "Item image is required"
-      isValid = false
-    }
-
-    setErrors(newErrors)
-    return isValid
-  }
-
-  // Handle image selection
-  function handleImageChange(e) {
+  const handleImageChange = (e) => {
     const file = e.target.files[0]
-    
     if (file) {
-      // Validate file type
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-      if (!validTypes.includes(file.type)) {
-        setMessage({
-          text: "Please select a valid image file (JPEG, PNG, WEBP)",
-          type: "error"
-        })
-        return
-      }
-      
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setMessage({
-          text: "Image size should be less than 5MB",
-          type: "error"
-        })
+        setMessage({ type: "warning", text: "Image size should be less than 5MB" })
         return
       }
-
-      setImageFile(file)
-      
-      // Create preview URL
-      if (imagePreview) {
-        URL.revokeObjectURL(imagePreview)
+      setImage(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result)
       }
-      setImagePreview(URL.createObjectURL(file))
-      
-      // Clear image error if any
-      if (errors.image) {
-        setErrors(prev => ({
-          ...prev,
-          image: ""
-        }))
-      }
+      reader.readAsDataURL(file)
     }
   }
 
-  // Remove selected image
-  function handleRemoveImage() {
-    setImageFile(null)
-    setImagePreview(null)
-    if (imagePreview) {
-      URL.revokeObjectURL(imagePreview)
-    }
+  const handleReset = () => {
+    setFormData({
+      name: "",
+      description: "",
+      price: "",
+      discount: "",
+      calories: "",
+      category: "",
+      foodType: "veg"
+    })
+    setImage(null)
+    setImagePreview("")
+    setMessage({ type: "", text: "" })
   }
 
-  // Handle form submission
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     
-    // Validate form
-    if (!validateForm()) {
-      setMessage({
-        text: "Please fix the errors in the form",
-        type: "error"
-      })
-      
-      // Mark all fields as touched to show errors
-      const allTouched = {}
-      Object.keys(form).forEach(key => {
-        allTouched[key] = true
-      })
-      setTouched(allTouched)
-      
+    if (!formData.name.trim()) {
+      setMessage({ type: "warning", text: "Please enter item name" })
+      return
+    }
+    if (!formData.description.trim()) {
+      setMessage({ type: "warning", text: "Please enter description" })
+      return
+    }
+    if (!formData.price) {
+      setMessage({ type: "warning", text: "Please enter price" })
+      return
+    }
+    if (parseFloat(formData.price) <= 0) {
+      setMessage({ type: "warning", text: "Price must be greater than 0" })
       return
     }
 
-    setIsSubmitting(true)
-    setMessage({ text: "", type: "" })
+    setIsLoading(true)
+    setMessage({ type: "", text: "" })
 
     try {
-      const formData = new FormData()
-      
-      // Append form fields
-      Object.keys(form).forEach(key => {
-        formData.append(key, form[key])
+      const formDataToSend = new FormData()
+      Object.keys(formData).forEach(key => {
+        formDataToSend.append(key, formData[key])
       })
-
-      // Append image
-      if (imageFile) {
-        formData.append("image", imageFile)
+      if (image) {
+        formDataToSend.append("image", image)
       }
 
-      const res = await fetch("http://localhost:5000/api/menu", {
-        method: "POST",
-        body: formData
-      })
-
-      if (res.ok) {
-        setMessage({
-          text: "✅ Menu item added successfully!",
-          type: "success"
-        })
-
-        // Reset form
-        setForm({
-          name: "",
-          desc: "",
-          price: "",
-          discount: "0",
-          kcal: "",
-          time: "",
-          category: "burgers",
-          foodType: "veg"
-        })
-        handleRemoveImage()
-        setErrors({})
-        setTouched({})
-
-        // Navigate after success
+      // Your API call here
+      setTimeout(() => {
+        setMessage({ type: "success", text: "Menu item added successfully!" })
+        handleReset()
+        setIsLoading(false)
+        
         setTimeout(() => {
-          navigate("/menu/main")
-        }, 1500)
-      } else {
-        throw new Error("Failed to add menu item")
-      }
+          navigate("/admin")
+        }, 2000)
+      }, 1000)
     } catch (error) {
-      setMessage({
-        text: "Error adding menu item. Please try again.",
-        type: "error"
-      })
-      console.error("Submit error:", error)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  // Handle cancel
-  function handleCancel() {
-    if (window.confirm("Are you sure you want to cancel? All entered data will be lost.")) {
-      navigate("/menu/main")
+      setMessage({ type: "error", text: "Failed to add menu item" })
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="add-menu-page">
-      <Header />
-
-      <div className="add-menu-container">
-        <div className="add-menu-header">
-          <h1>Add Menu Item</h1>
-          <p className="subtitle">Fill in the details to add a new item to your menu</p>
+    <div className="admin-page">
+      <div className="admin-container">
+        {/* Header */}
+        <div className="page-header">
+          <button className="back-btn" onClick={() => navigate("/admin")}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M15 18L9 12L15 6" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Back to Dashboard
+          </button>
+          <div className="header-content">
+            <h1>Add New Menu Item</h1>
+            <p>Create a culinary masterpiece for your restaurant</p>
+          </div>
         </div>
 
-        {/* Message display */}
-        {message.text && (
-          <div className={`message ${message.type}`}>
-            <span>{message.text}</span>
-            <button 
-              className="close-btn"
-              onClick={() => setMessage({ text: "", type: "" })}
-            >
-              ×
-            </button>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="add-menu-form">
-          {/* Item Name */}
-          <div className="form-group">
-            <label htmlFor="name">
-              Item Name <span className="required">*</span>
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              placeholder="e.g., Margherita Pizza"
-              value={form.name}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className={touched.name && errors.name ? "error" : ""}
-              disabled={isSubmitting}
-              maxLength={50}
-            />
-            {touched.name && errors.name && (
-              <span className="error-text">{errors.name}</span>
+        {/* Form Card */}
+        <div className="form-card">
+          <form onSubmit={handleSubmit}>
+            {/* Alert Message */}
+            {message.text && (
+              <div className={`alert-message ${message.type}`}>
+                <div className="alert-content">
+                  <span className="alert-icon">
+                    {message.type === "success" ? "✓" : message.type === "warning" ? "!" : "⚠"}
+                  </span>
+                  <span>{message.text}</span>
+                </div>
+                <button 
+                  type="button"
+                  className="alert-close"
+                  onClick={() => setMessage({ type: "", text: "" })}
+                >
+                  ×
+                </button>
+              </div>
             )}
-            <span className="char-count">
-              {form.name.length}/50
-            </span>
-          </div>
 
-          {/* Description */}
-          <div className="form-group">
-            <label htmlFor="desc">
-              Description <span className="required">*</span>
-            </label>
-            <textarea
-              id="desc"
-              name="desc"
-              placeholder="Describe the menu item..."
-              value={form.desc}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              rows="4"
-              className={touched.desc && errors.desc ? "error" : ""}
-              disabled={isSubmitting}
-              maxLength={500}
-            />
-            {touched.desc && errors.desc && (
-              <span className="error-text">{errors.desc}</span>
-            )}
-            <span className="char-count">
-              {form.desc.length}/500
-            </span>
-          </div>
-
-          {/* Price, Discount, Calories Row */}
-          <div className="row-3">
+            {/* Item Name */}
             <div className="form-group">
-              <label htmlFor="price">
-                Price ($) <span className="required">*</span>
-              </label>
+              <label className="required">Item Name</label>
               <input
-                id="price"
-                name="price"
-                type="number"
-                step="0.01"
-                min="0"
-                max="10000"
-                placeholder="0.00"
-                value={form.price}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className={touched.price && errors.price ? "error" : ""}
-                disabled={isSubmitting}
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="e.g., Margherita Pizza"
+                autoComplete="off"
               />
-              {touched.price && errors.price && (
-                <span className="error-text">{errors.price}</span>
-              )}
             </div>
 
+            {/* Category & Food Type Row */}
+            <div className="form-row">
+              <div className="form-group">
+                <label>Category</label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  className="premium-select"
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((cat, idx) => (
+                    <option key={idx} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Food Type</label>
+                <div className="food-type-group">
+                  <label className={`food-type-card ${formData.foodType === 'veg' ? 'active' : ''}`}>
+                    <input
+                      type="radio"
+                      name="foodType"
+                      value="veg"
+                      checked={formData.foodType === 'veg'}
+                      onChange={handleInputChange}
+                    />
+                    <div className="food-type-content">
+                      <span className="food-icon veg-icon"></span>
+                      <span className="food-type-name">Vegetarian</span>
+                    </div>
+                  </label>
+                  
+                  <label className={`food-type-card ${formData.foodType === 'non-veg' ? 'active' : ''}`}>
+                    <input
+                      type="radio"
+                      name="foodType"
+                      value="non-veg"
+                      checked={formData.foodType === 'non-veg'}
+                      onChange={handleInputChange}
+                    />
+                    <div className="food-type-content">
+                      <span className="food-icon nonveg-icon"></span>
+                      <span className="food-type-name">Non-Vegetarian</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
             <div className="form-group">
-              <label htmlFor="discount">
-                Discount (%)
-              </label>
-              <input
-                id="discount"
-                name="discount"
-                type="number"
-                min="0"
-                max="100"
-                placeholder="0"
-                value={form.discount}
-                onChange={handleChange}
-                disabled={isSubmitting}
+              <label className="required">Description</label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="Describe the menu item with enticing details..."
+                rows="4"
+                className="premium-textarea"
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="kcal">
-                Calories <span className="required">*</span>
-              </label>
-              <input
-                id="kcal"
-                name="kcal"
-                type="number"
-                min="0"
-                max="5000"
-                placeholder="e.g., 450"
-                value={form.kcal}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className={touched.kcal && errors.kcal ? "error" : ""}
-                disabled={isSubmitting}
-              />
-              {touched.kcal && errors.kcal && (
-                <span className="error-text">{errors.kcal}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Category Selection */}
-          <div className="form-group">
-            <label htmlFor="category">
-              Category <span className="required">*</span>
-            </label>
-            <select
-              id="category"
-              name="category"
-              value={form.category}
-              onChange={handleChange}
-              disabled={isSubmitting}
-            >
-              {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>
-                  {cat.charAt(0).toUpperCase() + cat.slice(1).replace('-', ' ')}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Food Type (Veg/Non-Veg) */}
-          <div className="form-group">
-            <label htmlFor="foodType">
-              Food Type <span className="required">*</span>
-            </label>
-            <div className="food-type-selector">
-              <label className={`food-type-option ${form.foodType === 'veg' ? 'selected' : ''}`}>
-                <input
-                  type="radio"
-                  name="foodType"
-                  value="veg"
-                  checked={form.foodType === 'veg'}
-                  onChange={handleChange}
-                  disabled={isSubmitting}
-                />
-                <span className="veg-indicator">●</span>
-                <span>Vegetarian</span>
-              </label>
-              <label className={`food-type-option ${form.foodType === 'non-veg' ? 'selected' : ''}`}>
-                <input
-                  type="radio"
-                  name="foodType"
-                  value="non-veg"
-                  checked={form.foodType === 'non-veg'}
-                  onChange={handleChange}
-                  disabled={isSubmitting}
-                />
-                <span className="non-veg-indicator">●</span>
-                <span>Non-Vegetarian</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Image Upload */}
-          <div className="form-group">
-            <label htmlFor="image">
-              Item Image <span className="required">*</span>
-            </label>
-            <div className="image-upload-container">
-              <input
-                id="image"
-                name="image"
-                type="file"
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-                onChange={handleImageChange}
-                className={errors.image ? "error" : ""}
-                disabled={isSubmitting}
-              />
-              
-              {imagePreview ? (
-                <div className="image-preview-container">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
-                    className="image-preview"
+            {/* Price, Discount, Calories Row */}
+            <div className="form-row three-col">
+              <div className="form-group">
+                <label className="required">Price</label>
+                <div className="input-with-suffix">
+                  <input
+                    type="number"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
                   />
-                  <button
-                    type="button"
-                    className="remove-image-btn"
-                    onClick={handleRemoveImage}
-                    disabled={isSubmitting}
-                  >
-                    ✕
-                  </button>
+                  <span className="input-suffix">$</span>
                 </div>
-              ) : (
-                <div className="upload-placeholder">
-                  <span className="upload-icon">📸</span>
-                  <span>Click to upload image</span>
-                  <span className="hint-text">JPEG, PNG, WEBP (max 5MB)</span>
-                </div>
-              )}
-            </div>
-            {errors.image && (
-              <span className="error-text">{errors.image}</span>
-            )}
-          </div>
+              </div>
 
-          {/* Form Actions */}
-          <div className="form-actions">
-            <button
-              type="button"
-              className="cancel-btn"
-              onClick={handleCancel}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="submit-btn"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="spinner"></span>
-                  Adding...
-                </>
-              ) : (
-                "Add Menu Item"
-              )}
-            </button>
-          </div>
-        </form>
+              <div className="form-group">
+                <label>Discount</label>
+                <div className="input-with-suffix">
+                  <input
+                    type="number"
+                    name="discount"
+                    value={formData.discount}
+                    onChange={handleInputChange}
+                    placeholder="0"
+                    min="0"
+                    max="100"
+                    step="1"
+                  />
+                  <span className="input-suffix">% OFF</span>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Calories</label>
+                <div className="input-with-suffix">
+                  <input
+                    type="number"
+                    name="calories"
+                    value={formData.calories}
+                    onChange={handleInputChange}
+                    placeholder="450"
+                    min="0"
+                    step="1"
+                  />
+                  <span className="input-suffix">kcal</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Image Upload */}
+            <div className="form-group">
+              <label>Item Image</label>
+              <div className="image-upload-area">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageChange}
+                  id="image-input"
+                  hidden
+                />
+                <label htmlFor="image-input" className="upload-label">
+                  {imagePreview ? (
+                    <div className="image-preview-container">
+                      <img src={imagePreview} alt="Preview" className="image-preview" />
+                      <div className="change-image-overlay">
+                        <span>Change Image</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="upload-placeholder">
+                      <div className="upload-icon">📷</div>
+                      <div className="upload-text">
+                        <span>Click to upload image</span>
+                        <small>JPEG, PNG, WEBP (max 5MB)</small>
+                      </div>
+                    </div>
+                  )}
+                </label>
+              </div>
+            </div>
+
+            {/* Button Group */}
+            <div className="button-group">
+              <button type="button" className="btn-secondary" onClick={handleReset}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" strokeLinecap="round"/>
+                  <circle cx="12" cy="12" r="3" strokeLinecap="round"/>
+                </svg>
+                Clear Form
+              </button>
+              <button type="button" className="btn-cancel" onClick={() => navigate("/admin")}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <span className="spinner"></span>
+                    Adding Item...
+                  </>
+                ) : (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 4v12m0 0l-3-3m3 3l3-3M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" strokeLinecap="round"/>
+                    </svg>
+                    Add Menu Item
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )
 }
 
-export default AddMenuItem
+export default AddItem

@@ -17,55 +17,63 @@ function Menu() {
   const [originalData, setOriginalData] = useState({})
   const [restaurantName, setRestaurantName] = useState("")
   const [foodTypeFilter, setFoodTypeFilter] = useState("all")
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     fetchMenu()
   }, [restaurantId])
 
-  // Filter by food type when foodTypeFilter changes
   useEffect(() => {
     if (foodTypeFilter === "all") {
       setMenuData(originalData)
     } else {
       const filtered = {}
+
       Object.keys(originalData).forEach(category => {
-        const matchedItems = originalData[category].filter(item =>
-          item.foodType === foodTypeFilter
+        const matchedItems = originalData[category].filter(
+          item => item.foodType === foodTypeFilter
         )
+
         if (matchedItems.length > 0) {
           filtered[category] = matchedItems
         }
       })
+
       setMenuData(filtered)
     }
   }, [foodTypeFilter, originalData])
 
   const fetchMenu = async () => {
+    setIsLoading(true)
+
     try {
-      // Show all menu items for now (restaurant filter data not properly set in DB)
       const res = await fetch("http://localhost:5000/api/menu")
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`)
       }
+
       const data = await res.json()
 
-      // Fetch restaurant name if URL has restaurant param
       if (restaurantId) {
         try {
-          const restaurantRes = await fetch(`http://localhost:5000/api/restaurants/${restaurantId}`)
+          const restaurantRes = await fetch(
+            `http://localhost:5000/api/restaurants/${restaurantId}`
+          )
+
           if (restaurantRes.ok) {
             const restaurant = await restaurantRes.json()
             setRestaurantName(restaurant.name)
           }
         } catch (e) {
-          console.error("Error fetching restaurant:", e)
+          console.error("Restaurant fetch error:", e)
         }
       }
 
       const grouped = {}
 
       data.forEach(item => {
-        const category = item.category?.toLowerCase() || "others"
+        let category = item.category?.toLowerCase() || "others"
 
         if (!grouped[category]) {
           grouped[category] = []
@@ -74,26 +82,45 @@ function Menu() {
         grouped[category].push(item)
       })
 
-      setMenuData(grouped)
-      setOriginalData(grouped)
+      const sortedGrouped = {}
+      const categoryOrder = [
+        "burgers",
+        "pizza",
+        "starters",
+        "salad",
+        "soups",
+        "arabic food",
+        "others"
+      ]
 
-      const firstCategory = Object.keys(grouped)[0]
+      categoryOrder.forEach(cat => {
+        if (grouped[cat]) {
+          sortedGrouped[cat] = grouped[cat]
+        }
+      })
+
+      Object.keys(grouped).forEach(cat => {
+        if (!categoryOrder.includes(cat)) {
+          sortedGrouped[cat] = grouped[cat]
+        }
+      })
+
+      setMenuData(sortedGrouped)
+      setOriginalData(sortedGrouped)
+
+      const firstCategory = Object.keys(sortedGrouped)[0]
       if (firstCategory) {
         setActive(firstCategory)
       }
 
     } catch (error) {
       console.error("Error loading menu:", error)
-      // Use modern toast notification
-      if (window.toast) {
-        window.toast.error("Backend server is not connected. Please start the backend server and try again.")
-      } else {
-        alert("Backend server is not connected. Please start the backend server and try again.")
-      }
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleSearch = (searchTerm) => {
+  const handleSearch = searchTerm => {
     if (!searchTerm.trim()) {
       setMenuData(originalData)
       return
@@ -116,14 +143,13 @@ function Menu() {
     setMenuData(filtered)
   }
 
-  const deleteItem = async (id) => {
+  const deleteItem = async id => {
     try {
       await fetch(`http://localhost:5000/api/menu/${id}`, {
         method: "DELETE"
       })
 
       fetchMenu()
-
     } catch (error) {
       console.error("Delete failed:", error)
     }
@@ -132,7 +158,7 @@ function Menu() {
   useEffect(() => {
     const sections = document.querySelectorAll("section")
 
-    if (sections.length === 0) return
+    if (!sections.length) return
 
     const observer = new IntersectionObserver(
       entries => {
@@ -143,7 +169,7 @@ function Menu() {
         })
       },
       {
-        threshold: 0.4
+        threshold: 0.35
       }
     )
 
@@ -152,18 +178,31 @@ function Menu() {
     return () => observer.disconnect()
   }, [menuData])
 
+  const formatCategoryName = category => {
+    return category.replace("-", " ").toUpperCase()
+  }
+
+  if (isLoading) {
+    return (
+      <div className="menu-page">
+        <Header onSearch={handleSearch} />
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading menu...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="menu-page">
 
       <Header onSearch={handleSearch} />
 
       {restaurantName && (
-        <div className="restaurant-header" style={{ padding: '1rem 2rem', background: '#f8f9fa', textAlign: 'center' }}>
-          <h2 style={{ margin: 0, color: '#333' }}>{restaurantName}</h2>
-          <button 
-            onClick={() => navigate('/')}
-            style={{ marginTop: '0.5rem', padding: '0.5rem 1rem', cursor: 'pointer' }}
-          >
+        <div className="restaurant-header">
+          <h2>{restaurantName}</h2>
+          <button onClick={() => navigate("/")}>
             ← Back to Restaurants
           </button>
         </div>
@@ -172,78 +211,65 @@ function Menu() {
       <CategoryTabs
         categories={Object.keys(menuData)}
         active={active}
-        setActive={setActive}
+        setActive={(category) => {
+          setActive(category)
+
+          document.getElementById(category)?.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          })
+        }}
       />
 
-      {/* Food Type Filter */}
-      <div className="food-type-filter" style={{ padding: '0.75rem 2rem', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+      <div className="food-type-filter">
         <button
-          onClick={() => setFoodTypeFilter('all')}
-          style={{
-            padding: '0.5rem 1rem',
-            border: foodTypeFilter === 'all' ? '2px solid #2e7d32' : '1px solid #ccc',
-            borderRadius: '20px',
-            background: foodTypeFilter === 'all' ? '#2e7d32' : 'white',
-            color: foodTypeFilter === 'all' ? 'white' : '#333',
-            cursor: 'pointer',
-            fontWeight: '500'
-          }}
+          onClick={() => setFoodTypeFilter("all")}
+          className={foodTypeFilter === "all" ? "active" : ""}
         >
           All
         </button>
+
         <button
-          onClick={() => setFoodTypeFilter('veg')}
-          style={{
-            padding: '0.5rem 1rem',
-            border: foodTypeFilter === 'veg' ? '2px solid #22c55e' : '1px solid #ccc',
-            borderRadius: '20px',
-            background: foodTypeFilter === 'veg' ? '#22c55e' : 'white',
-            color: foodTypeFilter === 'veg' ? 'white' : '#333',
-            cursor: 'pointer',
-            fontWeight: '500',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.25rem'
-          }}
+          onClick={() => setFoodTypeFilter("veg")}
+          className={foodTypeFilter === "veg" ? "active" : ""}
         >
-          <span>●</span> Veg
+          Veg
         </button>
+
         <button
-          onClick={() => setFoodTypeFilter('non-veg')}
-          style={{
-            padding: '0.5rem 1rem',
-            border: foodTypeFilter === 'non-veg' ? '2px solid #dc2626' : '1px solid #ccc',
-            borderRadius: '20px',
-            background: foodTypeFilter === 'non-veg' ? '#dc2626' : 'white',
-            color: foodTypeFilter === 'non-veg' ? 'white' : '#333',
-            cursor: 'pointer',
-            fontWeight: '500',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.25rem'
-          }}
+          onClick={() => setFoodTypeFilter("nonveg")}
+          className={foodTypeFilter === "nonveg" ? "active" : ""}
         >
-          <span>●</span> Non-Veg
+          Non-Veg
         </button>
       </div>
 
-      {Object.keys(menuData).map(category => (
-        <section key={category} id={category}>
-          <h1 className="menu-title">
-            {category.replace("-", " ").toUpperCase()}
-          </h1>
+      {Object.keys(menuData).length === 0 ? (
+        <div className="no-items">
+          <p>No menu items found</p>
+          <button onClick={() => setFoodTypeFilter("all")}>
+            Reset Filters
+          </button>
+        </div>
+      ) : (
+        Object.keys(menuData).map(category => (
+          <section key={category} id={category}>
+            <h1 className="menu-title">
+              {formatCategoryName(category)}
+            </h1>
 
-          <div className="menu-grid">
-            {menuData[category]?.map(food => (
-              <FoodCard
-                key={food._id}
-                item={food}
-                onDelete={deleteItem}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
+            <div className="menu-grid">
+              {menuData[category]?.map(food => (
+                <FoodCard
+                  key={food._id}
+                  item={food}
+                  onDelete={deleteItem}
+                />
+              ))}
+            </div>
+          </section>
+        ))
+      )}
 
       <button className="expert-btn">
         Talk to a menu expert →

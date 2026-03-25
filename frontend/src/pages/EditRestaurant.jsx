@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import "../styles/admin.css"
-import "../styles/CreateRestaurant.css"
+
 
 const API_BASE = "http://localhost:5000"
 

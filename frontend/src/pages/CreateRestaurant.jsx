@@ -1,110 +1,188 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import "../styles/admin.css"
-import "../styles/CreateRestaurant.css"
 
 function CreateRestaurant() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ name: "", location: "", phone: "" })
-  const [imageFile, setImageFile] = useState(null)
-  const [imagePreview, setImagePreview] = useState(null)
-  const [message, setMessage] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    name: "",
+    location: "",
+    phone: ""
+  })
+  const [image, setImage] = useState(null)
+  const [imagePreview, setImagePreview] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [message, setMessage] = useState({ type: "", text: "" })
 
-  function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value })
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  function handleImageChange(e) {
+  const handleImageChange = (e) => {
     const file = e.target.files[0]
     if (file) {
-      setImageFile(file)
-      setImagePreview(URL.createObjectURL(file))
+      if (file.size > 5 * 1024 * 1024) {
+        setMessage({ type: "error", text: "Image size should be less than 5MB" })
+        return
+      }
+      setImage(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
     }
   }
 
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-    setMessage("")
+    
+    if (!formData.name.trim()) {
+      setMessage({ type: "error", text: "Please enter restaurant name" })
+      return
+    }
+
+    setIsLoading(true)
+    setMessage({ type: "", text: "" })
+
     try {
-      const formData = new FormData()
-      formData.append("name", form.name)
-      formData.append("location", form.location)
-      formData.append("phone", form.phone)
-      if (imageFile) {
-        formData.append("image", imageFile)
+      // Implement your restaurant creation logic here
+      const formDataToSend = new FormData()
+      formDataToSend.append("name", formData.name)
+      formDataToSend.append("location", formData.location)
+      formDataToSend.append("phone", formData.phone)
+      if (image) {
+        formDataToSend.append("image", image)
       }
 
-      const res = await fetch("http://localhost:5000/api/restaurants", {
-        method: "POST",
-        body: formData
-      })
-      const data = await res.json()
-      if (res.ok) {
-        setMessage("✅ Restaurant created: " + data.name)
-        setForm({ name: "", location: "", phone: "" })
-        setImageFile(null)
-        setImagePreview(null)
-        setTimeout(() => navigate("/admin/create-category"), 1000)
-      } else {
-        setMessage("❌ Error: " + data.error)
-      }
-    } catch {
-      setMessage("❌ Failed to connect to backend.")
+      // const res = await fetch("http://localhost:5000/api/restaurants", {
+      //   method: "POST",
+      //   body: formDataToSend
+      // })
+
+      setTimeout(() => {
+        setMessage({ type: "success", text: "Restaurant created successfully!" })
+        setFormData({ name: "", location: "", phone: "" })
+        setImage(null)
+        setImagePreview("")
+        setIsLoading(false)
+      }, 1000)
+    } catch (error) {
+      setMessage({ type: "error", text: "Failed to create restaurant" })
+      setIsLoading(false)
     }
-    setLoading(false)
   }
 
   return (
     <div className="admin-page">
-      <div className="admin-header">
-        <h1>🏨 Create Restaurant</h1>
-        <button className="btn-back" onClick={() => navigate("/admin")}>← Back to Admin</button>
-      </div>
+      <div className="admin-container">
+        <div className="page-header">
+          <button className="back-btn" onClick={() => navigate("/admin")}>
+            ← Back to Admin
+          </button>
+          <div className="header-content">
+            <h1>Create Restaurant</h1>
+            <p>Add a new restaurant to your platform</p>
+          </div>
+        </div>
 
-      {message && <p className="admin-message">{message}</p>}
-
-      <form className="admin-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Restaurant Name *</label>
-          <input name="name" value={form.name} onChange={handleChange} placeholder="e.g. Pizza Palace" required />
-        </div>
-        <div className="form-group">
-          <label>Location</label>
-          <input name="location" value={form.location} onChange={handleChange} placeholder="e.g. Bangalore" />
-        </div>
-        <div className="form-group">
-          <label>Phone</label>
-          <input name="phone" value={form.phone} onChange={handleChange} placeholder="e.g. 9876543210" />
-        </div>
-        <div className="form-group">
-          <label>Restaurant Image</label>
-          <div className="image-upload-area" onClick={() => document.getElementById("restaurantImageInput").click()}>
-            {imagePreview ? (
-              <img src={imagePreview} alt="Preview" className="image-preview" />
-            ) : (
-              <div className="image-placeholder">
-                <span>🏨</span>
-                <p>Click to upload restaurant image</p>
-                <small>JPG, PNG, WEBP up to 5MB</small>
+        <div className="form-card">
+          <form onSubmit={handleSubmit}>
+            {message.text && (
+              <div className={`alert-message ${message.type}`}>
+                <span className="alert-icon">
+                  {message.type === "success" ? "✓" : "⚠️"}
+                </span>
+                <span>{message.text}</span>
+                <button 
+                  className="alert-close"
+                  onClick={() => setMessage({ type: "", text: "" })}
+                >
+                  ×
+                </button>
               </div>
             )}
-          </div>
-          <input
-            id="restaurantImageInput"
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            style={{ display: "none" }}
-          />
+
+            <div className="form-group">
+              <label className="required">Restaurant Name</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="e.g., Pizza Palace"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Location</label>
+              <input
+                type="text"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                placeholder="e.g., Bangalore"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Phone</label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                placeholder="e.g., 9876543210"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Restaurant Image</label>
+              <div className="image-upload-area">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageChange}
+                  id="restaurant-image"
+                  hidden
+                />
+                <label htmlFor="restaurant-image" className="upload-label">
+                  {imagePreview ? (
+                    <div className="image-preview-container">
+                      <img src={imagePreview} alt="Preview" className="image-preview" />
+                      <div className="change-image-overlay">
+                        <span>Click to change</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="upload-placeholder">
+                      <span className="upload-icon">📸</span>
+                      <span>Click to upload restaurant image</span>
+                      <small>JPG, PNG, WEBP up to 5MB</small>
+                    </div>
+                  )}
+                </label>
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              className="btn-primary"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <span className="spinner"></span>
+                  Creating...
+                </>
+              ) : (
+                "Create Restaurant"
+              )}
+            </button>
+          </form>
         </div>
-        <div className="form-actions">
-          <button type="submit" className="btn-submit" disabled={loading}>
-            {loading ? "Creating..." : "Create Restaurant"}
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   )
 }

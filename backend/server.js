@@ -3,11 +3,11 @@ require("dotenv").config()
 const express = require("express")
 const cors = require("cors")
 const path = require("path")
+const fs = require("fs")
 
 const { connectDB } = require("./config/db")
 
 const menuRoutes = require("./routes/menuRoutes")
-console.log("🔥 USING menuRoutes from routes/menuRoutes.js")
 const restaurantRoutes = require("./routes/restaurantRoutes")
 const paymentRoutes = require("./routes/paymentRoutes")
 const categoryRoutes = require("./routes/categoryRoutes")
@@ -19,34 +19,56 @@ const Menu = require("./models/Menu")
 const app = express()
 const PORT = process.env.PORT || 5000
 
+console.log("🔥 USING menuRoutes from routes/menuRoutes.js")
 console.log("✅ menuRoutes imported:", typeof menuRoutes)
 
-/* Middleware */
+
+// =========================
+// Middleware
+// =========================
 app.use(cors())
 app.use(express.json())
 
-/* Static folder */
-app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
-/* Route Debug Middleware */
+// =========================
+// Static Upload Folder
+// =========================
+const uploadsPath = path.join(__dirname, "uploads")
+
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true })
+  console.log("📂 uploads folder created")
+}
+
+console.log("📂 Upload folder path:", uploadsPath)
+
+app.use("/uploads", express.static(uploadsPath))
+
+
+// =========================
+// Debug Logger
+// =========================
 app.use((req, res, next) => {
   console.log(`➡ ${req.method} ${req.originalUrl}`)
   next()
 })
 
-/* Routes */
+
+// =========================
+// Routes
+// =========================
 app.use("/api/menu", menuRoutes)
-
-
 console.log("✅ /api/menu mounted")
-
 
 app.use("/api/restaurants", restaurantRoutes)
 app.use("/api/payments", paymentRoutes)
 app.use("/api/categories", categoryRoutes)
 app.use("/api/orders", orderRoutes)
 
-/* 404 handler */
+
+// =========================
+// 404 Handler
+// =========================
 app.use((req, res) => {
   console.log(`❌ 404 Route not found: ${req.method} ${req.originalUrl}`)
   res.status(404).json({
@@ -55,7 +77,10 @@ app.use((req, res) => {
   })
 })
 
-/* Error handler */
+
+// =========================
+// Error Handler
+// =========================
 app.use((err, req, res, next) => {
   console.error("❌ Server error:", err)
   res.status(500).json({
@@ -63,7 +88,10 @@ app.use((err, req, res, next) => {
   })
 })
 
-/* Seed */
+
+// =========================
+// Auto Seed Data
+// =========================
 async function autoSeed() {
   const restaurantCount = await Restaurant.countDocuments()
 
@@ -106,18 +134,21 @@ async function autoSeed() {
   }
 }
 
-/* Start server */
+
+// =========================
+// Start Server
+// =========================
 async function startServer() {
   try {
     console.log("🚀 Starting server...")
 
     await connectDB()
-
     await autoSeed()
 
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`)
     })
+
   } catch (error) {
     console.error("❌ Failed to start:", error)
   }

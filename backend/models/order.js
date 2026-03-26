@@ -7,7 +7,16 @@ const orderSchema = new mongoose.Schema({
  items:[
   {
    name:String,
-   price:Number
+   price:Number,
+   quantity: {
+     type: Number,
+     default: 1
+   },
+   foodType: {
+    type: String,
+    enum: ['veg', 'non-veg'],
+    default: 'veg'
+   }
   }
  ],
 
@@ -15,12 +24,17 @@ const orderSchema = new mongoose.Schema({
 
  tokenNumber: {
   type: Number,
-  default: () => Math.floor(1000 + Math.random() * 9000) // 4-digit token
+  default: () => Math.floor(1000 + Math.random() * 9000)
  },
 
  status:{
   type:String,
   default:"Pending"
+ },
+
+ preparingTime: {
+  type: Number,
+  default: 15
  },
 
  createdAt:{

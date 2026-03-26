@@ -20,6 +20,12 @@ const FoodItemSchema = new mongoose.Schema({
 
   image: String,
 
+  foodType: {
+    type: String,
+    enum: ['veg', 'non-veg'],
+    default: 'veg'
+  },
+
   available: {
     type: Boolean,
     default: true

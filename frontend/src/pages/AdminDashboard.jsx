@@ -81,6 +81,13 @@ function AdminDashboard() {
       icon: "📱",
       gradient: "linear-gradient(135deg, #2c2c2c, #1a1a1a)"
     },
+    { 
+      label: "Manage Coupons",    
+      path: "/admin/coupons",           
+      desc: "Create and manage discount coupons",
+      icon: "🎟️",
+      gradient: "linear-gradient(135deg, #2c2c2c, #1a1a1a)"
+    },
   ]
 
   const StatCard = ({ title, value, icon, trend }) => (

@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../config";
+import { calculateDiscountedPrice } from "../utils/priceUtils";
 import "../styles/header.css";
 
 function Header({ onSearch = () => {} }) {
@@ -7,37 +9,54 @@ function Header({ onSearch = () => {} }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]);
+  const [cartTotal, setCartTotal] = useState(0);
   const cartRef = useRef(null);
   const searchTimeoutRef = useRef(null);
+
+  // Get image URL helper
+  const getImageUrl = useCallback((image) => {
+    if (!image) return "/images/default-food.jpg";
+    if (image.startsWith("http")) return image;
+    if (image.startsWith("/uploads/")) return `${API_BASE_URL}${image}`;
+    return `${API_BASE_URL}/uploads/${image}`;
+  }, []);
 
   // Load cart from localStorage
   const loadCart = useCallback(() => {
     try {
       const cart = JSON.parse(localStorage.getItem("cart") || "[]");
       setCartItems(cart);
+      
+      // Calculate total with discounts
+      const total = cart.reduce((sum, item) => {
+        const discountedPrice = calculateDiscountedPrice(item.price, item.discount);
+        return sum + discountedPrice * (item.quantity || 1);
+      }, 0);
+      
+      setCartTotal(total);
     } catch (error) {
       console.error("Error loading cart:", error);
       setCartItems([]);
+      setCartTotal(0);
     }
   }, []);
 
-  // Calculate cart total and item count
-  const { cartTotal, totalItems } = useMemo(() => {
-    const total = cartItems.reduce((sum, item) => {
-      const price = Number(item.price) || 0;
-      const quantity = item.quantity || 1;
-      return sum + price * quantity;
-    }, 0);
-    
-    const items = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
-    
-    return { cartTotal: total, totalItems: items };
+  // Calculate total items count
+  const totalItems = useMemo(() => {
+    return cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
   }, [cartItems]);
 
   // Update cart in localStorage and state
   const updateCart = useCallback((updatedCart) => {
     localStorage.setItem("cart", JSON.stringify(updatedCart));
     setCartItems(updatedCart);
+    
+    const total = updatedCart.reduce((sum, item) => {
+      const discountedPrice = calculateDiscountedPrice(item.price, item.discount);
+      return sum + discountedPrice * (item.quantity || 1);
+    }, 0);
+    
+    setCartTotal(total);
   }, []);
 
   // Handle quantity updates
@@ -62,6 +81,23 @@ function Header({ onSearch = () => {} }) {
     setIsCartOpen(prev => !prev);
     loadCart();
   }, [loadCart]);
+
+  // Debounced search
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      onSearch(searchTerm);
+    }, 300);
+    
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchTerm, onSearch]);
 
   // Handle click outside to close cart
   useEffect(() => {
@@ -90,29 +126,12 @@ function Header({ onSearch = () => {} }) {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [loadCart]);
 
-  // Debounced search
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-    
-    searchTimeoutRef.current = setTimeout(() => {
-      onSearch(searchTerm);
-    }, 300);
-    
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [searchTerm, onSearch]);
-
   return (
     <header className="header">
       <div className="header-container">
-        <div className="logo" onClick={() => navigate("/")}>
+        <div className="logo" onClick={() => navigate("/")} role="button" tabIndex={0}>
           <span className="logo-icon">🍽️</span>
-          <span className="logo-text">FoodMenu</span>
+          <span className="logo-text">QRhino</span>
         </div>
 
         <div className="header-right">
@@ -162,14 +181,28 @@ function Header({ onSearch = () => {} }) {
                       {cartItems.map(item => (
                         <div key={item._id} className="cart-item">
                           <img
-                            src={`http://localhost:5000/uploads/${item.image}`}
+                            src={getImageUrl(item.image)}
                             alt={item.name}
                             className="cart-item-image"
                             loading="lazy"
+                            onError={(e) => {
+                              e.target.src = "/images/default-food.jpg";
+                            }}
                           />
                           <div className="cart-item-details">
                             <h4>{item.name}</h4>
-                            <p className="cart-item-price">₹{item.price}</p>
+                            <p className="cart-item-price">
+                              {item.discount > 0 ? (
+                                <>
+                                  <span className="original-price">₹{item.price}</span>
+                                  <span className="discounted-price">
+                                    ₹{calculateDiscountedPrice(item.price, item.discount)}
+                                  </span>
+                                </>
+                              ) : (
+                                `₹${item.price}`
+                              )}
+                            </p>
                             <div className="cart-item-quantity">
                               <button 
                                 onClick={() => updateQuantity(item._id, (item.quantity || 1) - 1)}
@@ -222,6 +255,20 @@ function Header({ onSearch = () => {} }) {
               <path d="M3 21C3.906 18.814 5.697 17 8 17H16C18.303 17 20.094 18.814 21 21" strokeWidth="2"/>
             </svg>
             <span>Admin</span>
+          </button>
+
+          <button 
+            className="admin-button kitchen-btn" 
+            onClick={() => navigate("/kitchen")}
+            aria-label="Kitchen panel"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M3 3H21V7H3V3Z" strokeWidth="2"/>
+              <path d="M5 7V21H19V7" strokeWidth="2"/>
+              <path d="M9 10H15" strokeWidth="2"/>
+              <path d="M12 10V17" strokeWidth="2"/>
+            </svg>
+            <span>Kitchen</span>
           </button>
         </div>
       </div>

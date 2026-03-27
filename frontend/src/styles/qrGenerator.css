@@ -1,0 +1,677 @@
+/* =========================================
+   QR GENERATOR STYLES
+   Light Orange & Cream Theme - No Dark Colors
+   Prefix: qr-gen-
+========================================= */
+
+/* Light Color Variables */
+:root {
+  --light-orange: #ffb347;
+  --light-orange-primary: #ff9f4a;
+  --light-orange-soft: #ffc08a;
+  --light-orange-pale: #ffe0c4;
+  --cream: #fffef7;
+  --cream-light: #ffffff;
+  --cream-soft: #fffbf5;
+  --cream-warm: #fff9f0;
+  --peach: #ffe5cc;
+  --apricot: #ffd9b5;
+  --brown-soft: #c9a87c;
+  --brown-light: #b87a4a;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-orange: 0 4px 12px rgba(255, 159, 74, 0.15);
+  --shadow-orange-lg: 0 8px 24px rgba(255, 159, 74, 0.2);
+  
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  
+  /* Spacing */
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  
+  /* Transitions */
+  --transition: all 0.3s ease;
+}
+
+/* Container */
+.qr-gen-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fffef7 0%, #fffbf5 50%, #fff9f0 100%);
+  padding: var(--space-lg);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Content Wrapper */
+.qr-gen-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  animation: qrGenFadeIn 0.5s ease;
+}
+
+@keyframes qrGenFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom Scrollbar */
+.qr-gen-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.qr-gen-container::-webkit-scrollbar-track {
+  background: #fff9f0;
+  border-radius: 10px;
+}
+
+.qr-gen-container::-webkit-scrollbar-thumb {
+  background: var(--light-orange-primary);
+  border-radius: 10px;
+}
+
+.qr-gen-container::-webkit-scrollbar-thumb:hover {
+  background: var(--light-orange);
+}
+
+/* Breadcrumb */
+.qr-gen-breadcrumb {
+  margin-bottom: var(--space-lg);
+}
+
+.qr-gen-breadcrumb .ant-breadcrumb a {
+  color: var(--light-orange-primary);
+  transition: var(--transition);
+}
+
+.qr-gen-breadcrumb .ant-breadcrumb a:hover {
+  color: var(--light-orange);
+}
+
+.qr-gen-breadcrumb .ant-breadcrumb li:last-child {
+  color: var(--brown-light);
+  font-weight: 500;
+}
+
+/* Tabs */
+.qr-gen-tabs .ant-tabs-tab {
+  font-size: 16px;
+  padding: 12px 24px;
+  transition: var(--transition);
+}
+
+.qr-gen-tabs .ant-tabs-tab:hover {
+  color: var(--light-orange-primary);
+}
+
+.qr-gen-tabs .ant-tabs-tab-active {
+  color: var(--light-orange-primary);
+}
+
+.qr-gen-tabs .ant-tabs-ink-bar {
+  background: var(--light-orange-primary);
+}
+
+.qr-gen-tab-icon {
+  margin-right: var(--space-sm);
+  color: var(--light-orange-primary);
+}
+
+/* Cards */
+.qr-gen-form-card,
+.qr-gen-result-card,
+.qr-gen-empty-card,
+.qr-gen-bulk-card,
+.qr-gen-share-card {
+  background: var(--cream-light);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--light-orange-pale);
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.qr-gen-form-card:hover,
+.qr-gen-result-card:hover,
+.qr-gen-bulk-card:hover,
+.qr-gen-share-card:hover {
+  box-shadow: var(--shadow-orange-lg);
+  transform: translateY(-2px);
+  border-color: var(--light-orange-soft);
+}
+
+.qr-gen-form-card .ant-card-head,
+.qr-gen-result-card .ant-card-head,
+.qr-gen-bulk-card .ant-card-head,
+.qr-gen-share-card .ant-card-head {
+  border-bottom: 1px solid var(--light-orange-pale);
+  background: var(--cream-warm);
+}
+
+.qr-gen-form-card .ant-card-head-title,
+.qr-gen-result-card .ant-card-head-title,
+.qr-gen-bulk-card .ant-card-head-title,
+.qr-gen-share-card .ant-card-head-title {
+  font-weight: 600;
+  color: var(--brown-light);
+  font-size: 1.1rem;
+}
+
+.qr-gen-form-card .ant-card-body,
+.qr-gen-result-card .ant-card-body,
+.qr-gen-empty-card .ant-card-body,
+.qr-gen-bulk-card .ant-card-body,
+.qr-gen-share-card .ant-card-body {
+  padding: var(--space-xl);
+}
+
+/* Card Icons */
+.qr-gen-card-icon,
+.qr-gen-success-icon {
+  color: var(--light-orange-primary);
+  font-size: 1.1rem;
+}
+
+/* Form Item */
+.qr-gen-form-item {
+  margin-bottom: var(--space-lg);
+}
+
+.qr-gen-form-item .ant-form-item-label > label {
+  font-weight: 600;
+  color: var(--brown-light);
+  font-size: 0.875rem;
+}
+
+/* Select */
+.qr-gen-select .ant-select-selector {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--light-orange-pale);
+  height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.qr-gen-select .ant-select-selector:hover {
+  border-color: var(--light-orange-primary);
+}
+
+.qr-gen-location-tag {
+  background: var(--cream-warm);
+  border-color: var(--light-orange-pale);
+  color: var(--light-orange-primary);
+  border-radius: var(--radius-full);
+}
+
+/* Button */
+.qr-gen-generate-btn,
+.qr-gen-bulk-generate-btn {
+  background: var(--light-orange-primary);
+  border: none;
+  border-radius: var(--radius-full);
+  height: 48px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: var(--transition);
+  box-shadow: var(--shadow-orange);
+  color: white;
+}
+
+.qr-gen-generate-btn:hover,
+.qr-gen-bulk-generate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-orange-lg);
+  background: var(--light-orange);
+}
+
+.qr-gen-action-btn,
+.qr-gen-bulk-download-btn {
+  border-radius: var(--radius-full);
+  border: 1px solid var(--light-orange-pale);
+  background: white;
+  color: var(--brown-light);
+  transition: var(--transition);
+  height: 40px;
+}
+
+.qr-gen-action-btn:hover,
+.qr-gen-bulk-download-btn:hover {
+  border-color: var(--light-orange-primary);
+  color: var(--light-orange-primary);
+  transform: translateY(-2px);
+}
+
+/* Restaurant Info */
+.qr-gen-restaurant-info {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+}
+
+.qr-gen-divider {
+  margin: var(--space-md) 0;
+  border-color: var(--light-orange-pale);
+}
+
+.qr-gen-info-label {
+  color: var(--brown-light);
+}
+
+.qr-gen-restaurant-name {
+  font-weight: 600;
+  color: var(--brown-light);
+  font-size: 1rem;
+}
+
+.qr-gen-restaurant-location {
+  color: var(--brown-soft);
+}
+
+.qr-gen-cuisine-tags {
+  margin-top: var(--space-sm);
+}
+
+.qr-gen-cuisine-tag {
+  background: var(--cream-warm);
+  border-color: var(--light-orange-pale);
+  color: var(--light-orange-primary);
+  border-radius: var(--radius-full);
+  margin-right: var(--space-sm);
+}
+
+/* QR Display */
+.qr-gen-display {
+  text-align: center;
+}
+
+.qr-gen-image-wrapper {
+  background: var(--cream-soft);
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  display: inline-block;
+  margin-bottom: var(--space-lg);
+  border: 1px solid var(--light-orange-pale);
+}
+
+.qr-gen-code {
+  border-radius: var(--radius-md);
+}
+
+.qr-gen-actions {
+  margin: var(--space-lg) 0;
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+/* Info Alert */
+.qr-gen-info-alert {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--light-orange-pale);
+  background: rgba(255, 159, 74, 0.05);
+}
+
+.qr-gen-info-alert .ant-alert-message {
+  color: var(--brown-light);
+  font-weight: 600;
+}
+
+/* Empty State */
+.qr-gen-empty-card {
+  text-align: center;
+}
+
+.qr-gen-empty {
+  padding: var(--space-2xl) var(--space-lg);
+}
+
+.qr-gen-empty-btn {
+  background: var(--light-orange-primary);
+  border: none;
+  border-radius: var(--radius-full);
+  margin-top: var(--space-md);
+}
+
+.qr-gen-empty-btn:hover {
+  background: var(--light-orange);
+}
+
+/* Bulk QR Styles */
+.qr-gen-bulk-header {
+  margin-bottom: var(--space-lg);
+}
+
+.qr-gen-bulk-stats {
+  margin-bottom: var(--space-lg);
+}
+
+.qr-gen-stat-card-small {
+  background: var(--cream-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  text-align: center;
+  border: 1px solid var(--light-orange-pale);
+  transition: var(--transition);
+}
+
+.qr-gen-stat-card-small:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-orange);
+  border-color: var(--light-orange-soft);
+}
+
+.qr-gen-stat-icon-small {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-sm);
+  color: var(--light-orange-primary);
+}
+
+.qr-gen-stat-value-small {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--light-orange-primary);
+}
+
+.qr-gen-stat-label-small {
+  color: var(--brown-soft);
+  font-size: 0.75rem;
+  margin-top: var(--space-xs);
+}
+
+.qr-gen-progress .ant-progress-bg {
+  background: var(--light-orange-primary);
+}
+
+/* Bulk Grid */
+.qr-gen-bulk-grid {
+  margin-top: var(--space-lg);
+}
+
+.qr-gen-bulk-item {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: var(--transition);
+  border: 1px solid var(--light-orange-pale);
+}
+
+.qr-gen-bulk-item:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-orange);
+  border-color: var(--light-orange-soft);
+}
+
+.qr-gen-bulk-cover {
+  background: var(--cream-soft);
+  padding: var(--space-lg);
+  text-align: center;
+  border-bottom: 1px solid var(--light-orange-pale);
+}
+
+.qr-gen-bulk-code {
+  border-radius: var(--radius-md);
+}
+
+.qr-gen-bulk-title {
+  font-weight: 600;
+  color: var(--brown-light);
+}
+
+.qr-gen-bulk-location {
+  font-size: 0.75rem;
+  color: var(--brown-soft);
+}
+
+.qr-gen-bulk-cuisine-tag {
+  background: var(--cream-warm);
+  border-color: var(--light-orange-pale);
+  color: var(--light-orange-primary);
+  border-radius: var(--radius-full);
+  margin-top: var(--space-sm);
+  font-size: 0.7rem;
+}
+
+.qr-gen-bulk-action {
+  color: var(--brown-soft);
+  transition: var(--transition);
+}
+
+.qr-gen-bulk-action:hover {
+  color: var(--light-orange-primary);
+}
+
+.qr-gen-bulk-empty {
+  padding: var(--space-2xl) var(--space-lg);
+}
+
+/* Share Options */
+.qr-gen-share-title {
+  color: var(--brown-light);
+  text-align: center;
+}
+
+.qr-gen-share-subtitle {
+  color: var(--brown-soft);
+  text-align: center;
+  margin-bottom: var(--space-lg);
+}
+
+.qr-gen-share-grid {
+  margin-top: var(--space-lg);
+}
+
+.qr-gen-share-method-card {
+  text-align: center;
+  border: 1px solid var(--light-orange-pale);
+  border-radius: var(--radius-lg);
+  transition: var(--transition);
+}
+
+.qr-gen-share-method-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-orange);
+  border-color: var(--light-orange-soft);
+}
+
+.qr-gen-share-method-icon {
+  font-size: 2rem;
+  margin-bottom: var(--space-md);
+}
+
+.qr-gen-share-method-icon.whatsapp { color: #25D366; }
+.qr-gen-share-method-icon.email { color: #EA4335; }
+.qr-gen-share-method-icon.facebook { color: #1877F2; }
+.qr-gen-share-method-icon.twitter { color: #1DA1F2; }
+
+.qr-gen-share-btn {
+  border-radius: var(--radius-full);
+  border: 1px solid var(--light-orange-pale);
+  transition: var(--transition);
+}
+
+.qr-gen-share-btn.whatsapp-btn {
+  background: #25D366;
+  border-color: #25D366;
+  color: white;
+}
+
+.qr-gen-share-btn.whatsapp-btn:hover {
+  background: #20b859;
+  transform: translateY(-2px);
+}
+
+.qr-gen-share-btn:hover:not(.whatsapp-btn) {
+  border-color: var(--light-orange-primary);
+  color: var(--light-orange-primary);
+  transform: translateY(-2px);
+}
+
+.qr-gen-tip-alert {
+  margin-top: var(--space-lg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--light-orange-pale);
+  background: rgba(255, 159, 74, 0.05);
+}
+
+/* Preview Modal */
+.qr-gen-preview-modal .ant-modal-content {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.qr-gen-preview-modal .ant-modal-header {
+  background: var(--cream-warm);
+  border-bottom: 1px solid var(--light-orange-pale);
+}
+
+.qr-gen-preview-modal .ant-modal-title {
+  color: var(--brown-light);
+  font-weight: 600;
+}
+
+.qr-gen-preview-content {
+  text-align: center;
+  padding: var(--space-md);
+}
+
+.qr-gen-preview-qr {
+  background: var(--cream-soft);
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  display: inline-block;
+  margin-bottom: var(--space-lg);
+  border: 1px solid var(--light-orange-pale);
+}
+
+.qr-gen-preview-actions {
+  margin: var(--space-lg) 0;
+}
+
+.qr-gen-preview-btn {
+  border-radius: var(--radius-full);
+  border: 1px solid var(--light-orange-pale);
+  transition: var(--transition);
+}
+
+.qr-gen-preview-btn:hover {
+  border-color: var(--light-orange-primary);
+  color: var(--light-orange-primary);
+  transform: translateY(-2px);
+}
+
+.qr-gen-preview-url-text {
+  font-size: 0.75rem;
+  word-break: break-all;
+  color: var(--brown-soft);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .qr-gen-container {
+    padding: var(--space-md);
+  }
+  
+  .qr-gen-form-card .ant-card-body,
+  .qr-gen-result-card .ant-card-body,
+  .qr-gen-bulk-card .ant-card-body {
+    padding: var(--space-lg);
+  }
+}
+
+@media (max-width: 768px) {
+  .qr-gen-container {
+    padding: var(--space-sm);
+  }
+  
+  .qr-gen-tabs .ant-tabs-tab {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+  
+  .qr-gen-generate-btn,
+  .qr-gen-bulk-generate-btn,
+  .qr-gen-bulk-download-btn {
+    height: 40px;
+    font-size: 0.875rem;
+  }
+  
+  .qr-gen-action-btn {
+    height: 36px;
+    font-size: 0.75rem;
+  }
+  
+  .qr-gen-image-wrapper {
+    padding: var(--space-md);
+  }
+  
+  .qr-gen-bulk-cover {
+    padding: var(--space-md);
+  }
+  
+  .qr-gen-stat-value-small {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .qr-gen-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .qr-gen-action-btn {
+    width: 100%;
+  }
+  
+  .qr-gen-bulk-cover {
+    padding: var(--space-sm);
+  }
+  
+  .qr-gen-stat-card-small {
+    padding: var(--space-sm);
+  }
+  
+  .qr-gen-stat-value-small {
+    font-size: 1rem;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .qr-gen-container {
+    background: white;
+    padding: 0;
+  }
+  
+  .qr-gen-back-btn,
+  .qr-gen-generate-btn,
+  .qr-gen-action-btn,
+  .qr-gen-bulk-generate-btn,
+  .qr-gen-bulk-download-btn,
+  .qr-gen-share-btn {
+    display: none;
+  }
+  
+  .qr-gen-form-card,
+  .qr-gen-result-card,
+  .qr-gen-bulk-card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}

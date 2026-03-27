@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import Header from "../components/Header"
+import API_BASE_URL from "../config"
 import "../styles/addmenu.css"
 
 function EditMenuItem() {
@@ -16,15 +17,32 @@ function EditMenuItem() {
     kcal: "",
     time: "",
     category: "",
-    foodType: "veg"
+    categoryId: "",
+    foodType: "veg",
+    restaurantId: ""
   })
+
+  const [restaurants, setRestaurants] = useState([])
+  const [categories, setCategories] = useState([])
 
   const [image, setImage] = useState(null)
   const [currentImage, setCurrentImage] = useState("")
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/menu")
+    // Fetch restaurants for dropdown
+    fetch(`${API_BASE_URL}/api/restaurants`)
+      .then(res => res.json())
+      .then(data => setRestaurants(data))
+      .catch(err => console.error("Failed to fetch restaurants:", err))
+
+    // Fetch categories from database
+    fetch(`${API_BASE_URL}/api/categories`)
+      .then(res => res.json())
+      .then(data => setCategories(data))
+      .catch(err => console.error("Failed to fetch categories:", err))
+
+    fetch(`${API_BASE_URL}/api/menu`)
       .then(res => res.json())
       .then(data => {
         const item = data.find(food => food._id === id)
@@ -38,13 +56,15 @@ function EditMenuItem() {
             kcal: item.kcal || "",
             time: item.time || "",
             category: item.category || "",
-            foodType: item.foodType || "veg"
+            categoryId: item.categoryId || "",
+            foodType: item.foodType || "veg",
+            restaurantId: item.restaurantId || ""
           })
           // Set current image URL
           if (item.image) {
             const imageUrl = item.image.startsWith('http') 
               ? item.image 
-              : `http://localhost:5000/uploads/${item.image}`
+              : `${API_BASE_URL}/uploads/${item.image}`
             setCurrentImage(imageUrl)
           }
         }
@@ -82,15 +102,17 @@ function EditMenuItem() {
       formData.append("kcal", form.kcal)
       formData.append("time", form.time)
       formData.append("category", form.category)
+      formData.append("categoryId", form.categoryId)
       formData.append("foodType", form.foodType)
       formData.append("discount", form.discount)
+      formData.append("restaurantId", form.restaurantId)
       
       // Only append image if a new one was selected
       if (image) {
         formData.append("image", image)
       }
 
-      const response = await fetch(`http://localhost:5000/api/menu/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/menu/${id}`, {
         method: "PUT",
         body: formData
       })
@@ -149,6 +171,23 @@ function EditMenuItem() {
             )}
           </div>
 
+          {/* Restaurant Selection */}
+          <div className="form-group">
+            <label>Restaurant</label>
+            <select
+              name="restaurantId"
+              value={form.restaurantId}
+              onChange={handleChange}
+            >
+              <option value="">Select a restaurant</option>
+              {restaurants.map(restaurant => (
+                <option key={restaurant._id} value={restaurant._id}>
+                  {restaurant.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <input
             name="name"
             value={form.name}
@@ -194,6 +233,26 @@ function EditMenuItem() {
             onChange={handleChange}
             placeholder="Category"
           />
+
+          {/* Category ID Selection (from database) */}
+          <div className="form-group">
+            <label htmlFor="categoryId">
+              Link to Category (Optional)
+            </label>
+            <select
+              id="categoryId"
+              name="categoryId"
+              value={form.categoryId}
+              onChange={handleChange}
+            >
+              <option value="">-- Select a category --</option>
+              {categories.map(cat => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* Discount */}
           <div className="form-group">

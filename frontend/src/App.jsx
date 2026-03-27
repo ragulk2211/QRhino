@@ -9,16 +9,19 @@ import CreateCategory from "./pages/CreateCategory"
 import QRGenerator from "./pages/QRGenerator"
 import EditRestaurant from "./pages/EditRestaurant"
 import Kitchen from "./pages/Kitchen"
-import Cart from "./pages/Cart";
+import Cart from "./pages/cart";
 import Breakfast from "./pages/Breakfast"
 import Burgers from "./pages/Burgers"
 import EditMenuItem from "./pages/EditMenuItem"
+
 import RestaurantMenu from "./pages/RestaurantMenu";
+
+import CouponManagement from "./pages/CouponManagement"
+
 
 function App() {
   return (
     <BrowserRouter>
-
       <Routes>
 
         <Route path="/" element={<Home />} />
@@ -36,6 +39,7 @@ function App() {
         <Route path="/admin/create-category" element={<CreateCategory />} />
         <Route path="/admin/add-item" element={<AddMenuItem />} />
         <Route path="/admin/qr-generator" element={<QRGenerator />} />
+        <Route path="/admin/coupons" element={<CouponManagement />} />
         
         <Route path="/add-item" element={<AddMenuItem />} />
 
@@ -47,7 +51,6 @@ function App() {
         <Route path="/restaurant/menu" element={<RestaurantMenu />} />
 
       </Routes>
-
     </BrowserRouter>
   )
 }

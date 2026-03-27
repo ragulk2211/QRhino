@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import API_BASE_URL from "../config"
 import "../styles/admin.css"
 
-
-const API_BASE = "http://localhost:5000"
 
 function EditRestaurant() {
   const { id } = useParams()
@@ -17,7 +16,7 @@ function EditRestaurant() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/restaurants/${id}`)
+    fetch(`${API_BASE_URL}/api/restaurants/${id}`)
       .then(r => {
         if (!r.ok) {
           throw new Error(`HTTP ${r.status}`)
@@ -28,7 +27,7 @@ function EditRestaurant() {
         if (data.name) {
           setForm({ name: data.name, location: data.location || "", phone: data.phone || "" })
           if (data.image) {
-            setCurrentImage(`${API_BASE}/uploads/${data.image}`)
+            setCurrentImage(`${API_BASE_URL}/uploads/${data.image}`)
           }
         }
         setLoading(false)
@@ -65,7 +64,7 @@ function EditRestaurant() {
         formData.append("image", imageFile)
       }
 
-      const res = await fetch(`${API_BASE}/api/restaurants/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/restaurants/${id}`, {
         method: "PUT",
         body: formData
       })

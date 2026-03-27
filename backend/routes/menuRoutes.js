@@ -8,7 +8,6 @@ const Menu = require("../models/Menu")
 
 console.log("✅ menuRoutes loaded")
 
-
 // =========================
 // Upload folder
 // =========================
@@ -18,7 +17,6 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true })
 }
 
-
 // =========================
 // Multer Storage
 // =========================
@@ -26,25 +24,21 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadsDir)
   },
-
   filename: (req, file, cb) => {
     const uniqueName =
       Date.now() +
       "-" +
       Math.round(Math.random() * 1e9) +
       path.extname(file.originalname)
-
     cb(null, uniqueName)
   }
 })
-
 
 // =========================
 // File Filter
 // =========================
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /jpg|jpeg|png|webp/
-
   const ext = allowedTypes.test(path.extname(file.originalname).toLowerCase())
   const mime = allowedTypes.test(file.mimetype)
 
@@ -55,7 +49,6 @@ const fileFilter = (req, file, cb) => {
   }
 }
 
-
 // =========================
 // Multer Upload
 // =========================
@@ -63,20 +56,23 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024
+    fileSize: 5 * 1024 * 1024 // 5MB limit
   }
 })
 
-
 // =========================
-// GET ALL MENU
+// GET ALL MENU ITEMS
 // =========================
 router.get("/", async (req, res) => {
   try {
     console.log("✅ GET /api/menu hit")
-
-    const { restaurantId } = req.query
-    const filter = restaurantId ? { restaurantId } : {}
+    
+    const { restaurantId, foodType, category } = req.query
+    const filter = {}
+    
+    if (restaurantId) filter.restaurantId = restaurantId
+    if (foodType) filter.foodType = foodType
+    if (category) filter.category = new RegExp(category, 'i') // Case-insensitive match
 
     const menu = await Menu.find(filter).sort({ createdAt: -1 })
 
@@ -88,9 +84,8 @@ router.get("/", async (req, res) => {
   }
 })
 
-
 // =========================
-// GET FEATURED
+// GET FEATURED ITEMS
 // =========================
 router.get("/featured", async (req, res) => {
   try {
@@ -108,7 +103,6 @@ router.get("/featured", async (req, res) => {
   }
 })
 
-
 // =========================
 // CREATE MENU ITEM
 // =========================
@@ -116,39 +110,56 @@ router.post("/", upload.single("image"), async (req, res) => {
   try {
     console.log("✅ POST /api/menu hit")
 
-    const {
+    let {
       name,
       desc,
       price,
+      discount,
       category,
+      categoryId,
       kcal,
       time,
-      restaurantId
+      restaurantId,
+      foodType
     } = req.body
+
+    // ✅ FIX: Convert types with validation (prevents NaN)
+    price = Number(price) || 0
+    discount = Number(discount) || 0
+    kcal = Number(kcal) || 0
+    time = Number(time) || 0
+
+    // Debug log (only in development)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("BODY:", req.body)
+      console.log("FILE:", req.file)
+    }
 
     const image = req.file ? req.file.filename : null
 
-    const newMenu = new Menu({
+    const menuItem = new Menu({
       name,
       desc,
       price,
+      discount,
       category,
+      categoryId: categoryId || null,
       kcal,
       time,
       image,
-      restaurantId: restaurantId || null
+      restaurantId: restaurantId || null,
+      foodType: foodType || "veg"
     })
 
-    await newMenu.save()
+    await menuItem.save()
 
-    res.status(201).json(newMenu)
+    res.status(201).json(menuItem)
 
   } catch (error) {
-    console.error("❌ Error creating menu:", error)
-    res.status(500).json({ error: "Failed to create menu item" })
+    console.error("❌ FULL ERROR:", error)
+    res.status(500).json({ error: error.message })
   }
 })
-
 
 // =========================
 // UPDATE MENU ITEM
@@ -163,25 +174,47 @@ router.put("/:id", upload.single("image"), async (req, res) => {
       return res.status(404).json({ error: "Menu item not found" })
     }
 
+    let {
+      name,
+      desc,
+      price,
+      discount,
+      category,
+      categoryId,
+      kcal,
+      time,
+      restaurantId,
+      foodType
+    } = req.body
+
+    // Convert types with validation
+    price = Number(price) || 0
+    discount = Number(discount) || 0
+    kcal = Number(kcal) || 0
+    time = Number(time) || 0
+
     const updateData = {
-      name: req.body.name,
-      desc: req.body.desc,
-      price: req.body.price,
-      category: req.body.category,
-      kcal: req.body.kcal,
-      time: req.body.time,
-      restaurantId: req.body.restaurantId
+      name,
+      desc,
+      price,
+      discount,
+      category,
+      categoryId: categoryId || null,
+      kcal,
+      time,
+      restaurantId: restaurantId || null,
+      foodType: foodType || "veg"
     }
 
+    // Handle image update
     if (req.file) {
+      // Delete old image if exists
       if (existing.image) {
         const oldImagePath = path.join(uploadsDir, existing.image)
-
         if (fs.existsSync(oldImagePath)) {
           fs.unlinkSync(oldImagePath)
         }
       }
-
       updateData.image = req.file.filename
     }
 
@@ -199,7 +232,6 @@ router.put("/:id", upload.single("image"), async (req, res) => {
   }
 })
 
-
 // =========================
 // DELETE MENU ITEM
 // =========================
@@ -213,9 +245,9 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ error: "Menu item not found" })
     }
 
+    // Delete associated image file
     if (deleted.image) {
       const imagePath = path.join(uploadsDir, deleted.image)
-
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath)
       }

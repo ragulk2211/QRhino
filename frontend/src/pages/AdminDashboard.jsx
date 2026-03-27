@@ -1,237 +1,495 @@
-import { useNavigate } from "react-router-dom"
-import { useState, useEffect } from "react"
-import "../styles/admin.css"
-import "../styles/AdminDashboard.css"
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import {
+  Card,
+  Row,
+  Col,
+  Button,
+  Typography,
+  Space,
+  Breadcrumb,
+  Statistic,
+  List,
+  Tag,
+  Skeleton,
+  Alert,
+  Divider,
+  Tooltip,
+  Empty,
+  Avatar,
+  Timeline,
+  Badge,
+  Progress
+} from "antd";
+import {
+  ArrowLeftOutlined,
+  ShopOutlined,
+  FolderOutlined,
+  MenuOutlined,
+  QrcodeOutlined,
+  GiftOutlined,
+  PlusOutlined,
+  EyeOutlined,
+  BulbOutlined,
+  RocketOutlined,
+  ThunderboltOutlined,
+  StarOutlined,
+  TrophyOutlined,
+  CheckCircleOutlined,
+  WarningOutlined,
+  InfoCircleOutlined,
+  CalendarOutlined,
+  DashboardOutlined
+} from "@ant-design/icons";
+import API_BASE_URL from "../config";
+import "../styles/AdminDashboard.css";
+
+const { Title, Text, Paragraph } = Typography;
 
 function AdminDashboard() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     restaurants: 0,
     categories: 0,
     menuItems: 0,
     qrCodes: 0
-  })
-  const [recentActivities, setRecentActivities] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  });
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [greeting, setGreeting] = useState("");
+  const [currentTime, setCurrentTime] = useState("");
 
   useEffect(() => {
-    fetchDashboardStats()
-    fetchRecentActivities()
-  }, [])
+    setGreeting(getGreeting());
+    setCurrentTime(new Date().toLocaleTimeString());
+    fetchDashboardStats();
+    fetchRecentActivities();
+    
+    const interval = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString());
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  };
 
   const fetchDashboardStats = async () => {
+    setIsLoading(true);
     try {
-      const restaurantsRes = await fetch("http://localhost:5000/api/restaurants")
-      const restaurants = await restaurantsRes.json()
+      const restaurantsRes = await fetch(`${API_BASE_URL}/api/restaurants`);
+      const restaurants = await restaurantsRes.json();
       
-      const menuRes = await fetch("http://localhost:5000/api/menu")
-      const menuItems = await menuRes.json()
+      const menuRes = await fetch(`${API_BASE_URL}/api/menu`);
+      const menuItems = await menuRes.json();
       
-      const categories = [...new Set(menuItems.map(item => item.category))].length
+      const categories = [...new Set(menuItems.map(item => item.category))].filter(Boolean).length;
 
       setStats({
         restaurants: restaurants.length || 0,
         categories: categories || 0,
         menuItems: menuItems.length || 0,
         qrCodes: restaurants.length || 0
-      })
+      });
     } catch (error) {
-      console.error("Error fetching stats:", error)
+      console.error("Error fetching stats:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const fetchRecentActivities = async () => {
-    const activities = [
-      { id: 1, action: "New restaurant added", time: "2 minutes ago", type: "success" },
-      { id: 2, action: "Menu item updated", time: "15 minutes ago", type: "info" },
-      { id: 3, action: "QR code generated", time: "1 hour ago", type: "warning" },
-      { id: 4, action: "Category created", time: "3 hours ago", type: "success" }
-    ]
-    setRecentActivities(activities)
-  }
+    try {
+      // In a real app, fetch from API
+      const activities = [
+        { id: 1, action: "New restaurant added", time: "2 minutes ago", type: "success", icon: <ShopOutlined /> },
+        { id: 2, action: "Menu item updated", time: "15 minutes ago", type: "info", icon: <MenuOutlined /> },
+        { id: 3, action: "QR code generated", time: "1 hour ago", type: "warning", icon: <QrcodeOutlined /> },
+        { id: 4, action: "Category created", time: "3 hours ago", type: "success", icon: <FolderOutlined /> },
+        { id: 5, action: "Coupon created: SAVE20", time: "5 hours ago", type: "info", icon: <GiftOutlined /> }
+      ];
+      setRecentActivities(activities);
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+    }
+  };
 
   const actions = [
     { 
       label: "Create Restaurant", 
       path: "/admin/create-restaurant", 
       desc: "Add a new restaurant to the system",
-      icon: "🏨",
-      gradient: "linear-gradient(135deg, #2c2c2c, #1a1a1a)"
+      icon: <ShopOutlined />,
+      color: "#ff9f4a"
     },
     { 
       label: "Create Category",   
       path: "/admin/create-category",   
       desc: "Add a new menu category",
-      icon: "📂",
-      gradient: "linear-gradient(135deg, #2c2c2c, #1a1a1a)"
+      icon: <FolderOutlined />,
+      color: "#ffb347"
     },
     { 
       label: "Add Food Menu",     
       path: "/add-item",                 
       desc: "Add a new food item with image",
-      icon: "🍔",
-      gradient: "linear-gradient(135deg, #2c2c2c, #1a1a1a)"
+      icon: <MenuOutlined />,
+      color: "#ffc08a"
     },
     { 
       label: "Generate QR Code",  
       path: "/admin/qr-generator",       
       desc: "Generate QR code for a menu page",
-      icon: "📱",
-      gradient: "linear-gradient(135deg, #2c2c2c, #1a1a1a)"
+      icon: <QrcodeOutlined />,
+      color: "#ff9f4a"
     },
     { 
       label: "Manage Coupons",    
       path: "/admin/coupons",           
       desc: "Create and manage discount coupons",
-      icon: "🎟️",
-      gradient: "linear-gradient(135deg, #2c2c2c, #1a1a1a)"
+      icon: <GiftOutlined />,
+      color: "#ffb347"
     },
-  ]
+  ];
 
-  const StatCard = ({ title, value, icon, trend }) => (
-    <div className="stat-card">
-      <div className="stat-icon">
-        {icon}
-      </div>
-      <div className="stat-info">
-        <h3>{title}</h3>
-        <div className="stat-value">
-          {isLoading ? <div className="stat-skeleton"></div> : value}
+  const tips = [
+    { icon: "📸", text: "Add high-quality images to your menu items for better engagement" },
+    { icon: "🏷️", text: "Organize items with proper categories for easy navigation" },
+    { icon: "📊", text: "Generate QR codes for each restaurant to track performance" },
+    { icon: "🎯", text: "Regularly update menu items to keep customers engaged" }
+  ];
+
+  const getActivityIcon = (type) => {
+    switch(type) {
+      case 'success': return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
+      case 'warning': return <WarningOutlined style={{ color: '#faad14' }} />;
+      default: return <InfoCircleOutlined style={{ color: '#ff9f4a' }} />;
+    }
+  };
+
+  const getProgressPercentage = () => {
+    const total = stats.restaurants + stats.categories + stats.menuItems;
+    const max = 100;
+    return Math.min(Math.round((total / max) * 100), 100);
+  };
+
+  const StatCard = ({ title, value, icon, trend, loading }) => (
+    <Card className="admin-dash-stat-card" hoverable>
+      <div className="admin-dash-stat-icon">{icon}</div>
+      <Statistic
+        title={title}
+        value={loading ? "..." : value}
+        valueStyle={{ color: '#ff9f4a', fontWeight: 700 }}
+        className="admin-dash-statistic"
+      />
+      {trend && !loading && (
+        <div className="admin-dash-stat-trend">
+          <Tag color="orange" className="admin-dash-trend-tag">{trend}</Tag>
         </div>
-        {trend && <span className="stat-trend">{trend}</span>}
-      </div>
-    </div>
-  )
+      )}
+      {loading && <Skeleton.Input active size="small" className="admin-dash-stat-skeleton" />}
+    </Card>
+  );
 
   return (
-    <div className="admin-dashboard">
-      <div className="dashboard-container">
+    <div className="admin-dash-container">
+      <div className="admin-dash-content">
+        <Breadcrumb className="admin-dash-breadcrumb">
+          <Breadcrumb.Item>
+            <DashboardOutlined /> Dashboard
+          </Breadcrumb.Item>
+          <Breadcrumb.Item>Admin Panel</Breadcrumb.Item>
+        </Breadcrumb>
+
         {/* Header Section */}
-        <div className="dashboard-header">
-          <div className="header-left">
-            <div className="header-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 3H21V5H3V3Z" fill="currentColor"/>
-                <path d="M5 7H19V9H5V7Z" fill="currentColor"/>
-                <path d="M7 11H17V13H7V11Z" fill="currentColor"/>
-                <path d="M9 15H15V17H9V15Z" fill="currentColor"/>
-                <path d="M11 19H13V21H11V19Z" fill="currentColor"/>
-              </svg>
-            </div>
-            <div>
-              <h1>Admin Dashboard</h1>
-              <p>Manage your QR Restaurant System</p>
+        <div className="admin-dash-header">
+          <div className="admin-dash-header-left">
+            <Avatar size={64} icon={<RocketOutlined />} className="admin-dash-header-avatar" />
+            <div className="admin-dash-header-info">
+              <Title level={2} className="admin-dash-title">
+                {greeting}, Admin! 👋
+              </Title>
+              <Space>
+                <Text type="secondary" className="admin-dash-subtitle">
+                  Welcome to your QRhino Admin Dashboard
+                </Text>
+                <Tag icon={<CalendarOutlined />} color="orange" className="admin-dash-time-tag">
+                  {currentTime}
+                </Tag>
+              </Space>
             </div>
           </div>
-          <button className="btn-home" onClick={() => navigate("/")}>
-            ← Back to Home
-          </button>
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate("/")}
+            className="admin-dash-back-btn"
+          >
+            Back to Home
+          </Button>
         </div>
 
         {/* Stats Grid */}
-        <div className="stats-grid">
-          <StatCard 
-            title="Total Restaurants" 
-            value={stats.restaurants} 
-            icon="🏨"
-            trend="+2 this week"
-          />
-          <StatCard 
-            title="Categories" 
-            value={stats.categories} 
-            icon="📂"
-            trend="+5 new"
-          />
-          <StatCard 
-            title="Menu Items" 
-            value={stats.menuItems} 
-            icon="🍔"
-            trend="+12 added"
-          />
-          <StatCard 
-            title="QR Codes" 
-            value={stats.qrCodes} 
-            icon="📱"
-            trend="Active"
-          />
+        <div className="admin-dash-stats-section">
+          <div className="admin-dash-section-header">
+            <Title level={3} className="admin-dash-section-title">
+              <StarOutlined /> Overview Dashboard
+            </Title>
+            <Text type="secondary">Real-time statistics of your platform</Text>
+          </div>
+          <Row gutter={[24, 24]}>
+            <Col xs={24} sm={12} lg={6}>
+              <StatCard
+                title="Total Restaurants"
+                value={stats.restaurants}
+                icon={<ShopOutlined />}
+                trend="+2 this week"
+                loading={isLoading}
+              />
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <StatCard
+                title="Categories"
+                value={stats.categories}
+                icon={<FolderOutlined />}
+                trend="+5 new"
+                loading={isLoading}
+              />
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <StatCard
+                title="Menu Items"
+                value={stats.menuItems}
+                icon={<MenuOutlined />}
+                trend="+12 added"
+                loading={isLoading}
+              />
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <StatCard
+                title="QR Codes"
+                value={stats.qrCodes}
+                icon={<QrcodeOutlined />}
+                trend="Active"
+                loading={isLoading}
+              />
+            </Col>
+          </Row>
         </div>
 
         {/* Quick Actions Section */}
-        <div className="quick-actions-section">
-          <div className="section-title">
-            <h2>Quick Actions</h2>
-            <p>Manage your restaurant content</p>
+        <div className="admin-dash-actions-section">
+          <div className="admin-dash-section-header">
+            <Title level={3} className="admin-dash-section-title">
+              <ThunderboltOutlined /> Quick Actions
+            </Title>
+            <Text type="secondary">Manage your restaurant content</Text>
           </div>
-          <div className="actions-grid">
-            {actions.map((action, i) => (
-              <div 
-                key={i} 
-                className="action-card"
-                onClick={() => navigate(action.path)}
-              >
-                <div className="action-icon">{action.icon}</div>
-                <div className="action-content">
-                  <h3>{action.label}</h3>
-                  <p>{action.desc}</p>
-                  <span className="action-link">Get started →</span>
-                </div>
-              </div>
+          <Row gutter={[24, 24]}>
+            {actions.map((action, index) => (
+              <Col xs={24} sm={12} lg={8} key={index}>
+                <Card
+                  className="admin-dash-action-card"
+                  hoverable
+                  onClick={() => navigate(action.path)}
+                >
+                  <div className="admin-dash-action-icon" style={{ color: action.color }}>
+                    {action.icon}
+                  </div>
+                  <div className="admin-dash-action-content">
+                    <Title level={4} className="admin-dash-action-title">
+                      {action.label}
+                    </Title>
+                    <Text type="secondary" className="admin-dash-action-desc">
+                      {action.desc}
+                    </Text>
+                    <div className="admin-dash-action-link">
+                      <span>Get started</span>
+                      <PlusOutlined />
+                    </div>
+                  </div>
+                </Card>
+              </Col>
             ))}
-          </div>
+          </Row>
         </div>
 
-        {/* Recent Activity Section */}
-        <div className="recent-activity-section">
-          <div className="section-title">
-            <h2>Recent Activity</h2>
-            <p>Latest updates from your system</p>
-          </div>
-          <div className="activity-list">
-            {recentActivities.map((activity) => (
-              <div key={activity.id} className={`activity-item ${activity.type}`}>
-                <div className="activity-dot"></div>
-                <div className="activity-details">
-                  <div className="activity-action">{activity.action}</div>
-                  <div className="activity-time">{activity.time}</div>
+        <Row gutter={[24, 24]}>
+          {/* Recent Activity Section */}
+          <Col xs={24} lg={14}>
+            <Card
+              title={
+                <Space>
+                  <EyeOutlined />
+                  <span>Recent Activity</span>
+                  <Badge count={recentActivities.length} className="admin-dash-badge" />
+                </Space>
+              }
+              className="admin-dash-activity-card"
+              extra={
+                <Button type="link" onClick={() => navigate("/admin/activities")}>
+                  View All
+                </Button>
+              }
+            >
+              {recentActivities.length === 0 ? (
+                <Empty description="No recent activities" />
+              ) : (
+                <List
+                  dataSource={recentActivities}
+                  renderItem={(item) => (
+                    <List.Item className="admin-dash-activity-item">
+                      <List.Item.Meta
+                        avatar={
+                          <Avatar
+                            icon={item.icon}
+                            className={`admin-dash-activity-avatar ${item.type}`}
+                          />
+                        }
+                        title={
+                          <Space>
+                            <Text strong className="admin-dash-activity-action">
+                              {item.action}
+                            </Text>
+                            <Tag color="orange" className="admin-dash-activity-tag">
+                              {item.type}
+                            </Tag>
+                          </Space>
+                        }
+                        description={
+                          <Text type="secondary" className="admin-dash-activity-time">
+                            {item.time}
+                          </Text>
+                        }
+                      />
+                    </List.Item>
+                  )}
+                />
+              )}
+            </Card>
+          </Col>
+
+          {/* Quick Tips Section */}
+          <Col xs={24} lg={10}>
+            <Card
+              title={
+                <Space>
+                  <BulbOutlined />
+                  <span>Quick Tips</span>
+                </Space>
+              }
+              className="admin-dash-tips-card"
+            >
+              <Timeline
+                className="admin-dash-timeline"
+                items={tips.map((tip, index) => ({
+                  dot: <div className="admin-dash-timeline-dot">{tip.icon}</div>,
+                  children: (
+                    <Text className="admin-dash-tip-text">
+                      {tip.text}
+                    </Text>
+                  ),
+                  color: 'orange'
+                }))}
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Progress Section */}
+        <div className="admin-dash-progress-section">
+          <Card className="admin-dash-progress-card">
+            <Row gutter={[24, 24]} align="middle">
+              <Col xs={24} md={8}>
+                <div className="admin-dash-progress-left">
+                  <div className="admin-dash-progress-icon">
+                    <TrophyOutlined />
+                  </div>
+                  <Title level={4} className="admin-dash-progress-title">
+                    Platform Progress
+                  </Title>
+                  <Text type="secondary">Track your achievements</Text>
                 </div>
-              </div>
-            ))}
-          </div>
-          <button className="view-all-btn" onClick={() => navigate("/admin/activities")}>
-            View All Activities
-          </button>
+              </Col>
+              <Col xs={24} md={16}>
+                <div className="admin-dash-progress-stats">
+                  <div className="admin-dash-progress-item">
+                    <div className="admin-dash-progress-label">Completion Rate</div>
+                    <Progress
+                      percent={getProgressPercentage()}
+                      strokeColor="#ff9f4a"
+                      trailColor="#ffe0c4"
+                      className="admin-dash-progress-bar"
+                    />
+                  </div>
+                  <Row gutter={[16, 16]}>
+                    <Col xs={12} sm={6}>
+                      <div className="admin-dash-milestone">
+                        <div className="admin-dash-milestone-value">
+                          {stats.restaurants}
+                        </div>
+                        <div className="admin-dash-milestone-label">Restaurants</div>
+                      </div>
+                    </Col>
+                    <Col xs={12} sm={6}>
+                      <div className="admin-dash-milestone">
+                        <div className="admin-dash-milestone-value">
+                          {stats.categories}
+                        </div>
+                        <div className="admin-dash-milestone-label">Categories</div>
+                      </div>
+                    </Col>
+                    <Col xs={12} sm={6}>
+                      <div className="admin-dash-milestone">
+                        <div className="admin-dash-milestone-value">
+                          {stats.menuItems}
+                        </div>
+                        <div className="admin-dash-milestone-label">Menu Items</div>
+                      </div>
+                    </Col>
+                    <Col xs={12} sm={6}>
+                      <div className="admin-dash-milestone">
+                        <div className="admin-dash-milestone-value">
+                          {Math.round(stats.restaurants * 10)}
+                        </div>
+                        <div className="admin-dash-milestone-label">QR Scans</div>
+                      </div>
+                    </Col>
+                  </Row>
+                </div>
+              </Col>
+            </Row>
+          </Card>
         </div>
 
-        {/* Quick Tips */}
-        <div className="quick-tips-section">
-          <div className="section-title">
-            <h2>Quick Tips</h2>
-            <p>Get the most out of your admin panel</p>
-          </div>
-          <div className="tips-grid">
-            <div className="tip-card">
-              <div className="tip-icon">📸</div>
-              <p>Add high-quality images to your menu items for better engagement</p>
-            </div>
-            <div className="tip-card">
-              <div className="tip-icon">🏷️</div>
-              <p>Organize items with proper categories for easy navigation</p>
-            </div>
-            <div className="tip-card">
-              <div className="tip-icon">📊</div>
-              <p>Generate QR codes for each restaurant to track performance</p>
-            </div>
-            <div className="tip-card">
-              <div className="tip-icon">🎯</div>
-              <p>Regularly update menu items to keep customers engaged</p>
-            </div>
-          </div>
-        </div>
+        {/* Loading Alert */}
+        {isLoading && (
+          <Alert
+            message="Loading Dashboard Data"
+            description="Please wait while we fetch the latest information"
+            type="info"
+            showIcon
+            className="admin-dash-loading-alert"
+          />
+        )}
+
+        {/* Welcome Alert */}
+        {!isLoading && (
+          <Alert
+            message="🎉 Welcome to Your Admin Dashboard"
+            description="Manage restaurants, menu items, QR codes, and coupons all from one place. Get started by creating your first restaurant!"
+            type="success"
+            showIcon
+            className="admin-dash-welcome-alert"
+          />
+        )}
       </div>
     </div>
-  )
+  );
 }
 
-export default AdminDashboard
+export default AdminDashboard;

@@ -455,3 +455,68 @@
     border: 1px solid #ddd;
   }
 }
+
+/* Cancel Button */
+.category-form-cancel-btn {
+  border-radius: var(--radius-full);
+  border: 1px solid var(--light-orange-pale);
+  background: white;
+  color: var(--brown-light);
+  transition: var(--transition);
+  height: 48px;
+}
+
+.category-form-cancel-btn:hover {
+  border-color: var(--light-orange-primary);
+  color: var(--light-orange-primary);
+  transform: translateY(-2px);
+}
+
+/* Loading state improvements */
+.category-form-loading {
+  text-align: center;
+  padding: var(--space-2xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+/* Edit button hover */
+.category-form-edit-btn:hover {
+  color: var(--light-orange-primary) !important;
+  background: var(--cream-warm) !important;
+}
+
+/* Delete button hover */
+.category-form-delete-btn:hover {
+  background: #fff0f0 !important;
+}
+
+/* List item improvements */
+.category-form-list-item .ant-list-item-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* Tooltip customization */
+.ant-tooltip-inner {
+  background: var(--brown-light);
+  border-radius: var(--radius-sm);
+}
+
+/* Modal customization */
+.ant-modal-confirm-body .ant-modal-confirm-title {
+  color: var(--brown-light);
+  font-weight: 600;
+}
+
+.ant-modal-confirm-btns .ant-btn-primary {
+  background: #ff4d4f;
+  border-color: #ff4d4f;
+}
+
+.ant-modal-confirm-btns .ant-btn-primary:hover {
+  background: #ff7878;
+  border-color: #ff7878;
+}

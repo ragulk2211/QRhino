@@ -3,40 +3,34 @@
    Premium Light Orange + Cream Theme
 ========================================= */
 
+/* CSS VARIABLES */
 :root {
   --orange-primary: #ff9f4a;
   --orange-light: #ffb347;
   --orange-soft: #ffc08a;
   --orange-pale: #ffe0c4;
-
   --cream: #fffef7;
   --cream-light: #ffffff;
   --cream-soft: #fffbf5;
   --cream-warm: #fff9f0;
-
   --brown-soft: #c9a87c;
   --brown-light: #b87a4a;
   --brown-dark: #6b4d2f;
-
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
-
   --shadow-orange: 0 4px 12px rgba(255, 159, 74, 0.15);
   --shadow-orange-lg: 0 8px 24px rgba(255, 159, 74, 0.2);
-
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-2xl: 24px;
   --radius-full: 9999px;
-
   --transition: all 0.3s ease;
 }
 
 /* Container */
-
 .edit-menu-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #fffef7 0%, #fffbf5 50%, #fff9f0 100%);
@@ -50,7 +44,6 @@
 }
 
 /* Card */
-
 .edit-menu-card {
   background: var(--cream-light);
   border-radius: var(--radius-2xl);
@@ -70,7 +63,6 @@
 }
 
 /* Header */
-
 .edit-menu-header {
   text-align: center;
   position: relative;
@@ -112,7 +104,6 @@
 }
 
 /* Form */
-
 .edit-menu-form-item {
   margin-bottom: 24px;
 }
@@ -124,7 +115,6 @@
 }
 
 /* Inputs */
-
 .edit-menu-card .ant-input,
 .edit-menu-card .ant-input-number,
 .edit-menu-card .ant-select-selector,
@@ -152,7 +142,6 @@
 }
 
 /* Radio */
-
 .edit-menu-card .ant-radio-group {
   display: flex;
   gap: 24px;
@@ -168,13 +157,11 @@
 }
 
 /* Switch */
-
 .ant-switch-checked {
   background: var(--orange-primary) !important;
 }
 
 /* Image Section */
-
 .edit-menu-image-section {
   text-align: center;
   margin-top: 16px;
@@ -192,8 +179,9 @@
 
 .edit-menu-image-preview {
   display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
 .edit-menu-image-preview .ant-image-img {
@@ -207,14 +195,28 @@
   box-shadow: var(--shadow-orange);
 }
 
+.remove-image-btn {
+  border-radius: var(--radius-full);
+}
+
 /* Upload */
+.edit-menu-upload-dragger .ant-upload-drag {
+  border-radius: var(--radius-lg);
+  background: var(--cream-soft);
+  border: 2px dashed var(--orange-pale);
+  transition: var(--transition);
+}
+
+.edit-menu-upload-dragger .ant-upload-drag:hover {
+  border-color: var(--orange-primary);
+  background: var(--cream-warm);
+}
 
 .ant-upload {
   width: 100%;
 }
 
 /* Buttons */
-
 .edit-menu-submit-btn {
   background: linear-gradient(135deg, var(--orange-light), var(--orange-primary));
   border: none !important;
@@ -233,14 +235,66 @@
   box-shadow: var(--shadow-orange-lg);
 }
 
-/* Divider */
+/* Action Buttons */
+.edit-menu-actions {
+  margin: 24px 0;
+  text-align: center;
+}
 
+/* Divider */
 .ant-divider {
   border-color: var(--orange-pale);
 }
 
-/* Alerts */
+/* Price Preview Card */
+.price-preview-card {
+  background: linear-gradient(135deg, #fffbf5, #fffef7);
+  border: 1px solid var(--orange-pale);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  text-align: center;
+  margin-top: 24px;
+}
 
+.final-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--orange-primary);
+  margin: 8px 0;
+}
+
+.discount-tag {
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  animation: pulse 1s ease infinite;
+  background: #52c41a;
+  color: white;
+  border: none;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Food Type Icons */
+.veg-icon, .nonveg-icon {
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+.food-type-group .ant-radio-wrapper {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+
+.food-type-group .ant-radio-wrapper:hover {
+  background: var(--cream-soft);
+}
+
+/* Alerts */
 .edit-menu-info-alert,
 .edit-menu-tips-alert {
   margin-top: 16px;
@@ -249,10 +303,19 @@
   background: rgba(255, 159, 74, 0.05);
 }
 
-/* Loading */
+.edit-menu-tips-alert .ant-alert-message {
+  color: var(--brown-light);
+  font-weight: 600;
+}
 
+.edit-menu-tips-alert .ant-alert-icon {
+  color: var(--orange-primary);
+}
+
+/* Loading */
 .edit-menu-loading-card {
   border-radius: var(--radius-2xl);
+  border: 1px solid var(--orange-pale);
   text-align: center;
 }
 
@@ -260,10 +323,33 @@
   padding: 60px;
 }
 
-/* Scrollbar */
+/* Tooltip */
+.ant-tooltip-inner {
+  background: var(--brown-light);
+  border-radius: var(--radius-sm);
+}
 
+/* Switch Styling */
+.ant-switch {
+  background: var(--orange-pale);
+}
+
+.ant-switch-checked {
+  background: var(--orange-primary);
+}
+
+.ant-switch-checked .ant-switch-handle::before {
+  background: white;
+}
+
+/* Scrollbar */
 .edit-menu-container::-webkit-scrollbar {
   width: 8px;
+}
+
+.edit-menu-container::-webkit-scrollbar-track {
+  background: var(--cream-soft);
+  border-radius: 10px;
 }
 
 .edit-menu-container::-webkit-scrollbar-thumb {
@@ -272,7 +358,6 @@
 }
 
 /* Animation */
-
 @keyframes fadeUp {
   from {
     opacity: 0;
@@ -285,7 +370,6 @@
 }
 
 /* Responsive */
-
 @media (max-width: 768px) {
   .edit-menu-content {
     padding: 16px;
@@ -308,6 +392,28 @@
     flex-direction: column;
     gap: 12px;
   }
+  
+  .price-preview-card {
+    margin-top: 0;
+    margin-bottom: 16px;
+  }
+  
+  .final-price {
+    font-size: 20px;
+  }
+  
+  .edit-menu-actions .ant-space {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .edit-menu-actions .ant-space-item {
+    flex: 1;
+  }
+  
+  .edit-menu-actions button {
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -321,5 +427,23 @@
 
   .edit-menu-title {
     font-size: 1.3rem;
+  }
+  
+  .price-preview-card {
+    padding: 12px;
+  }
+  
+  .final-price {
+    font-size: 18px;
+  }
+  
+  .food-type-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .food-type-group .ant-radio-wrapper {
+    margin-right: 0;
   }
 }

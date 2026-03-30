@@ -18,8 +18,8 @@ import {
   List,
   Avatar,
   Empty,
-  Statistic,
-  Tooltip
+  Tooltip,
+  Modal
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -30,12 +30,14 @@ import {
   EditOutlined,
   DatabaseOutlined,
   InfoCircleOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  ExclamationCircleOutlined
 } from "@ant-design/icons";
 import API_BASE_URL from "../config";
 import "../styles/createCategory.css";
 
 const { Title, Text, Paragraph } = Typography;
+const { confirm } = Modal;
 
 function CreateCategory() {
   const navigate = useNavigate();
@@ -43,22 +45,26 @@ function CreateCategory() {
   const [existingCategories, setExistingCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
   const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     fetchExistingCategories();
   }, []);
 
+  // FIXED: Store full category objects with _id
   const fetchExistingCategories = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/menu`);
+      const res = await fetch(`${API_BASE_URL}/api/categories`);
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
-      const categories = [...new Set(data.map(item => item.category))].filter(Boolean);
-      setExistingCategories(categories);
+      // Store full category objects
+      setExistingCategories(Array.isArray(data) ? data : []);
     } catch (error) {
+      console.error("Error fetching categories:", error);
       message.error("Failed to fetch categories");
+      setExistingCategories([]);
     } finally {
       setIsLoading(false);
     }
@@ -94,9 +100,14 @@ function CreateCategory() {
     setCreating(true);
     
     try {
-      // API call to create category
-      const response = await fetch(`${API_BASE_URL}/api/categories`, {
-        method: "POST",
+      const url = editingCategory 
+        ? `${API_BASE_URL}/api/categories/${editingCategory._id}`  // Use _id for edit
+        : `${API_BASE_URL}/api/categories`;
+      
+      const method = editingCategory ? "PUT" : "POST";
+      
+      const response = await fetch(url, {
+        method: method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -106,45 +117,76 @@ function CreateCategory() {
       });
       
       if (response.ok) {
+        const data = await response.json();
         message.success({
-          content: `Category "${values.categoryName}" created successfully!`,
+          content: editingCategory 
+            ? `Category "${values.categoryName}" updated successfully!`
+            : `Category "${values.categoryName}" created successfully!`,
           icon: <CheckCircleOutlined />,
           duration: 3
         });
         form.resetFields();
         setFormErrors({});
-        fetchExistingCategories();
+        setEditingCategory(null);
+        fetchExistingCategories(); // Refresh the list
       } else {
         const error = await response.json();
-        message.error(error.message || "Failed to create category");
+        message.error(error.message || error.error || "Failed to save category");
       }
     } catch (error) {
-      console.error("Error creating category:", error);
+      console.error("Error saving category:", error);
       message.error("Network error. Please check your connection.");
     } finally {
       setCreating(false);
     }
   };
 
-  const handleDeleteCategory = async (category) => {
-    try {
-      // API call to delete category
-      const response = await fetch(`${API_BASE_URL}/api/categories/${category}`, {
-        method: "DELETE"
-      });
-      
-      if (response.ok) {
-        message.success(`Category "${category}" deleted successfully`);
-        fetchExistingCategories();
-      } else {
-        message.error("Failed to delete category");
+  // FIXED: Delete using _id instead of name
+  const handleDeleteCategory = (category) => {
+    confirm({
+      title: 'Delete Category',
+      icon: <ExclamationCircleOutlined />,
+      content: `Are you sure you want to delete "${category.displayName || category.name}"?`,
+      okText: 'Yes, Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          // Use category._id for deletion
+          const response = await fetch(`${API_BASE_URL}/api/categories/${category._id}`, {
+            method: "DELETE"
+          });
+          
+          if (response.ok) {
+            message.success(`Category "${category.displayName || category.name}" deleted successfully`);
+            fetchExistingCategories();
+          } else {
+            const error = await response.json();
+            message.error(error.message || error.error || "Failed to delete category");
+          }
+        } catch (error) {
+          console.error("Error deleting category:", error);
+          message.error("Network error. Please try again.");
+        }
       }
-    } catch (error) {
-      message.error("Network error. Please try again.");
-    }
+    });
   };
 
-  const getCategoryIcon = (category) => {
+  const handleEditCategory = (category) => {
+    setEditingCategory(category);
+    form.setFieldsValue({ categoryName: category.name });
+    message.info(`Editing category: ${category.displayName || category.name}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCategory(null);
+    form.resetFields();
+    setFormErrors({});
+    message.info("Edit cancelled");
+  };
+
+  const getCategoryIcon = (categoryName) => {
     const icons = {
       burgers: "🍔",
       pizza: "🍕",
@@ -160,9 +202,16 @@ function CreateCategory() {
       italian: "🍝",
       mexican: "🌮",
       japanese: "🍣",
-      thai: "🍜"
+      thai: "🍜",
+      breakfast: "🍳",
+      lunch: "🥪",
+      dinner: "🍽️",
+      seafood: "🦞",
+      steak: "🥩",
+      vegan: "🌱",
+      vegetarian: "🥬"
     };
-    return icons[category.toLowerCase()] || "📁";
+    return icons[categoryName?.toLowerCase()] || "📁";
   };
 
   return (
@@ -172,7 +221,7 @@ function CreateCategory() {
           <Breadcrumb.Item>
             <a onClick={() => navigate("/admin")}>Dashboard</a>
           </Breadcrumb.Item>
-          <Breadcrumb.Item>Create Category</Breadcrumb.Item>
+          <Breadcrumb.Item>Manage Categories</Breadcrumb.Item>
         </Breadcrumb>
 
         <Row gutter={[24, 24]}>
@@ -181,8 +230,10 @@ function CreateCategory() {
               className="category-form-card" 
               title={
                 <Space>
-                  <PlusOutlined className="category-form-icon" />
-                  <span>Create New Category</span>
+                  {editingCategory ? <EditOutlined /> : <PlusOutlined />}
+                  <span className="category-form-icon">
+                    {editingCategory ? "Edit Category" : "Create New Category"}
+                  </span>
                 </Space>
               }
             >
@@ -207,7 +258,8 @@ function CreateCategory() {
                   rules={[
                     { required: true, message: "Please enter category name" },
                     { min: 2, message: "Category name must be at least 2 characters" },
-                    { max: 30, message: "Category name must be less than 30 characters" }
+                    { max: 30, message: "Category name must be less than 30 characters" },
+                    { pattern: /^[a-z]+$/, message: "Use lowercase letters only" }
                   ]}
                   className="category-form-item"
                 >
@@ -228,17 +280,32 @@ function CreateCategory() {
                 </Form.Item>
 
                 <Form.Item>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    size="large"
-                    loading={creating}
-                    icon={<PlusOutlined />}
-                    block
-                    className="category-form-submit-btn"
-                  >
-                    {creating ? "Creating..." : "Create Category"}
-                  </Button>
+                  <Space style={{ width: '100%' }} direction="vertical" size="middle">
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      size="large"
+                      loading={creating}
+                      icon={editingCategory ? <EditOutlined /> : <PlusOutlined />}
+                      block
+                      className="category-form-submit-btn"
+                    >
+                      {creating 
+                        ? (editingCategory ? "Updating..." : "Creating...") 
+                        : (editingCategory ? "Update Category" : "Create Category")}
+                    </Button>
+                    
+                    {editingCategory && (
+                      <Button
+                        size="large"
+                        onClick={handleCancelEdit}
+                        block
+                        className="category-form-cancel-btn"
+                      >
+                        Cancel Edit
+                      </Button>
+                    )}
+                  </Space>
                 </Form.Item>
 
                 <Divider className="category-form-divider" />
@@ -249,9 +316,10 @@ function CreateCategory() {
                   </Text>
                   <ul>
                     <li>Use singular form (e.g., "burger" not "burgers")</li>
-                    <li>Keep it short and descriptive</li>
-                    <li>Avoid special characters</li>
+                    <li>Keep it short and descriptive (2-30 characters)</li>
+                    <li>Avoid special characters and spaces</li>
                     <li>Use lowercase letters only</li>
+                    <li>Examples: pizza, burger, pasta, salad</li>
                   </ul>
                 </div>
               </Form>
@@ -265,13 +333,16 @@ function CreateCategory() {
                 <Space>
                   <DatabaseOutlined className="category-form-icon" />
                   <span>Existing Categories</span>
-                  <Tag color="orange" className="category-form-count-tag">{existingCategories.length} total</Tag>
+                  <Tag color="orange" className="category-form-count-tag">
+                    {existingCategories.length} total
+                  </Tag>
                 </Space>
               }
             >
               {isLoading ? (
                 <div className="category-form-loading">
                   <Spin size="large" />
+                  <div style={{ marginTop: '16px', color: '#c9a87c' }}>Loading categories...</div>
                 </div>
               ) : existingCategories.length > 0 ? (
                 <List
@@ -287,8 +358,10 @@ function CreateCategory() {
                             icon={<EditOutlined />}
                             size="small"
                             className="category-form-edit-btn"
-                            onClick={() => message.info("Edit feature coming soon")}
-                          />
+                            onClick={() => handleEditCategory(category)}
+                          >
+                            Edit
+                          </Button>
                         </Tooltip>,
                         <Tooltip title="Delete category">
                           <Button
@@ -298,25 +371,31 @@ function CreateCategory() {
                             size="small"
                             className="category-form-delete-btn"
                             onClick={() => handleDeleteCategory(category)}
-                          />
+                          >
+                            Delete
+                          </Button>
                         </Tooltip>
                       ]}
                     >
                       <List.Item.Meta
                         avatar={
                           <Avatar className="category-form-avatar">
-                            {getCategoryIcon(category)}
+                            {getCategoryIcon(category.name)}
                           </Avatar>
                         }
                         title={
                           <Space>
-                            <span className="category-form-category-name">{category}</span>
-                            <Tag color="orange" className="category-form-index-tag">{index + 1}</Tag>
+                            <span className="category-form-category-name">
+                              {category.displayName || category.name}
+                            </span>
+                            <Tag color="orange" className="category-form-index-tag">
+                              #{index + 1}
+                            </Tag>
                           </Space>
                         }
                         description={
                           <span className="category-form-category-desc">
-                            {category.charAt(0).toUpperCase() + category.slice(1)} category
+                            ID: {category._id} • Created: {category.createdAt ? new Date(category.createdAt).toLocaleDateString() : 'Recently'}
                           </span>
                         }
                       />
@@ -342,35 +421,38 @@ function CreateCategory() {
           </Col>
         </Row>
 
-        <Row gutter={[24, 24]} className="category-form-stats-row">
-          <Col xs={24} md={8}>
-            <div className="category-form-stat-card">
-              <div className="category-form-stat-icon">
-                <FolderOpenOutlined />
+        {/* Statistics Row */}
+        {existingCategories.length > 0 && (
+          <Row gutter={[24, 24]} className="category-form-stats-row">
+            <Col xs={24} md={8}>
+              <div className="category-form-stat-card">
+                <div className="category-form-stat-icon">
+                  <FolderOpenOutlined />
+                </div>
+                <div className="category-form-stat-value">{existingCategories.length}</div>
+                <div className="category-form-stat-label">Total Categories</div>
               </div>
-              <div className="category-form-stat-value">{existingCategories.length}</div>
-              <div className="category-form-stat-label">Total Categories</div>
-            </div>
-          </Col>
-          <Col xs={24} md={8}>
-            <div className="category-form-stat-card">
-              <div className="category-form-stat-icon">🍽️</div>
-              <div className="category-form-stat-value">
-                {existingCategories[0] ? existingCategories[0].charAt(0).toUpperCase() + existingCategories[0].slice(1) : "N/A"}
+            </Col>
+            <Col xs={24} md={8}>
+              <div className="category-form-stat-card">
+                <div className="category-form-stat-icon">🍽️</div>
+                <div className="category-form-stat-value">
+                  {existingCategories[0] ? existingCategories[0].displayName || existingCategories[0].name : "N/A"}
+                </div>
+                <div className="category-form-stat-label">Latest Category</div>
               </div>
-              <div className="category-form-stat-label">Most Popular</div>
-            </div>
-          </Col>
-          <Col xs={24} md={8}>
-            <div className="category-form-stat-card">
-              <div className="category-form-stat-icon">
-                <PlusOutlined />
+            </Col>
+            <Col xs={24} md={8}>
+              <div className="category-form-stat-card">
+                <div className="category-form-stat-icon">
+                  <PlusOutlined />
+                </div>
+                <div className="category-form-stat-value">{existingCategories.length}</div>
+                <div className="category-form-stat-label">Active Categories</div>
               </div>
-              <div className="category-form-stat-value">{existingCategories.length * 10}%</div>
-              <div className="category-form-stat-label">Growth</div>
-            </div>
-          </Col>
-        </Row>
+            </Col>
+          </Row>
+        )}
       </div>
     </div>
   );

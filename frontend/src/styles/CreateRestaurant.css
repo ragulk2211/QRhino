@@ -31,17 +31,22 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
+  --radius-2xl: 32px;
   --radius-full: 9999px;
   
   /* Spacing */
+  --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 32px;
   --space-2xl: 48px;
+  --space-3xl: 64px;
   
   /* Transitions */
+  --transition-fast: all 0.2s ease;
   --transition: all 0.3s ease;
+  --transition-slow: all 0.4s ease;
 }
 
 /* Container */
@@ -73,22 +78,23 @@
 
 /* Custom Scrollbar */
 .restaurant-form-container::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 .restaurant-form-container::-webkit-scrollbar-track {
-  background: #fff9f0;
+  background: var(--cream-warm);
   border-radius: 10px;
 }
 
 .restaurant-form-container::-webkit-scrollbar-thumb {
-  background: var(--light-orange-primary);
+  background: linear-gradient(135deg, var(--light-orange-soft), var(--light-orange-primary));
   border-radius: 10px;
+  transition: var(--transition);
 }
 
 .restaurant-form-container::-webkit-scrollbar-thumb:hover {
-  background: var(--light-orange);
+  background: linear-gradient(135deg, var(--light-orange-primary), var(--light-orange));
 }
 
 /* Breadcrumb */
@@ -103,6 +109,7 @@
 
 .restaurant-form-breadcrumb .ant-breadcrumb a:hover {
   color: var(--light-orange);
+  transform: translateX(2px);
 }
 
 .restaurant-form-breadcrumb .ant-breadcrumb li:last-child {
@@ -113,7 +120,7 @@
 /* Card */
 .restaurant-form-card {
   background: var(--cream-light);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--light-orange-pale);
   overflow: hidden;
@@ -122,7 +129,7 @@
 
 .restaurant-form-card:hover {
   box-shadow: var(--shadow-orange-lg);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   border-color: var(--light-orange-soft);
 }
 
@@ -148,6 +155,9 @@
   transition: var(--transition);
   height: 40px;
   padding: 0 var(--space-lg);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .restaurant-form-back-btn:hover {
@@ -158,6 +168,10 @@
   box-shadow: var(--shadow-orange);
 }
 
+.restaurant-form-back-btn .anticon {
+  font-size: 16px;
+}
+
 .restaurant-form-title {
   color: var(--brown-light);
   margin-bottom: var(--space-sm);
@@ -165,18 +179,34 @@
   font-size: 2rem;
   position: relative;
   display: inline-block;
+  background: linear-gradient(135deg, var(--light-orange-primary), var(--light-orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .restaurant-form-title::after {
   content: '';
   position: absolute;
-  bottom: -8px;
+  bottom: -12px;
   left: 50%;
   transform: translateX(-50%);
   width: 60px;
   height: 3px;
-  background: var(--light-orange-primary);
+  background: linear-gradient(90deg, var(--light-orange-primary), var(--light-orange));
   border-radius: var(--radius-full);
+  animation: titleUnderline 0.6s ease;
+}
+
+@keyframes titleUnderline {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 60px;
+    opacity: 1;
+  }
 }
 
 .restaurant-form-subtitle {
@@ -190,9 +220,14 @@
   margin-bottom: 48px;
 }
 
+.restaurant-form-steps .ant-steps-item {
+  cursor: pointer;
+}
+
 .restaurant-form-steps .ant-steps-item-title {
   font-weight: 600;
   color: var(--brown-light);
+  transition: var(--transition);
 }
 
 .restaurant-form-steps .ant-steps-item-process .ant-steps-item-icon {
@@ -206,6 +241,7 @@
 
 .restaurant-form-steps .ant-steps-item-finish .ant-steps-item-icon {
   border-color: var(--light-orange-primary);
+  background: var(--cream-light);
 }
 
 .restaurant-form-steps .ant-steps-item-finish .ant-steps-item-icon .ant-steps-icon {
@@ -215,6 +251,14 @@
 .restaurant-form-steps .ant-steps-item-wait .ant-steps-item-icon {
   border-color: var(--light-orange-pale);
   background: white;
+}
+
+.restaurant-form-steps .ant-steps-item-wait .ant-steps-item-icon .ant-steps-icon {
+  color: var(--brown-soft);
+}
+
+.restaurant-form-steps .ant-steps-item-finish > .ant-steps-item-container > .ant-steps-item-tail::after {
+  background-color: var(--light-orange-primary);
 }
 
 /* Form Item */
@@ -259,6 +303,26 @@
   box-shadow: 0 0 0 2px rgba(255, 159, 74, 0.1);
 }
 
+.restaurant-form-card .ant-input-affix-wrapper {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--light-orange-pale);
+  transition: var(--transition);
+}
+
+.restaurant-form-card .ant-input-affix-wrapper:hover {
+  border-color: var(--light-orange-primary);
+}
+
+.restaurant-form-card .ant-input-affix-wrapper-focused {
+  border-color: var(--light-orange-primary);
+  box-shadow: 0 0 0 2px rgba(255, 159, 74, 0.1);
+}
+
+.restaurant-form-card .ant-input-prefix {
+  color: var(--light-orange-primary);
+  margin-right: var(--space-sm);
+}
+
 /* Input Number */
 .restaurant-form-card .ant-input-number-handler-wrap {
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
@@ -274,12 +338,26 @@
   color: var(--light-orange-primary);
 }
 
+.restaurant-form-card .ant-input-number-handler-up-inner,
+.restaurant-form-card .ant-input-number-handler-down-inner {
+  color: var(--brown-soft);
+}
+
 /* Select */
 .restaurant-form-card .ant-select-selection-placeholder {
   color: var(--brown-soft);
 }
 
 .restaurant-form-card .ant-select-arrow {
+  color: var(--light-orange-primary);
+}
+
+.restaurant-form-card .ant-select-clear {
+  color: var(--brown-soft);
+  background: var(--cream-light);
+}
+
+.restaurant-form-card .ant-select-clear:hover {
   color: var(--light-orange-primary);
 }
 
@@ -294,6 +372,7 @@
 .ant-select-item {
   border-radius: var(--radius-sm);
   transition: var(--transition);
+  padding: var(--space-sm) var(--space-md);
 }
 
 .ant-select-item-option-selected {
@@ -326,6 +405,10 @@
   background: var(--light-orange-primary);
 }
 
+.restaurant-form-card .ant-switch-handle::before {
+  background-color: white;
+}
+
 /* Rate */
 .restaurant-form-card .ant-rate {
   color: var(--light-orange-primary);
@@ -333,6 +416,16 @@
 
 .restaurant-form-card .ant-rate-star-second {
   color: var(--light-orange-pale);
+}
+
+.restaurant-form-card .ant-rate-star-first,
+.restaurant-form-card .ant-rate-star-second {
+  transition: var(--transition);
+}
+
+.restaurant-form-card .ant-rate-star:hover .ant-rate-star-second,
+.restaurant-form-card .ant-rate-star:hover .ant-rate-star-first {
+  color: var(--light-orange-soft);
 }
 
 /* Upload Area */
@@ -345,6 +438,7 @@
   background: var(--cream-soft);
   border: 2px dashed var(--light-orange-pale);
   transition: var(--transition);
+  padding: var(--space-xl);
 }
 
 .restaurant-form-upload-area .ant-upload-drag:hover {
@@ -360,12 +454,18 @@
 
 .restaurant-form-upload-area .ant-upload-drag-icon .anticon {
   font-size: 48px;
+  transition: var(--transition);
+}
+
+.restaurant-form-upload-area .ant-upload-drag:hover .ant-upload-drag-icon .anticon {
+  transform: scale(1.1);
 }
 
 .restaurant-form-upload-area .ant-upload-text {
   color: var(--brown-light);
   font-weight: 500;
   margin-bottom: var(--space-sm);
+  font-size: 1rem;
 }
 
 .restaurant-form-upload-area .ant-upload-hint {
@@ -391,10 +491,14 @@
   box-shadow: var(--shadow-orange);
 }
 
+.restaurant-form-image-preview .ant-image-mask {
+  border-radius: var(--radius-md);
+}
+
 /* Buttons */
 .restaurant-form-submit-btn,
 .restaurant-form-next-btn {
-  background: var(--light-orange-primary);
+  background: linear-gradient(135deg, var(--light-orange-primary), var(--light-orange));
   border: none;
   border-radius: var(--radius-full);
   height: 48px;
@@ -403,13 +507,19 @@
   transition: var(--transition);
   box-shadow: var(--shadow-orange);
   color: white;
+  padding: 0 var(--space-xl);
 }
 
 .restaurant-form-submit-btn:hover,
 .restaurant-form-next-btn:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-orange-lg);
-  background: var(--light-orange);
+  background: linear-gradient(135deg, var(--light-orange), var(--light-orange-primary));
+}
+
+.restaurant-form-submit-btn:active,
+.restaurant-form-next-btn:active {
+  transform: translateY(0);
 }
 
 .restaurant-form-prev-btn,
@@ -420,6 +530,8 @@
   color: var(--brown-light);
   transition: var(--transition);
   height: 48px;
+  padding: 0 var(--space-xl);
+  font-weight: 500;
 }
 
 .restaurant-form-prev-btn:hover,
@@ -427,25 +539,40 @@
   border-color: var(--light-orange-primary);
   color: var(--light-orange-primary);
   transform: translateY(-2px);
+  background: var(--cream-soft);
+}
+
+.restaurant-form-prev-btn:active,
+.restaurant-form-reset-btn:active {
+  transform: translateY(0);
 }
 
 /* Error States */
-.restaurant-form-item-has-error .ant-input,
-.restaurant-form-item-has-error .ant-input-number,
-.restaurant-form-item-has-error .ant-select-selector {
+.restaurant-form-card .ant-form-item-has-error .ant-input,
+.restaurant-form-card .ant-form-item-has-error .ant-input-number,
+.restaurant-form-card .ant-form-item-has-error .ant-select-selector,
+.restaurant-form-card .ant-form-item-has-error .ant-input-affix-wrapper {
   border-color: #ffb6b6;
 }
 
-.restaurant-form-item-has-error .ant-input:focus,
-.restaurant-form-item-has-error .ant-input-number:focus,
-.restaurant-form-item-has-error .ant-select-selector:focus {
+.restaurant-form-card .ant-form-item-has-error .ant-input:focus,
+.restaurant-form-card .ant-form-item-has-error .ant-input-number:focus,
+.restaurant-form-card .ant-form-item-has-error .ant-select-selector:focus,
+.restaurant-form-card .ant-form-item-has-error .ant-input-affix-wrapper:focus {
   box-shadow: 0 0 0 2px rgba(255, 182, 182, 0.1);
 }
 
-.restaurant-form-item .ant-form-item-explain-error {
+.restaurant-form-card .ant-form-item-explain-error {
   color: #ff9f9f;
   font-size: 0.75rem;
-  margin-top: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+/* Success States */
+.restaurant-form-card .ant-form-item-has-success .ant-input,
+.restaurant-form-card .ant-form-item-has-success .ant-input-number,
+.restaurant-form-card .ant-form-item-has-success .ant-select-selector {
+  border-color: #95de64;
 }
 
 /* Divider */
@@ -459,10 +586,24 @@
   border-radius: var(--radius-md);
   margin-top: var(--space-md);
   border: 1px solid var(--light-orange-pale);
-  background: rgba(255, 159, 74, 0.05);
+  background: linear-gradient(135deg, rgba(255, 159, 74, 0.05), rgba(255, 176, 71, 0.03));
 }
 
-/* Responsive */
+.restaurant-form-tips-alert .ant-alert-message {
+  color: var(--brown-light);
+  font-weight: 600;
+}
+
+.restaurant-form-tips-alert .ant-alert-icon {
+  color: var(--light-orange-primary);
+}
+
+/* Loading State */
+.restaurant-form-card .ant-spin {
+  color: var(--light-orange-primary);
+}
+
+/* Responsive Design */
 @media (max-width: 1024px) {
   .restaurant-form-card .ant-card-body {
     padding: var(--space-xl);
@@ -470,6 +611,10 @@
   
   .restaurant-form-container {
     padding: var(--space-md);
+  }
+  
+  .restaurant-form-title {
+    font-size: 1.75rem;
   }
 }
 
@@ -486,6 +631,7 @@
     position: static;
     margin-bottom: var(--space-md);
     display: inline-flex;
+    width: auto;
   }
   
   .restaurant-form-submit-btn,
@@ -494,6 +640,7 @@
   .restaurant-form-reset-btn {
     height: 40px;
     font-size: 0.875rem;
+    padding: 0 var(--space-lg);
   }
   
   .restaurant-form-steps {
@@ -503,23 +650,76 @@
   .restaurant-form-steps .ant-steps-item-title {
     font-size: 12px;
   }
+  
+  .restaurant-form-header {
+    margin-bottom: var(--space-lg);
+  }
+  
+  .restaurant-form-item {
+    margin-bottom: var(--space-md);
+  }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 576px) {
+  .restaurant-form-container {
+    padding: var(--space-sm);
+  }
+  
+  .restaurant-form-card .ant-card-body {
+    padding: var(--space-md);
+  }
+  
   .restaurant-form-title {
     font-size: 1.25rem;
   }
   
-  .restaurant-form-card .ant-form-item {
-    margin-bottom: var(--space-md);
+  .restaurant-form-subtitle {
+    font-size: 0.875rem;
   }
   
   .restaurant-form-upload-area .ant-upload-drag {
     padding: var(--space-md);
   }
   
+  .restaurant-form-upload-area .ant-upload-drag-icon .anticon {
+    font-size: 32px;
+  }
+  
   .restaurant-form-steps .ant-steps-item-title {
     display: none;
+  }
+  
+  .restaurant-form-steps .ant-steps-item-icon {
+    margin-right: 0;
+  }
+  
+  .restaurant-form-image-preview .ant-image-img {
+    width: 200px;
+    height: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .restaurant-form-title {
+    font-size: 1.125rem;
+  }
+  
+  .restaurant-form-subtitle {
+    font-size: 0.75rem;
+  }
+  
+  .restaurant-form-submit-btn,
+  .restaurant-form-next-btn,
+  .restaurant-form-prev-btn,
+  .restaurant-form-reset-btn {
+    height: 36px;
+    font-size: 0.75rem;
+    padding: 0 var(--space-md);
+  }
+  
+  .restaurant-form-image-preview .ant-image-img {
+    width: 150px;
+    height: 120px;
   }
 }
 
@@ -534,7 +734,9 @@
   .restaurant-form-submit-btn,
   .restaurant-form-next-btn,
   .restaurant-form-prev-btn,
-  .restaurant-form-reset-btn {
+  .restaurant-form-reset-btn,
+  .restaurant-form-steps,
+  .restaurant-form-tips-alert {
     display: none;
   }
   
@@ -542,4 +744,26 @@
     box-shadow: none;
     border: 1px solid #ddd;
   }
+  
+  .restaurant-form-card .ant-card-body {
+    padding: 0;
+  }
+}
+
+/* Hover Effects */
+.restaurant-form-card .ant-form-item-control-input-content > * {
+  transition: var(--transition-fast);
+}
+
+/* Focus Visible for Accessibility */
+.restaurant-form-card .ant-input:focus-visible,
+.restaurant-form-card .ant-input-number:focus-visible,
+.restaurant-form-card .ant-select-selector:focus-visible {
+  outline: 2px solid var(--light-orange-primary);
+  outline-offset: 2px;
+}
+
+/* Animation for Step Changes */
+.restaurant-form-content > * {
+  animation: restaurantFormFadeIn 0.3s ease;
 }

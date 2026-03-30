@@ -53,12 +53,11 @@ function CreateRestaurant() {
   const [imagePreview, setImagePreview] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [formErrors, setFormErrors] = useState({});
 
   const handleImageUpload = (file) => {
     const isImage = file.type.startsWith('image/');
     if (!isImage) {
-      message.error('Please upload an image file!');
+      message.error('Please upload an image file (JPEG, PNG, WEBP)!');
       return false;
     }
     
@@ -83,76 +82,10 @@ function CreateRestaurant() {
     message.info("Image removed");
   };
 
-  const validateForm = (values) => {
-    const errors = {};
-    
-    if (!values.name || values.name.trim().length < 2) {
-      errors.name = "Restaurant name must be at least 2 characters";
-    }
-    
-    if (!values.description || values.description.trim().length < 10) {
-      errors.description = "Description must be at least 10 characters";
-    }
-    
-    if (!values.cuisine || values.cuisine.length === 0) {
-      errors.cuisine = "Please select at least one cuisine type";
-    }
-    
-    if (!values.location?.address) {
-      errors.address = "Please enter street address";
-    }
-    
-    if (!values.location?.city) {
-      errors.city = "Please enter city";
-    }
-    
-    if (!values.location?.state) {
-      errors.state = "Please enter state";
-    }
-    
-    if (!values.location?.pincode) {
-      errors.pincode = "Please enter pincode";
-    }
-    
-    if (!values.phone) {
-      errors.phone = "Please enter phone number";
-    } else if (!/^\d{10}$/.test(values.phone)) {
-      errors.phone = "Phone must be 10 digits";
-    }
-    
-    if (!values.email) {
-      errors.email = "Please enter email";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
-      errors.email = "Please enter a valid email";
-    }
-    
-    if (!values.priceRange) {
-      errors.priceRange = "Please enter price range";
-    }
-    
-    if (!values.deliveryTime) {
-      errors.deliveryTime = "Please enter delivery time";
-    }
-    
-    if (!imageFile && !imagePreview) {
-      errors.image = "Please upload a restaurant image";
-    }
-    
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
   const onFinish = async (values) => {
-    if (!validateForm(values)) {
-      message.error({
-        content: "Please fix the errors in the form",
-        icon: <WarningOutlined />,
-        duration: 3
-      });
-      const firstError = document.querySelector('.restaurant-form-item-has-error');
-      if (firstError) {
-        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+    // Image validation
+    if (!imageFile && !imagePreview) {
+      message.error("Please upload a restaurant image");
       return;
     }
 
@@ -171,6 +104,7 @@ function CreateRestaurant() {
       formData.append("isOpen", values.isOpen);
       formData.append("rating", values.rating);
       formData.append("timings", values.timings || "");
+      
       if (imageFile) {
         formData.append("image", imageFile);
       }
@@ -189,10 +123,9 @@ function CreateRestaurant() {
         form.resetFields();
         handleRemoveImage();
         setCurrentStep(0);
-        setFormErrors({});
         setTimeout(() => navigate("/admin"), 2000);
       } else {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
         message.error(errorData.message || "Failed to create restaurant");
       }
     } catch (error) {
@@ -207,7 +140,6 @@ function CreateRestaurant() {
     form.resetFields();
     handleRemoveImage();
     setCurrentStep(0);
-    setFormErrors({});
     message.info("Form has been reset");
   };
 
@@ -271,7 +203,14 @@ function CreateRestaurant() {
               rating: 4.5,
               priceRange: 500,
               deliveryTime: 30,
-              cuisine: []
+              cuisine: [],
+              location: {
+                address: "",
+                city: "",
+                state: "",
+                pincode: "",
+                landmark: ""
+              }
             }}
           >
             {currentStep === 0 && (
@@ -281,9 +220,11 @@ function CreateRestaurant() {
                     <Form.Item
                       name="name"
                       label="Restaurant Name"
-                      validateStatus={formErrors.name ? "error" : ""}
-                      help={formErrors.name}
-                      rules={[{ required: true, message: "Please enter restaurant name" }]}
+                      rules={[
+                        { required: true, message: "Please enter restaurant name" },
+                        { min: 2, message: "Restaurant name must be at least 2 characters" },
+                        { max: 50, message: "Restaurant name must be less than 50 characters" }
+                      ]}
                       className="restaurant-form-item"
                     >
                       <Input 
@@ -306,9 +247,10 @@ function CreateRestaurant() {
                           </Tooltip>
                         </Space>
                       }
-                      validateStatus={formErrors.cuisine ? "error" : ""}
-                      help={formErrors.cuisine}
-                      rules={[{ required: true, message: "Please select cuisine type" }]}
+                      rules={[
+                        { required: true, message: "Please select at least one cuisine type" },
+                        { type: 'array', min: 1, message: "Please select at least one cuisine type" }
+                      ]}
                       className="restaurant-form-item"
                     >
                       <Select
@@ -334,9 +276,11 @@ function CreateRestaurant() {
                 <Form.Item
                   name="description"
                   label="Description"
-                  validateStatus={formErrors.description ? "error" : ""}
-                  help={formErrors.description}
-                  rules={[{ required: true, message: "Please enter description" }]}
+                  rules={[
+                    { required: true, message: "Please enter description" },
+                    { min: 10, message: "Description must be at least 10 characters" },
+                    { max: 500, message: "Description must be less than 500 characters" }
+                  ]}
                   className="restaurant-form-item"
                 >
                   <TextArea 
@@ -350,8 +294,6 @@ function CreateRestaurant() {
                 <Form.Item
                   label="Restaurant Image"
                   required
-                  validateStatus={formErrors.image ? "error" : ""}
-                  help={formErrors.image}
                   tooltip="Upload a high-quality image of the restaurant"
                   className="restaurant-form-item"
                 >
@@ -402,9 +344,10 @@ function CreateRestaurant() {
                     <Form.Item
                       name={["location", "address"]}
                       label="Street Address"
-                      validateStatus={formErrors.address ? "error" : ""}
-                      help={formErrors.address}
-                      rules={[{ required: true, message: "Please enter address" }]}
+                      rules={[
+                        { required: true, message: "Please enter street address" },
+                        { min: 5, message: "Address must be at least 5 characters" }
+                      ]}
                       className="restaurant-form-item"
                     >
                       <Input 
@@ -418,9 +361,10 @@ function CreateRestaurant() {
                     <Form.Item
                       name={["location", "city"]}
                       label="City"
-                      validateStatus={formErrors.city ? "error" : ""}
-                      help={formErrors.city}
-                      rules={[{ required: true, message: "Please enter city" }]}
+                      rules={[
+                        { required: true, message: "Please enter city" },
+                        { min: 2, message: "City name must be at least 2 characters" }
+                      ]}
                       className="restaurant-form-item"
                     >
                       <Input 
@@ -436,9 +380,10 @@ function CreateRestaurant() {
                     <Form.Item
                       name={["location", "state"]}
                       label="State"
-                      validateStatus={formErrors.state ? "error" : ""}
-                      help={formErrors.state}
-                      rules={[{ required: true, message: "Please enter state" }]}
+                      rules={[
+                        { required: true, message: "Please enter state" },
+                        { min: 2, message: "State name must be at least 2 characters" }
+                      ]}
                       className="restaurant-form-item"
                     >
                       <Input placeholder="State" size="large" />
@@ -448,21 +393,19 @@ function CreateRestaurant() {
                     <Form.Item
                       name={["location", "pincode"]}
                       label="Pincode"
-                      validateStatus={formErrors.pincode ? "error" : ""}
-                      help={formErrors.pincode}
                       rules={[
                         { required: true, message: "Please enter pincode" },
-                        { pattern: /^\d{6}$/, message: "Pincode must be 6 digits" }
+                        { pattern: /^\d{6}$/, message: "Pincode must be exactly 6 digits" }
                       ]}
                       className="restaurant-form-item"
                     >
-                      <InputNumber 
+                      <Input 
                         placeholder="Pincode" 
                         size="large"
-                        style={{ width: "100%" }}
+                        maxLength={6}
                         onKeyDown={(e) => {
-                          const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-                          if (!allowedKeys.includes(e.key) && !(e.key >= '0' && e.key <= '9')) {
+                          const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
+                          if (!allowedKeys.includes(e.key) && !/^\d$/.test(e.key)) {
                             e.preventDefault();
                           }
                         }}
@@ -485,11 +428,9 @@ function CreateRestaurant() {
                     <Form.Item
                       name="phone"
                       label="Phone Number"
-                      validateStatus={formErrors.phone ? "error" : ""}
-                      help={formErrors.phone}
                       rules={[
                         { required: true, message: "Please enter phone number" },
-                        { pattern: /^\d{10}$/, message: "Phone must be 10 digits" }
+                        { pattern: /^\d{10}$/, message: "Phone number must be exactly 10 digits" }
                       ]}
                       className="restaurant-form-item"
                     >
@@ -499,8 +440,8 @@ function CreateRestaurant() {
                         prefix={<PhoneOutlined />}
                         maxLength={10}
                         onKeyDown={(e) => {
-                          const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-                          if (!allowedKeys.includes(e.key) && !(e.key >= '0' && e.key <= '9')) {
+                          const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
+                          if (!allowedKeys.includes(e.key) && !/^\d$/.test(e.key)) {
                             e.preventDefault();
                           }
                         }}
@@ -511,11 +452,9 @@ function CreateRestaurant() {
                     <Form.Item
                       name="email"
                       label="Email Address"
-                      validateStatus={formErrors.email ? "error" : ""}
-                      help={formErrors.email}
                       rules={[
-                        { required: true, message: "Please enter email" },
-                        { type: "email", message: "Please enter valid email" }
+                        { required: true, message: "Please enter email address" },
+                        { type: "email", message: "Please enter a valid email address" }
                       ]}
                       className="restaurant-form-item"
                     >
@@ -544,25 +483,20 @@ function CreateRestaurant() {
                           </Tooltip>
                         </Space>
                       }
-                      validateStatus={formErrors.priceRange ? "error" : ""}
-                      help={formErrors.priceRange}
-                      rules={[{ required: true, message: "Please enter price range" }]}
+                      rules={[
+                        { required: true, message: "Please enter price range" },
+                        { type: 'number', min: 1, message: "Price must be at least ₹1" }
+                      ]}
                       className="restaurant-form-item"
                     >
                       <InputNumber
                         placeholder="500"
-                        min={0}
+                        min={1}
                         size="large"
                         style={{ width: "100%" }}
                         prefix={<DollarOutlined />}
                         formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                         parser={value => value.replace(/₹\s?|(,*)/g, '')}
-                        onKeyDown={(e) => {
-                          const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-                          if (!allowedKeys.includes(e.key) && !(e.key >= '0' && e.key <= '9')) {
-                            e.preventDefault();
-                          }
-                        }}
                       />
                     </Form.Item>
                   </Col>
@@ -577,25 +511,22 @@ function CreateRestaurant() {
                           </Tooltip>
                         </Space>
                       }
-                      validateStatus={formErrors.deliveryTime ? "error" : ""}
-                      help={formErrors.deliveryTime}
-                      rules={[{ required: true, message: "Please enter delivery time" }]}
+                      rules={[
+                        { required: true, message: "Please enter delivery time" },
+                        { type: 'number', min: 10, message: "Delivery time must be at least 10 minutes" },
+                        { type: 'number', max: 180, message: "Delivery time cannot exceed 180 minutes" }
+                      ]}
                       className="restaurant-form-item"
                     >
                       <InputNumber
                         placeholder="30"
-                        min={0}
+                        min={10}
+                        max={180}
                         size="large"
                         style={{ width: "100%" }}
                         suffix="mins"
                         formatter={value => `${value} min`}
                         parser={value => value.replace(' min', '')}
-                        onKeyDown={(e) => {
-                          const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-                          if (!allowedKeys.includes(e.key) && !(e.key >= '0' && e.key <= '9')) {
-                            e.preventDefault();
-                          }
-                        }}
                       />
                     </Form.Item>
                   </Col>
@@ -606,7 +537,9 @@ function CreateRestaurant() {
                     <Form.Item
                       name="rating"
                       label="Rating"
-                      rules={[{ required: true, message: "Please enter rating" }]}
+                      rules={[
+                        { required: true, message: "Please select a rating" }
+                      ]}
                       className="restaurant-form-item"
                     >
                       <Rate allowHalf defaultValue={4.5} />
@@ -632,9 +565,15 @@ function CreateRestaurant() {
                   name="timings"
                   label="Operating Hours"
                   tooltip="Enter restaurant operating hours"
+                  rules={[
+                    { pattern: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]\s*(AM|PM)\s*-\s*([0-1]?[0-9]|2[0-3]):[0-5][0-9]\s*(AM|PM)$/i, message: "Please enter valid time format (e.g., 9:00 AM - 11:00 PM)" }
+                  ]}
                   className="restaurant-form-item"
                 >
-                  <Input placeholder="e.g., 9:00 AM - 11:00 PM" size="large" />
+                  <Input 
+                    placeholder="e.g., 9:00 AM - 11:00 PM" 
+                    size="large"
+                  />
                 </Form.Item>
               </>
             )}
@@ -647,6 +586,7 @@ function CreateRestaurant() {
                   <Button 
                     onClick={() => setCurrentStep(currentStep - 1)}
                     className="restaurant-form-prev-btn"
+                    size="large"
                   >
                     Previous
                   </Button>
@@ -656,6 +596,7 @@ function CreateRestaurant() {
                     type="primary" 
                     onClick={() => setCurrentStep(currentStep + 1)}
                     className="restaurant-form-next-btn"
+                    size="large"
                   >
                     Next
                   </Button>
@@ -676,6 +617,7 @@ function CreateRestaurant() {
                   size="large"
                   icon={<ClearOutlined />}
                   className="restaurant-form-reset-btn"
+                  disabled={isLoading}
                 >
                   Reset
                 </Button>

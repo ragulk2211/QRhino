@@ -1,315 +1,282 @@
-import { useEffect, useState } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import Header from "../components/Header"
-import API_BASE_URL from "../config"
-import "../styles/addmenu.css"
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  Form,
+  Input,
+  InputNumber,
+  Button,
+  Select,
+  Upload,
+  message,
+  Card,
+  Row,
+  Col,
+  Divider,
+  Typography,
+  Spin,
+  Image,
+  Radio,
+  Switch
+} from "antd";
+
+import {
+  ArrowLeftOutlined,
+  UploadOutlined
+} from "@ant-design/icons";
+
+import API_BASE_URL from "../config";
+import "../styles/editmenu.css";
+
+const { Title, Paragraph } = Typography;
+const { Option } = Select;
+const { TextArea } = Input;
 
 function EditMenuItem() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const [form] = Form.useForm();
 
-  const { id } = useParams()
-  const navigate = useNavigate()
-
-  const [form, setForm] = useState({
-    name: "",
-    desc: "",
-    price: "",
-    discount: "0",
-    kcal: "",
-    time: "",
-    category: "",
-    categoryId: "",
-    foodType: "veg",
-    restaurantId: ""
-  })
-
-  const [restaurants, setRestaurants] = useState([])
-  const [categories, setCategories] = useState([])
-
-  const [image, setImage] = useState(null)
-  const [currentImage, setCurrentImage] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [categories, setCategories] = useState([]);
+  const [restaurants, setRestaurants] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [pageLoading, setPageLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Fetch restaurants for dropdown
-    fetch(`${API_BASE_URL}/api/restaurants`)
-      .then(res => res.json())
-      .then(data => setRestaurants(data))
-      .catch(err => console.error("Failed to fetch restaurants:", err))
+    fetchCategories();
+    fetchRestaurants();
+    fetchMenuItem();
+  }, []);
 
-    // Fetch categories from database
-    fetch(`${API_BASE_URL}/api/categories`)
-      .then(res => res.json())
-      .then(data => setCategories(data))
-      .catch(err => console.error("Failed to fetch categories:", err))
+  const fetchCategories = async () => {
+    const res = await fetch(`${API_BASE_URL}/api/menu`);
+    const data = await res.json();
 
-    fetch(`${API_BASE_URL}/api/menu`)
-      .then(res => res.json())
-      .then(data => {
-        const item = data.find(food => food._id === id)
+    const unique = [...new Set(data.map(item => item.category))];
+    setCategories(unique);
+  };
 
-        if (item) {
-          setForm({
-            name: item.name || "",
-            desc: item.desc || "",
-            price: item.price || "",
-            discount: item.discount || 0,
-            kcal: item.kcal || "",
-            time: item.time || "",
-            category: item.category || "",
-            categoryId: item.categoryId || "",
-            foodType: item.foodType || "veg",
-            restaurantId: item.restaurantId || ""
-          })
-          // Set current image URL
-          if (item.image) {
-            const imageUrl = item.image.startsWith('http') 
-              ? item.image 
-              : `${API_BASE_URL}/uploads/${item.image}`
-            setCurrentImage(imageUrl)
-          }
-        }
-      })
-      .catch(err => {
-        console.error("Error fetching menu item:", err)
-        alert("Backend server is not connected. Please start the backend server and try again.")
-      })
-  }, [id])
+  const fetchRestaurants = async () => {
+    const res = await fetch(`${API_BASE_URL}/api/restaurants`);
+    const data = await res.json();
+    setRestaurants(Array.isArray(data) ? data : []);
+  };
 
-  function handleChange(e) {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    })
-  }
+  const fetchMenuItem = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/menu/${id}`);
 
-  function handleImageChange(e) {
-    const file = e.target.files[0]
-    if (file) {
-      setImage(file)
+      if (!res.ok) throw new Error();
+
+      const data = await res.json();
+
+      const imageUrl = data.image
+        ? data.image.startsWith("/uploads/")
+          ? `${API_BASE_URL}${data.image}`
+          : `${API_BASE_URL}/uploads/${data.image}`
+        : "";
+
+      setImagePreview(imageUrl);
+
+      form.setFieldsValue({
+        restaurantId: data.restaurantId || "",
+        name: data.name || "",
+        description: data.desc || "",
+        price: data.price || 0,
+        discount: data.discount || 0,
+        kcal: data.kcal || 0,
+        time: data.time || 0,
+        category: data.category || "",
+        foodType: data.foodType || "veg",
+        isSpicy: data.isSpicy || false,
+        isRecommended: data.isRecommended || false
+      });
+
+    } catch {
+      message.error("Failed to load menu item");
+    } finally {
+      setPageLoading(false);
     }
-  }
+  };
 
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setLoading(true)
+  const handleImageUpload = (file) => {
+    setImageFile(file);
+
+    const reader = new FileReader();
+    reader.onload = (e) => setImagePreview(e.target.result);
+    reader.readAsDataURL(file);
+
+    return false;
+  };
+
+  const onFinish = async (values) => {
+    setIsLoading(true);
 
     try {
-      // Create FormData for multipart/form-data request
-      const formData = new FormData()
-      formData.append("name", form.name)
-      formData.append("desc", form.desc)
-      formData.append("price", form.price)
-      formData.append("kcal", form.kcal)
-      formData.append("time", form.time)
-      formData.append("category", form.category)
-      formData.append("categoryId", form.categoryId)
-      formData.append("foodType", form.foodType)
-      formData.append("discount", form.discount)
-      formData.append("restaurantId", form.restaurantId)
-      
-      // Only append image if a new one was selected
-      if (image) {
-        formData.append("image", image)
+      const formData = new FormData();
+
+      formData.append("name", values.name || "");
+      formData.append("desc", values.description || "");
+      formData.append("price", values.price || 0);
+      formData.append("discount", values.discount || 0);
+      formData.append("kcal", values.kcal || 0);
+      formData.append("time", values.time || 0);
+      formData.append("category", values.category || "");
+      formData.append("foodType", values.foodType || "veg");
+      formData.append("restaurantId", values.restaurantId || "");
+
+      if (imageFile) {
+        formData.append("image", imageFile);
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/menu/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/menu/${id}`, {
         method: "PUT",
         body: formData
-      })
+      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      const data = await res.json();
+
+      if (res.ok) {
+        message.success("Menu item updated successfully 🎉");
+        navigate("/admin");
+      } else {
+        message.error(data.error || "Update failed");
       }
 
-      alert("Updated successfully ✅")
-      navigate("/menu/main")
-    } catch (error) {
-      console.error("Error updating menu item:", error)
-      alert("Failed to update. Please try again.")
+    } catch {
+      message.error("Network error");
     } finally {
-      setLoading(false)
+      setIsLoading(false);
     }
+  };
+
+  if (pageLoading) {
+    return <Spin fullscreen />;
   }
 
   return (
-    <div className="add-menu-page">
+    <div className="edit-menu-container">
+      <div className="edit-menu-content">
 
-      <Header />
+        <Card className="edit-menu-card">
 
-      <div className="add-menu-container">
-
-        <h1>Edit Menu Item</h1>
-
-        <form onSubmit={handleSubmit} className="add-menu-form">
-
-          {/* Current Image Preview */}
-          <div className="image-upload-section">
-            <label>Current Image:</label>
-            {currentImage ? (
-              <div className="current-image-preview">
-                <img 
-                  src={currentImage} 
-                  alt="Current item" 
-                  style={{ maxWidth: "200px", maxHeight: "200px", borderRadius: "8px" }}
-                />
-              </div>
-            ) : (
-              <p>No image currently set</p>
-            )}
-            
-            <label>Replace Image (optional):</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              style={{ marginTop: "10px" }}
-            />
-            {image && (
-              <p style={{ color: "green", marginTop: "5px" }}>
-                New image selected: {image.name}
-              </p>
-            )}
-          </div>
-
-          {/* Restaurant Selection */}
-          <div className="form-group">
-            <label>Restaurant</label>
-            <select
-              name="restaurantId"
-              value={form.restaurantId}
-              onChange={handleChange}
+          <div className="edit-menu-header">
+            <Button
+              className="edit-menu-back-btn"
+              onClick={() => navigate("/admin")}
             >
-              <option value="">Select a restaurant</option>
-              {restaurants.map(restaurant => (
-                <option key={restaurant._id} value={restaurant._id}>
-                  {restaurant.name}
-                </option>
-              ))}
-            </select>
+              <ArrowLeftOutlined /> Back
+            </Button>
+
+            <Title className="edit-menu-title">Edit Menu Item</Title>
+            <Paragraph className="edit-menu-subtitle">
+              Update your dish beautifully 🍽️
+            </Paragraph>
           </div>
 
-          <input
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            placeholder="Dish Name"
-          />
+          <Divider />
 
-          <textarea
-            name="desc"
-            value={form.desc}
-            onChange={handleChange}
-            placeholder="Description"
-          />
+          <Form form={form} layout="vertical" onFinish={onFinish}>
 
-          <div className="row-3">
+            <Form.Item name="name" label="Item Name" className="edit-menu-form-item">
+              <Input size="large" />
+            </Form.Item>
 
-            <input
-              name="price"
-              value={form.price}
-              onChange={handleChange}
-              placeholder="Price"
-            />
+            <Form.Item name="description" label="Description" className="edit-menu-form-item">
+              <TextArea rows={4} />
+            </Form.Item>
 
-            <input
-              name="kcal"
-              value={form.kcal}
-              onChange={handleChange}
-              placeholder="Calories"
-            />
+            <Row gutter={24}>
+              <Col span={12}>
+                <Form.Item name="price" label="Price" className="edit-menu-form-item">
+                  <InputNumber style={{ width: "100%" }} size="large" />
+                </Form.Item>
+              </Col>
 
-            <input
-              name="time"
-              value={form.time}
-              onChange={handleChange}
-              placeholder="Time"
-            />
+              <Col span={12}>
+                <Form.Item name="discount" label="Discount" className="edit-menu-form-item">
+                  <InputNumber style={{ width: "100%" }} size="large" />
+                </Form.Item>
+              </Col>
+            </Row>
 
-          </div>
+            <Row gutter={24}>
+              <Col span={12}>
+                <Form.Item name="kcal" label="Calories" className="edit-menu-form-item">
+                  <InputNumber style={{ width: "100%" }} size="large" />
+                </Form.Item>
+              </Col>
 
-          <input
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            placeholder="Category"
-          />
+              <Col span={12}>
+                <Form.Item name="time" label="Prep Time" className="edit-menu-form-item">
+                  <InputNumber style={{ width: "100%" }} size="large" />
+                </Form.Item>
+              </Col>
+            </Row>
 
-          {/* Category ID Selection (from database) */}
-          <div className="form-group">
-            <label htmlFor="categoryId">
-              Link to Category (Optional)
-            </label>
-            <select
-              id="categoryId"
-              name="categoryId"
-              value={form.categoryId}
-              onChange={handleChange}
-            >
-              <option value="">-- Select a category --</option>
-              {categories.map(cat => (
-                <option key={cat._id} value={cat._id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
+            <Form.Item name="category" label="Category" className="edit-menu-form-item">
+              <Select size="large">
+                {categories.map(cat => (
+                  <Option key={cat} value={cat}>{cat}</Option>
+                ))}
+              </Select>
+            </Form.Item>
 
-          {/* Discount */}
-          <div className="form-group">
-            <label htmlFor="discount">Discount (%)</label>
-            <input
-              type="number"
-              name="discount"
-              value={form.discount}
-              onChange={handleChange}
-              placeholder="0"
-              min="0"
-              max="100"
-              style={{ width: '100%', padding: '0.75rem', border: '1.5px solid #e2e8f0', borderRadius: '8px' }}
-            />
-          </div>
+            <Form.Item name="restaurantId" label="Restaurant" className="edit-menu-form-item">
+              <Select size="large">
+                {restaurants.map(r => (
+                  <Option key={r._id} value={r._id}>{r.name}</Option>
+                ))}
+              </Select>
+            </Form.Item>
 
-          {/* Food Type (Veg/Non-Veg) */}
-          <div className="form-group">
-            <label htmlFor="foodType">
-              Food Type
-            </label>
-            <div className="food-type-selector">
-              <label className={`food-type-option ${form.foodType === 'veg' ? 'selected' : ''}`}>
-                <input
-                  type="radio"
-                  name="foodType"
-                  value="veg"
-                  checked={form.foodType === 'veg'}
-                  onChange={handleChange}
-                />
-                <span className="veg-indicator">●</span>
-                <span>Vegetarian</span>
-              </label>
-              <label className={`food-type-option ${form.foodType === 'non-veg' ? 'selected' : ''}`}>
-                <input
-                  type="radio"
-                  name="foodType"
-                  value="non-veg"
-                  checked={form.foodType === 'non-veg'}
-                  onChange={handleChange}
-                />
-                <span className="non-veg-indicator">●</span>
-                <span>Non-Vegetarian</span>
-              </label>
+            <Form.Item name="foodType" label="Food Type" className="edit-menu-form-item">
+              <Radio.Group>
+                <Radio value="veg">🌱 Veg</Radio>
+                <Radio value="non-veg">🍖 Non Veg</Radio>
+              </Radio.Group>
+            </Form.Item>
+
+            <Form.Item name="isSpicy" label="Spicy" valuePropName="checked">
+              <Switch />
+            </Form.Item>
+
+            <Form.Item name="isRecommended" label="Recommended" valuePropName="checked">
+              <Switch />
+            </Form.Item>
+
+            <div className="edit-menu-image-section">
+              <div className="edit-menu-image-label">Current Image</div>
+
+              {imagePreview && (
+                <div className="edit-menu-image-preview">
+                  <Image src={imagePreview} width={150} height={150} />
+                </div>
+              )}
+
+              <Upload beforeUpload={handleImageUpload} showUploadList={false}>
+                <Button icon={<UploadOutlined />} className="edit-menu-submit-btn">
+                  Upload New Image
+                </Button>
+              </Upload>
             </div>
-          </div>
 
-          <button className="submit-btn" disabled={loading}>
-            {loading ? "Saving..." : "Save Changes"}
-          </button>
+            <Divider />
 
-        </form>
+            <Button
+              htmlType="submit"
+              loading={isLoading}
+              className="edit-menu-submit-btn"
+            >
+              Update Menu Item
+            </Button>
 
+          </Form>
+        </Card>
       </div>
-
     </div>
-  )
+  );
 }
 
-export default EditMenuItem
+export default EditMenuItem;

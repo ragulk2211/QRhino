@@ -1,35 +1,26 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Layout,
   Typography,
   Button,
   Card,
   Row,
   Col,
   Space,
-  Tabs,
   Spin,
   Empty,
   Tag,
   Tooltip,
   Modal,
   message,
-  Input,
-  Select,
   Badge,
   Divider,
-  Breadcrumb,
   Avatar,
   Rate,
-  Pagination,
-  Skeleton,
-  Alert,
   Result,
   Affix,
   BackTop,
-  Menu as AntMenu,
-  Dropdown
+  Drawer
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -38,30 +29,20 @@ import {
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
-  HeartOutlined,
-  ShareAltOutlined,
   ClockCircleOutlined,
-  DollarOutlined,
   FireOutlined,
-  StarOutlined,
   EnvironmentOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  GlobalOutlined,
   MenuOutlined,
-  FilterOutlined,
-  SearchOutlined,
   CloseOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  MinusOutlined,
+  PlusCircleOutlined
 } from "@ant-design/icons";
 import Header from "../components/Header";
 import API_BASE_URL from "../config";
 import "../styles/menu.css";
 
 const { Title, Text, Paragraph } = Typography;
-const { Content } = Layout;
-const { TabPane } = Tabs;
-const { Option } = Select;
 
 function Menu() {
   const navigate = useNavigate();
@@ -79,14 +60,112 @@ function Menu() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFood, setSelectedFood] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
+  const [cartItems, setCartItems] = useState([]);
+  const [cartDrawerVisible, setCartDrawerVisible] = useState(false);
+
+  // Load cart from localStorage on mount
+  useEffect(() => {
+    loadCartFromStorage();
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const loadCartFromStorage = () => {
+    const savedCart = localStorage.getItem("cart");
+    if (savedCart) {
+      try {
+        const parsedCart = JSON.parse(savedCart);
+        setCartItems(parsedCart);
+      } catch (e) {
+        console.error("Error loading cart:", e);
+      }
+    }
+  };
+
+  const handleStorageChange = (e) => {
+    if (e.key === "cart") {
+      loadCartFromStorage();
+    }
+  };
+
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cartItems));
+    window.dispatchEvent(new Event('storage'));
+  }, [cartItems]);
+
+  const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  const cartTotal = cartItems.reduce((sum, item) => {
+    const price = item.discount > 0 
+      ? item.price - (item.price * item.discount / 100)
+      : item.price;
+    return sum + price * (item.quantity || 1);
+  }, 0);
+
+  const addToCart = (item) => {
+    setCartItems(prevItems => {
+      const existingItem = prevItems.find(cartItem => cartItem._id === item._id);
+      if (existingItem) {
+        return prevItems.map(cartItem =>
+          cartItem._id === item._id
+            ? { ...cartItem, quantity: (cartItem.quantity || 1) + 1 }
+            : cartItem
+        );
+      } else {
+        return [...prevItems, { ...item, quantity: 1 }];
+      }
+    });
+    message.success({
+      content: `${item.name} added to cart!`,
+      icon: <CheckCircleOutlined />,
+      duration: 2
+    });
+  };
+
+  const removeFromCart = (itemId) => {
+    setCartItems(prevItems => prevItems.filter(item => item._id !== itemId));
+    message.info("Item removed from cart");
+  };
+
+  const updateQuantity = (itemId, newQuantity) => {
+    if (newQuantity < 1) {
+      removeFromCart(itemId);
+      return;
+    }
+    setCartItems(prevItems =>
+      prevItems.map(item =>
+        item._id === itemId ? { ...item, quantity: newQuantity } : item
+      )
+    );
+  };
+
+  const clearCart = () => {
+    Modal.confirm({
+      title: "Clear Cart",
+      content: "Are you sure you want to clear your entire cart?",
+      okText: "Yes",
+      cancelText: "No",
+      okButtonProps: { danger: true },
+      onOk: () => {
+        setCartItems([]);
+        message.success("Cart cleared");
+      }
+    });
+  };
+
+  const proceedToCheckout = () => {
+    if (cartItems.length === 0) {
+      message.warning("Your cart is empty");
+      return;
+    }
+    setCartDrawerVisible(false);
+    navigate("/cart");
+  };
 
   // FETCH MENU
   useEffect(() => {
     fetchMenu();
   }, [restaurantId, categoryParam]);
 
-  // Filter when foodTypeFilter changes
   useEffect(() => {
     if (foodTypeFilter === "all") {
       setMenuData(originalData);
@@ -104,7 +183,6 @@ function Menu() {
     }
   }, [foodTypeFilter, originalData]);
 
-  // Search filter
   useEffect(() => {
     if (!searchTerm.trim()) {
       setMenuData(originalData);
@@ -126,7 +204,6 @@ function Menu() {
   const fetchMenu = async () => {
     setIsLoading(true);
     try {
-      // Fetch categories
       let catMap = {};
       try {
         const catRes = await fetch(`${API_BASE_URL}/api/categories`);
@@ -139,7 +216,6 @@ function Menu() {
         console.error("Category fetch error:", e);
       }
 
-      // Build URL with filters
       let url = `${API_BASE_URL}/api/menu`;
       const params = [];
       if (restaurantId) params.push(`restaurantId=${restaurantId}`);
@@ -149,7 +225,6 @@ function Menu() {
       const res = await fetch(url);
       const data = await res.json();
 
-      // Fetch restaurant name
       if (restaurantId) {
         try {
           const restaurantRes = await fetch(`${API_BASE_URL}/api/restaurants/${restaurantId}`);
@@ -162,7 +237,6 @@ function Menu() {
         }
       }
 
-      // Group data
       const grouped = {};
       data.forEach(item => {
         let category;
@@ -175,7 +249,6 @@ function Menu() {
         grouped[category].push(item);
       });
 
-      // Sort categories
       const categoryOrder = ["burgers", "pizza", "starters", "salad", "soups", "arabic food", "others"];
       const sortedGrouped = {};
       categoryOrder.forEach(cat => {
@@ -215,11 +288,6 @@ function Menu() {
         }
       }
     });
-  };
-
-  const addToCart = (item) => {
-    setCartCount(prev => prev + 1);
-    message.success(`${item.name} added to cart`);
   };
 
   const viewDetails = (food) => {
@@ -299,13 +367,13 @@ function Menu() {
               Non-Vegetarian
             </Button>
           </div>
-          <Badge count={cartCount} className="menu-cart-badge">
+          <Badge count={cartCount} className="menu-cart-badge" offset={[-5, 5]}>
             <Button 
               icon={<ShoppingCartOutlined />} 
-              onClick={() => navigate("/cart")}
+              onClick={() => setCartDrawerVisible(true)}
               className="menu-cart-btn"
             >
-              Cart
+              Cart {cartCount > 0 && `(${cartCount})`}
             </Button>
           </Badge>
         </Space>
@@ -361,9 +429,9 @@ function Menu() {
                 </Title>
                 <div className="menu-category-line"></div>
               </div>
-              <Row gutter={[24, 24]} className="menu-grid">
+              <div className="menu-grid">
                 {menuData[category]?.map(food => (
-                  <Col xs={24} sm={12} lg={8} key={food._id}>
+                  <div key={food._id} className="menu-food-card-wrapper">
                     <Card
                       hoverable
                       className="menu-food-card"
@@ -398,9 +466,10 @@ function Menu() {
                         </Tooltip>,
                         <Tooltip title="Add to Cart">
                           <Button
-                            type="text"
+                            type="primary"
                             icon={<ShoppingCartOutlined />}
                             onClick={() => addToCart(food)}
+                            className="menu-add-to-cart-btn"
                           />
                         </Tooltip>,
                         <Tooltip title="Delete Item">
@@ -452,13 +521,137 @@ function Menu() {
                         </div>
                       </div>
                     </Card>
-                  </Col>
+                  </div>
                 ))}
-              </Row>
+              </div>
             </section>
           ))
         )}
       </div>
+
+      {/* Cart Drawer */}
+      <Drawer
+        title={
+          <div className="cart-drawer-header">
+            <ShoppingCartOutlined />
+            <span>Your Cart ({cartCount} items)</span>
+          </div>
+        }
+        placement="right"
+        onClose={() => setCartDrawerVisible(false)}
+        open={cartDrawerVisible}
+        width={420}
+        className="cart-drawer"
+        extra={
+          cartItems.length > 0 && (
+            <Button type="link" danger onClick={clearCart}>
+              Clear All
+            </Button>
+          )
+        }
+        closeIcon={<CloseOutlined />}
+      >
+        {cartItems.length === 0 ? (
+          <Empty
+            description="Your cart is empty"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            className="cart-empty"
+          >
+            <Button 
+              type="primary" 
+              onClick={() => setCartDrawerVisible(false)}
+            >
+              Browse Menu
+            </Button>
+          </Empty>
+        ) : (
+          <div className="cart-drawer-content">
+            <div className="cart-items-list">
+              {cartItems.map((item) => (
+                <div key={item._id} className="cart-item">
+                  <div className="cart-item-image">
+                    <img
+                      src={item.image?.startsWith("http") ? item.image : `${API_BASE_URL}/uploads/${item.image}`}
+                      alt={item.name}
+                      onError={(e) => {
+                        e.target.src = "https://via.placeholder.com/60x60?text=No+Image";
+                      }}
+                    />
+                    {item.discount > 0 && (
+                      <span className="cart-item-discount">-{item.discount}%</span>
+                    )}
+                  </div>
+                  <div className="cart-item-info">
+                    <div className="cart-item-name">{item.name}</div>
+                    <div className="cart-item-price">
+                      {item.discount > 0 ? (
+                        <>
+                          <span className="original-price">₹{item.price}</span>
+                          <span className="discounted-price">
+                            ₹{Math.round(item.price - (item.price * item.discount / 100))}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="current-price">₹{item.price}</span>
+                      )}
+                    </div>
+                    <div className="cart-item-actions">
+                      <div className="quantity-control">
+                        <Button
+                          size="small"
+                          icon={<MinusOutlined />}
+                          onClick={() => updateQuantity(item._id, (item.quantity || 1) - 1)}
+                        />
+                        <span className="quantity">{item.quantity || 1}</span>
+                        <Button
+                          size="small"
+                          icon={<PlusCircleOutlined />}
+                          onClick={() => updateQuantity(item._id, (item.quantity || 1) + 1)}
+                        />
+                      </div>
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => removeFromCart(item._id)}
+                        size="small"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Divider className="cart-divider" />
+
+            <div className="cart-summary">
+              <div className="cart-subtotal">
+                <Text type="secondary">Subtotal</Text>
+                <Text strong className="subtotal-amount">₹{Math.round(cartTotal)}</Text>
+              </div>
+              <div className="cart-delivery">
+                <Text type="secondary">Delivery Fee</Text>
+                <Text>Free</Text>
+              </div>
+              <Divider className="cart-divider-small" />
+              <div className="cart-total">
+                <Text strong className="total-label">Total</Text>
+                <Text strong className="total-amount">₹{Math.round(cartTotal)}</Text>
+              </div>
+            </div>
+
+            <Button
+              type="primary"
+              size="large"
+              block
+              className="checkout-btn"
+              onClick={proceedToCheckout}
+            >
+              Proceed to Checkout
+            </Button>
+          </div>
+        )}
+      </Drawer>
 
       {/* Add Item Button */}
       <Affix offsetBottom={30}>
@@ -571,77 +764,6 @@ function Menu() {
           </div>
         )}
       </Modal>
-
-      {/* Footer */}
-      <footer className="menu-footer">
-        <div className="menu-footer-content">
-          <div className="menu-footer-logo">
-            <span className="menu-logo-icon">🍽️</span>
-            <span className="menu-logo-text">QRhino</span>
-          </div>
-          <Paragraph className="menu-footer-tagline">
-            ✨ Scan • Order • Enjoy ✨
-          </Paragraph>
-          <Row gutter={[24, 24]} className="menu-footer-grid">
-            <Col xs={24} sm={12} md={6}>
-              <div className="menu-footer-section">
-                <Title level={4}>📞 Contact Us</Title>
-                <Paragraph>Phone: +91 98765 43210</Paragraph>
-                <Paragraph>WhatsApp: +91 98765 43211</Paragraph>
-                <Paragraph>Email: support@qrhino.com</Paragraph>
-              </div>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <div className="menu-footer-section">
-                <Title level={4}>🕐 Operating Hours</Title>
-                <Paragraph>Monday - Friday: 9AM - 11PM</Paragraph>
-                <Paragraph>Saturday - Sunday: 10AM - 12AM</Paragraph>
-                <Paragraph>Holidays: 10AM - 10PM</Paragraph>
-              </div>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <div className="menu-footer-section">
-                <Title level={4}>📍 Our Locations</Title>
-                <Paragraph>Main Branch: Downtown</Paragraph>
-                <Paragraph>Branch 2: Westside Mall</Paragraph>
-                <Paragraph>Branch 3: Airport Road</Paragraph>
-              </div>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <div className="menu-footer-section">
-                <Title level={4}>🍕 Popular Categories</Title>
-                <Paragraph>Burgers • Pizzas • Biryani</Paragraph>
-                <Paragraph>Desserts • Beverages</Paragraph>
-                <Paragraph>Starters • Main Course</Paragraph>
-              </div>
-            </Col>
-          </Row>
-          <div className="menu-footer-social">
-            <Tooltip title="Facebook">
-              <span className="menu-social-icon">📘</span>
-            </Tooltip>
-            <Tooltip title="Instagram">
-              <span className="menu-social-icon">📸</span>
-            </Tooltip>
-            <Tooltip title="Twitter">
-              <span className="menu-social-icon">🐦</span>
-            </Tooltip>
-            <Tooltip title="LinkedIn">
-              <span className="menu-social-icon">💼</span>
-            </Tooltip>
-          </div>
-          <div className="menu-footer-links">
-            <Button type="link" onClick={() => navigate("/menu/main")}>Menu</Button>
-            <Button type="link" onClick={() => navigate("/cart")}>Cart</Button>
-            <Button type="link" onClick={() => navigate("/kitchen")}>Kitchen</Button>
-            <Button type="link" onClick={() => navigate("/admin")}>Admin</Button>
-          </div>
-          <Divider style={{ borderColor: 'rgba(255,255,255,0.1)', margin: '20px 0' }} />
-          <Text type="secondary" className="menu-footer-copyright">
-            © 2024 QRhino. All rights reserved. Made with ❤️
-          </Text>
-        </div>
-      </footer>
 
       <BackTop />
     </div>

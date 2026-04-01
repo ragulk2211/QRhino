@@ -18,8 +18,7 @@ import {
   Avatar,
   Rate,
   Result,
-  Affix,
-  BackTop,
+  FloatButton,
   Drawer
 } from "antd";
 import {
@@ -38,7 +37,8 @@ import {
   MinusOutlined,
   PlusCircleOutlined,
   ShopOutlined,
-  FilterOutlined
+  FilterOutlined,
+  UpOutlined
 } from "@ant-design/icons";
 import Header from "../components/Header";
 import API_BASE_URL from "../config";
@@ -315,7 +315,7 @@ function Menu() {
   };
 
   const getFoodTypeIcon = (type) => {
-    return type === "veg" ? "🌱" : "🍖";
+    return type === "veg" ? <CheckCircleOutlined /> : <FireOutlined />;
   };
 
   if (isLoading) {
@@ -334,10 +334,9 @@ function Menu() {
     <div className="menu-page">
       <Header onSearch={setSearchTerm} />
 
-      {/* Unified Top Bar - Restaurant Info, Filters & Cart */}
+      {/* Restaurant Header - Not Sticky */}
       <div className="menu-restaurant-header">
         <Row gutter={[16, 16]} align="middle">
-          {/* Restaurant Info */}
           <Col xs={24} md={8}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <Avatar size={56} icon={<ShopOutlined />} className="menu-restaurant-avatar" />
@@ -356,7 +355,6 @@ function Menu() {
             </div>
           </Col>
 
-          {/* Filter Buttons */}
           <Col xs={24} md={10}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center' }}>
               <FilterOutlined style={{ color: '#b87a4a' }} />
@@ -372,7 +370,7 @@ function Menu() {
                 <Button
                   onClick={() => setFoodTypeFilter("veg")}
                   type={foodTypeFilter === "veg" ? "primary" : "default"}
-                  icon={<span>🌱</span>}
+                  icon={<CheckCircleOutlined />}
                   className={foodTypeFilter === "veg" ? "menu-filter-active" : ""}
                   size="middle"
                 >
@@ -381,7 +379,7 @@ function Menu() {
                 <Button
                   onClick={() => setFoodTypeFilter("nonveg")}
                   type={foodTypeFilter === "nonveg" ? "primary" : "default"}
-                  icon={<span>🍖</span>}
+                  icon={<FireOutlined />}
                   className={foodTypeFilter === "nonveg" ? "menu-filter-active" : ""}
                   size="middle"
                 >
@@ -391,7 +389,6 @@ function Menu() {
             </div>
           </Col>
 
-          {/* Cart & Back Button */}
           <Col xs={24} md={6}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>
               <Badge count={cartCount} className="menu-cart-badge" offset={[-5, 5]}>
@@ -417,7 +414,7 @@ function Menu() {
         </Row>
       </div>
 
-      {/* Categories Tabs */}
+      {/* Categories Tabs - STICKY BELOW HEADER */}
       {Object.keys(menuData).length > 0 && (
         <div className="menu-category-tabs-wrapper">
           <div className="menu-category-tabs">
@@ -426,10 +423,18 @@ function Menu() {
                 key={category}
                 onClick={() => {
                   setActiveCategory(category);
-                  document.getElementById(`menu-${category}`)?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start"
-                  });
+                  const element = document.getElementById(`menu-${category}`);
+                  if (element) {
+                    const headerHeight = document.querySelector('.header')?.offsetHeight || 70;
+                    const tabsHeight = document.querySelector('.menu-category-tabs-wrapper')?.offsetHeight || 60;
+                    const offset = headerHeight + tabsHeight + 20;
+                    const elementPosition = element.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - offset;
+                    window.scrollTo({
+                      top: offsetPosition,
+                      behavior: "smooth"
+                    });
+                  }
                 }}
                 className={`menu-category-tab ${activeCategory === category ? "active" : ""}`}
               >
@@ -577,7 +582,7 @@ function Menu() {
         placement="right"
         onClose={() => setCartDrawerVisible(false)}
         open={cartDrawerVisible}
-        width={420}
+        size="default"
         className="cart-drawer"
         extra={
           cartItems.length > 0 && (
@@ -690,7 +695,7 @@ function Menu() {
         )}
       </Drawer>
 
-      {/* Add Item Button - Fixed Position */}
+      {/* Add Item Button - Fixed Position Bottom Right */}
       <div className="menu-add-item-btn-wrapper">
         <Button
           type="primary"
@@ -802,7 +807,12 @@ function Menu() {
         )}
       </Modal>
 
-      <BackTop />
+      {/* BackTop Button - Positioned Above Add Item Button */}
+      <FloatButton.BackTop 
+        icon={<UpOutlined />}
+        visibilityHeight={400}
+        className="menu-backtop"
+      />
     </div>
   );
 }

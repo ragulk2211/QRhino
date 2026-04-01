@@ -1,4 +1,4 @@
-/* header.css - Complete Fixed Version */
+/* header.css - Complete Fixed Version with Sticky Positioning */
 
 /* Variables for consistent theming - Cream Color Palette */
 :root {
@@ -89,28 +89,32 @@
   --transition-smooth: all 0.4s cubic-bezier(0.65, 0, 0.35, 1);
   
   /* Z-index layers */
-  --z-dropdown: 1000;
-  --z-modal: 1100;
-  --z-overlay: 1200;
+  --z-header: 1000;
+  --z-dropdown: 1100;
+  --z-modal: 1200;
+  --z-overlay: 1300;
   
   /* Dimensions */
   --header-padding: 1rem 2rem;
   --header-padding-mobile: 0.75rem 1rem;
+  --header-height: 80px;
+  --header-height-mobile: 70px;
   --search-max-width: 400px;
   --cart-dropdown-width: 380px;
 }
 
-/* Header Styles */
+/* Header Styles - STICKY */
 .header {
   background: linear-gradient(135deg, var(--cream-light) 0%, var(--cream) 100%);
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: var(--z-header);
   backdrop-filter: blur(10px);
   border-bottom: 2px solid rgba(184, 149, 110, 0.2);
   box-shadow: var(--shadow-sm);
   animation: slideDown 0.3s ease-out;
   width: 100%;
+  transition: all 0.3s ease;
 }
 
 @keyframes slideDown {
@@ -132,6 +136,8 @@
   justify-content: space-between;
   align-items: center;
   gap: 1.5rem;
+  height: var(--header-height);
+  transition: height 0.3s ease;
 }
 
 /* Logo Styles */
@@ -603,10 +609,15 @@
   fill: none;
 }
 
-/* Responsive Design */
+/* Responsive Design - Maintains Sticky */
 @media (max-width: 1024px) {
+  :root {
+    --header-height: 75px;
+  }
+  
   .header-container {
     padding: var(--spacing-lg) var(--spacing-2xl);
+    height: var(--header-height);
   }
   
   .search-wrapper {
@@ -615,10 +626,16 @@
 }
 
 @media (max-width: 768px) {
+  :root {
+    --header-height: 120px;
+  }
+  
   .header-container {
     flex-direction: column;
     gap: var(--spacing-lg);
     padding: var(--spacing-md);
+    height: auto;
+    min-height: var(--header-height);
   }
   
   .header-right {
@@ -662,6 +679,10 @@
 }
 
 @media (max-width: 480px) {
+  :root {
+    --header-height: 110px;
+  }
+  
   .header-right {
     gap: var(--spacing-sm);
   }

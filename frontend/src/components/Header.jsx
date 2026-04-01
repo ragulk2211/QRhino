@@ -57,6 +57,9 @@ function Header({ onSearch = () => {} }) {
     }, 0);
     
     setCartTotal(total);
+    
+    // Dispatch storage event for other tabs/components
+    window.dispatchEvent(new Event('storage'));
   }, []);
 
   // Handle quantity updates

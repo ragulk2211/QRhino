@@ -36,7 +36,9 @@ import {
   CloseOutlined,
   CheckCircleOutlined,
   MinusOutlined,
-  PlusCircleOutlined
+  PlusCircleOutlined,
+  ShopOutlined,
+  FilterOutlined
 } from "@ant-design/icons";
 import Header from "../components/Header";
 import API_BASE_URL from "../config";
@@ -54,6 +56,8 @@ function Menu() {
   const [menuData, setMenuData] = useState({});
   const [originalData, setOriginalData] = useState({});
   const [restaurantName, setRestaurantName] = useState("");
+  const [restaurantLocation, setRestaurantLocation] = useState("");
+  const [restaurantRating, setRestaurantRating] = useState(4.5);
   const [foodTypeFilter, setFoodTypeFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [categoryMap, setCategoryMap] = useState({});
@@ -122,8 +126,17 @@ function Menu() {
   };
 
   const removeFromCart = (itemId) => {
-    setCartItems(prevItems => prevItems.filter(item => item._id !== itemId));
-    message.info("Item removed from cart");
+    Modal.confirm({
+      title: "Remove Item",
+      content: "Are you sure you want to remove this item from cart?",
+      okText: "Yes",
+      cancelText: "No",
+      okButtonProps: { danger: true },
+      onOk: () => {
+        setCartItems(prevItems => prevItems.filter(item => item._id !== itemId));
+        message.success("Item removed from cart");
+      }
+    });
   };
 
   const updateQuantity = (itemId, newQuantity) => {
@@ -231,6 +244,8 @@ function Menu() {
           if (restaurantRes.ok) {
             const restaurant = await restaurantRes.json();
             setRestaurantName(restaurant.name);
+            setRestaurantLocation(restaurant.location?.address?.city || restaurant.location || "Location not set");
+            setRestaurantRating(restaurant.rating || 4.5);
           }
         } catch (e) {
           console.error("Restaurant fetch error:", e);
@@ -319,89 +334,110 @@ function Menu() {
     <div className="menu-page">
       <Header onSearch={setSearchTerm} />
 
-      {/* Restaurant Header */}
-      {restaurantName && (
-        <div className="menu-restaurant-header">
-          <div className="menu-restaurant-info">
-            <Avatar size={64} icon={<EnvironmentOutlined />} className="menu-restaurant-avatar" />
-            <div>
-              <Title level={3} className="menu-restaurant-name">{restaurantName}</Title>
-              <Text type="secondary">View our special menu curated just for you</Text>
+      {/* Unified Top Bar - Restaurant Info, Filters & Cart */}
+      <div className="menu-restaurant-header">
+        <Row gutter={[16, 16]} align="middle">
+          {/* Restaurant Info */}
+          <Col xs={24} md={8}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <Avatar size={56} icon={<ShopOutlined />} className="menu-restaurant-avatar" />
+              <div>
+                <Title level={4} className="menu-restaurant-name" style={{ marginBottom: 4 }}>
+                  {restaurantName || "Our Restaurant"}
+                </Title>
+                <Space size="small">
+                  <EnvironmentOutlined style={{ fontSize: 12, color: '#c9a87c' }} />
+                  <Text type="secondary" style={{ fontSize: 12 }}>{restaurantLocation}</Text>
+                </Space>
+                <div style={{ marginTop: 4 }}>
+                  <Rate disabled defaultValue={restaurantRating} allowHalf style={{ fontSize: 12 }} />
+                </div>
+              </div>
             </div>
-          </div>
-          <Button 
-            icon={<ArrowLeftOutlined />} 
-            onClick={() => navigate("/")}
-            className="menu-back-btn"
-          >
-            Back to Restaurants
-          </Button>
-        </div>
-      )}
+          </Col>
 
-      {/* Filter Section */}
-      <div className="menu-filter-section">
-        <Space size="middle" wrap>
-          <div className="menu-filter-buttons">
-            <Button
-              onClick={() => setFoodTypeFilter("all")}
-              type={foodTypeFilter === "all" ? "primary" : "default"}
-              className={foodTypeFilter === "all" ? "menu-filter-active" : ""}
-            >
-              All
-            </Button>
-            <Button
-              onClick={() => setFoodTypeFilter("veg")}
-              type={foodTypeFilter === "veg" ? "primary" : "default"}
-              icon={<span>🌱</span>}
-              className={foodTypeFilter === "veg" ? "menu-filter-active" : ""}
-            >
-              Vegetarian
-            </Button>
-            <Button
-              onClick={() => setFoodTypeFilter("nonveg")}
-              type={foodTypeFilter === "nonveg" ? "primary" : "default"}
-              icon={<span>🍖</span>}
-              className={foodTypeFilter === "nonveg" ? "menu-filter-active" : ""}
-            >
-              Non-Vegetarian
-            </Button>
-          </div>
-          <Badge count={cartCount} className="menu-cart-badge" offset={[-5, 5]}>
-            <Button 
-              icon={<ShoppingCartOutlined />} 
-              onClick={() => setCartDrawerVisible(true)}
-              className="menu-cart-btn"
-            >
-              Cart {cartCount > 0 && `(${cartCount})`}
-            </Button>
-          </Badge>
-        </Space>
+          {/* Filter Buttons */}
+          <Col xs={24} md={10}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center' }}>
+              <FilterOutlined style={{ color: '#b87a4a' }} />
+              <div className="menu-filter-buttons">
+                <Button
+                  onClick={() => setFoodTypeFilter("all")}
+                  type={foodTypeFilter === "all" ? "primary" : "default"}
+                  className={foodTypeFilter === "all" ? "menu-filter-active" : ""}
+                  size="middle"
+                >
+                  All
+                </Button>
+                <Button
+                  onClick={() => setFoodTypeFilter("veg")}
+                  type={foodTypeFilter === "veg" ? "primary" : "default"}
+                  icon={<span>🌱</span>}
+                  className={foodTypeFilter === "veg" ? "menu-filter-active" : ""}
+                  size="middle"
+                >
+                  Vegetarian
+                </Button>
+                <Button
+                  onClick={() => setFoodTypeFilter("nonveg")}
+                  type={foodTypeFilter === "nonveg" ? "primary" : "default"}
+                  icon={<span>🍖</span>}
+                  className={foodTypeFilter === "nonveg" ? "menu-filter-active" : ""}
+                  size="middle"
+                >
+                  Non-Vegetarian
+                </Button>
+              </div>
+            </div>
+          </Col>
+
+          {/* Cart & Back Button */}
+          <Col xs={24} md={6}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>
+              <Badge count={cartCount} className="menu-cart-badge" offset={[-5, 5]}>
+                <Button 
+                  icon={<ShoppingCartOutlined />} 
+                  onClick={() => setCartDrawerVisible(true)}
+                  className="menu-cart-btn"
+                  size="middle"
+                >
+                  Cart {cartCount > 0 && `(${cartCount})`}
+                </Button>
+              </Badge>
+              <Button 
+                icon={<ArrowLeftOutlined />} 
+                onClick={() => navigate("/")}
+                type="link"
+                style={{ color: '#b87a4a', padding: 0 }}
+              >
+                Back
+              </Button>
+            </div>
+          </Col>
+        </Row>
       </div>
 
       {/* Categories Tabs */}
       {Object.keys(menuData).length > 0 && (
-        <Affix offsetTop={70}>
-          <div className="menu-category-tabs-wrapper">
-            <div className="menu-category-tabs">
-              {Object.keys(menuData).map(category => (
-                <Button
-                  key={category}
-                  onClick={() => {
-                    setActiveCategory(category);
-                    document.getElementById(`menu-${category}`)?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "start"
-                    });
-                  }}
-                  className={`menu-category-tab ${activeCategory === category ? "active" : ""}`}
-                >
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </Button>
-              ))}
-            </div>
+        <div className="menu-category-tabs-wrapper">
+          <div className="menu-category-tabs">
+            {Object.keys(menuData).map(category => (
+              <Button
+                key={category}
+                onClick={() => {
+                  setActiveCategory(category);
+                  document.getElementById(`menu-${category}`)?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                  });
+                }}
+                className={`menu-category-tab ${activeCategory === category ? "active" : ""}`}
+              >
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </Button>
+            ))}
           </div>
-        </Affix>
+        </div>
       )}
 
       {/* Menu Items */}
@@ -431,97 +467,98 @@ function Menu() {
               </div>
               <div className="menu-grid">
                 {menuData[category]?.map(food => (
-                  <div key={food._id} className="menu-food-card-wrapper">
-                    <Card
-                      hoverable
-                      className="menu-food-card"
-                      cover={
-                        <div className="menu-food-image">
-                          <img
-                            alt={food.name}
-                            src={food.image?.startsWith("http") ? food.image : `${API_BASE_URL}/uploads/${food.image}`}
-                            onError={(e) => {
-                              e.target.src = "https://via.placeholder.com/400x300?text=No+Image";
-                            }}
-                          />
-                          {food.bestseller && (
-                            <Tag color="orange" className="menu-bestseller-tag">
-                              <FireOutlined /> Best Seller
-                            </Tag>
-                          )}
-                          {food.discount > 0 && (
-                            <Tag color="red" className="menu-discount-tag">
-                              -{food.discount}%
-                            </Tag>
-                          )}
-                        </div>
-                      }
-                      actions={[
-                        <Tooltip title="View Details">
-                          <Button
-                            type="text"
-                            icon={<EyeOutlined />}
-                            onClick={() => viewDetails(food)}
-                          />
-                        </Tooltip>,
-                        <Tooltip title="Add to Cart">
-                          <Button
-                            type="primary"
-                            icon={<ShoppingCartOutlined />}
-                            onClick={() => addToCart(food)}
-                            className="menu-add-to-cart-btn"
-                          />
-                        </Tooltip>,
-                        <Tooltip title="Delete Item">
-                          <Button
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={() => deleteItem(food._id)}
-                          />
-                        </Tooltip>
-                      ]}
-                    >
-                      <div className="menu-food-header">
-                        <Tag 
-                          icon={getFoodTypeIcon(food.foodType)} 
-                          color={getFoodTypeColor(food.foodType)}
-                          className="menu-food-type-tag"
+                  <Card
+                    key={food._id}
+                    hoverable
+                    className="menu-food-card"
+                    cover={
+                      <div className="menu-food-image">
+                        <img
+                          alt={food.name}
+                          src={food.image?.startsWith("http") ? food.image : `${API_BASE_URL}/uploads/${food.image}`}
+                          onError={(e) => {
+                            e.target.src = "https://via.placeholder.com/400x300?text=No+Image";
+                          }}
+                        />
+                        {food.bestseller && (
+                          <Tag color="orange" className="menu-bestseller-tag">
+                            <FireOutlined /> Best Seller
+                          </Tag>
+                        )}
+                        {food.discount > 0 && (
+                          <Tag color="red" className="menu-discount-tag">
+                            -{food.discount}%
+                          </Tag>
+                        )}
+                      </div>
+                    }
+                    actions={[
+                      <Tooltip title="View Details">
+                        <Button
+                          type="text"
+                          icon={<EyeOutlined />}
+                          onClick={() => viewDetails(food)}
+                        />
+                      </Tooltip>,
+                      <Tooltip title="Add to Cart">
+                        <Button
+                          type="primary"
+                          icon={<ShoppingCartOutlined />}
+                          onClick={() => addToCart(food)}
+                          className="menu-add-to-cart-btn"
                         >
-                          {food.foodType === "veg" ? "Vegetarian" : "Non-Vegetarian"}
-                        </Tag>
-                        <Rate disabled defaultValue={food.rating || 4.5} allowHalf style={{ fontSize: 12 }} />
+                          Add
+                        </Button>
+                      </Tooltip>,
+                      <Tooltip title="Delete Item">
+                        <Button
+                          type="text"
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => deleteItem(food._id)}
+                        />
+                      </Tooltip>
+                    ]}
+                  >
+                    <div className="menu-food-header">
+                      <Tag 
+                        icon={getFoodTypeIcon(food.foodType)} 
+                        color={getFoodTypeColor(food.foodType)}
+                        className="menu-food-type-tag"
+                      >
+                        {food.foodType === "veg" ? "Vegetarian" : "Non-Vegetarian"}
+                      </Tag>
+                      <Rate disabled defaultValue={food.rating || 4.5} allowHalf style={{ fontSize: 12 }} />
+                    </div>
+                    <Title level={4} className="menu-food-name">{food.name}</Title>
+                    <Paragraph ellipsis={{ rows: 2 }} className="menu-food-description">
+                      {food.desc || "Delicious dish prepared with fresh ingredients"}
+                    </Paragraph>
+                    <div className="menu-food-footer">
+                      <div className="menu-food-price">
+                        <Text strong className="menu-current-price">₹{food.price}</Text>
+                        {food.discount > 0 && (
+                          <Text delete className="menu-original-price">₹{food.originalPrice || food.price}</Text>
+                        )}
                       </div>
-                      <Title level={4} className="menu-food-name">{food.name}</Title>
-                      <Paragraph ellipsis={{ rows: 2 }} className="menu-food-description">
-                        {food.desc || "Delicious dish prepared with fresh ingredients"}
-                      </Paragraph>
-                      <div className="menu-food-footer">
-                        <div className="menu-food-price">
-                          <Text strong className="menu-current-price">₹{food.price}</Text>
-                          {food.discount > 0 && (
-                            <Text delete className="menu-original-price">₹{food.originalPrice || food.price}</Text>
-                          )}
-                        </div>
-                        <div className="menu-food-meta">
-                          {food.kcal > 0 && (
-                            <Tooltip title="Calories">
-                              <Tag icon={<FireOutlined />} className="menu-meta-tag">
-                                {food.kcal} kcal
-                              </Tag>
-                            </Tooltip>
-                          )}
-                          {food.time > 0 && (
-                            <Tooltip title="Prep Time">
-                              <Tag icon={<ClockCircleOutlined />} className="menu-meta-tag">
-                                {food.time} min
-                              </Tag>
-                            </Tooltip>
-                          )}
-                        </div>
+                      <div className="menu-food-meta">
+                        {food.kcal > 0 && (
+                          <Tooltip title="Calories">
+                            <Tag icon={<FireOutlined />} className="menu-meta-tag">
+                              {food.kcal} kcal
+                            </Tag>
+                          </Tooltip>
+                        )}
+                        {food.time > 0 && (
+                          <Tooltip title="Prep Time">
+                            <Tag icon={<ClockCircleOutlined />} className="menu-meta-tag">
+                              {food.time} min
+                            </Tag>
+                          </Tooltip>
+                        )}
                       </div>
-                    </Card>
-                  </div>
+                    </div>
+                  </Card>
                 ))}
               </div>
             </section>
@@ -653,8 +690,8 @@ function Menu() {
         )}
       </Drawer>
 
-      {/* Add Item Button */}
-      <Affix offsetBottom={30}>
+      {/* Add Item Button - Fixed Position */}
+      <div className="menu-add-item-btn-wrapper">
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -663,7 +700,7 @@ function Menu() {
         >
           Add New Item
         </Button>
-      </Affix>
+      </div>
 
       {/* Food Details Modal */}
       <Modal

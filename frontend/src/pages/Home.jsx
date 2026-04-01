@@ -23,6 +23,13 @@ function Home() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [imageErrors, setImageErrors] = useState({});
+
+  // Permanent placeholder image (base64 encoded fallback to avoid external requests)
+  const PLACEHOLDER_IMAGE = useMemo(() => 
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23e8d9cc'/%3E%3Ctext x='50%25' y='50%25' font-size='16' text-anchor='middle' dy='.3em' fill='%238b6946'%3ENo Image Available%3C/text%3E%3C/svg%3E",
+    []
+  );
 
   // Intersection Observer for scroll animations
   useEffect(() => {
@@ -105,16 +112,35 @@ function Home() {
     fetchFeaturedItems();
   }, [fetchRestaurants, fetchFeaturedItems]);
 
-  // Get image URL helper
+  // Get image URL helper with permanent fallback
   const getImageUrl = useCallback(
     (image, type = "restaurant") => {
-      if (!image) return "https://via.placeholder.com/400x300?text=No+Image";
+      if (!image) return PLACEHOLDER_IMAGE;
       if (image.startsWith("http")) return image;
+      if (image.startsWith("data:")) return image;
       if (type === "menu") return `${API_BASE_URL}${image}`;
       return `${API_BASE_URL}/uploads/${image}`;
     },
-    [API_BASE_URL]
+    [API_BASE_URL, PLACEHOLDER_IMAGE]
   );
+
+  // Handle image errors permanently
+  const handleImageError = useCallback((itemId, type = "restaurant") => {
+    setImageErrors(prev => ({
+      ...prev,
+      [`${type}-${itemId}`]: true
+    }));
+  }, []);
+
+  // Get final image source with error handling
+  const getImageSource = useCallback((item, type = "restaurant") => {
+    const errorKey = `${type}-${item._id || item.name}`;
+    if (imageErrors[errorKey]) {
+      return PLACEHOLDER_IMAGE;
+    }
+    const imageUrl = getImageUrl(item.image, type);
+    return imageUrl || PLACEHOLDER_IMAGE;
+  }, [getImageUrl, imageErrors, PLACEHOLDER_IMAGE]);
 
   // Form validation
   const validateForm = useCallback(() => {
@@ -352,12 +378,10 @@ function Home() {
                 >
                   <div className="card-media">
                     <img
-                      src={getImageUrl(restaurant.image)}
+                      src={getImageSource(restaurant, "restaurant")}
                       alt={restaurant.name}
                       loading="lazy"
-                      onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Available";
-                      }}
+                      onError={() => handleImageError(restaurant._id, "restaurant")}
                     />
                     <div className="card-overlay"></div>
                   </div>
@@ -418,12 +442,10 @@ function Home() {
                 >
                   <div className="card-media">
                     <img
-                      src={getImageUrl(item.image, "menu")}
+                      src={getImageSource(item, "menu")}
                       alt={item.name}
                       loading="lazy"
-                      onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Available";
-                      }}
+                      onError={() => handleImageError(item._id, "menu")}
                     />
                     {item.foodType && (
                       <span className={`veg-nonveg-badge ${item.foodType === 'veg' ? 'veg' : 'non-veg'}`}>

@@ -15,7 +15,6 @@ import {
   Tag,
   Alert,
   Spin,
-  List,
   Avatar,
   Empty,
   Tooltip,
@@ -52,14 +51,12 @@ function CreateCategory() {
     fetchExistingCategories();
   }, []);
 
-  // FIXED: Store full category objects with _id
   const fetchExistingCategories = async () => {
     setIsLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/categories`);
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
-      // Store full category objects
       setExistingCategories(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -101,7 +98,7 @@ function CreateCategory() {
     
     try {
       const url = editingCategory 
-        ? `${API_BASE_URL}/api/categories/${editingCategory._id}`  // Use _id for edit
+        ? `${API_BASE_URL}/api/categories/${editingCategory._id}`
         : `${API_BASE_URL}/api/categories`;
       
       const method = editingCategory ? "PUT" : "POST";
@@ -128,7 +125,7 @@ function CreateCategory() {
         form.resetFields();
         setFormErrors({});
         setEditingCategory(null);
-        fetchExistingCategories(); // Refresh the list
+        fetchExistingCategories();
       } else {
         const error = await response.json();
         message.error(error.message || error.error || "Failed to save category");
@@ -141,7 +138,6 @@ function CreateCategory() {
     }
   };
 
-  // FIXED: Delete using _id instead of name
   const handleDeleteCategory = (category) => {
     confirm({
       title: 'Delete Category',
@@ -152,7 +148,6 @@ function CreateCategory() {
       cancelText: 'Cancel',
       onOk: async () => {
         try {
-          // Use category._id for deletion
           const response = await fetch(`${API_BASE_URL}/api/categories/${category._id}`, {
             method: "DELETE"
           });
@@ -214,15 +209,22 @@ function CreateCategory() {
     return icons[categoryName?.toLowerCase()] || "📁";
   };
 
+  // Create breadcrumb items for the new API
+  const breadcrumbItems = [
+    {
+      title: <a onClick={() => navigate("/admin")}>Dashboard</a>,
+      key: "dashboard"
+    },
+    {
+      title: "Manage Categories",
+      key: "categories"
+    }
+  ];
+
   return (
     <div className="category-form-container">
       <div className="category-form-content">
-        <Breadcrumb className="category-form-breadcrumb">
-          <Breadcrumb.Item>
-            <a onClick={() => navigate("/admin")}>Dashboard</a>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>Manage Categories</Breadcrumb.Item>
-        </Breadcrumb>
+        <Breadcrumb items={breadcrumbItems} className="category-form-breadcrumb" />
 
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={12}>
@@ -280,7 +282,7 @@ function CreateCategory() {
                 </Form.Item>
 
                 <Form.Item>
-                  <Space style={{ width: '100%' }} direction="vertical" size="middle">
+                  <Space style={{ width: '100%' }} orientation="vertical" size="middle">
                     <Button
                       type="primary"
                       htmlType="submit"
@@ -345,13 +347,43 @@ function CreateCategory() {
                   <div style={{ marginTop: '16px', color: '#c9a87c' }}>Loading categories...</div>
                 </div>
               ) : existingCategories.length > 0 ? (
-                <List
-                  dataSource={existingCategories}
-                  className="category-form-list"
-                  renderItem={(category, index) => (
-                    <List.Item
+                // Replaced deprecated List component with custom mapping
+                <div className="category-form-list">
+                  {existingCategories.map((category, index) => (
+                    <div 
+                      key={category._id || index}
                       className="category-form-list-item"
-                      actions={[
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 16px',
+                        borderRadius: '8px',
+                        transition: 'all 0.3s ease',
+                        marginBottom: '8px',
+                        background: '#fffbf5',
+                        border: '1px solid #ffe0c4'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                        <Avatar className="category-form-avatar">
+                          {getCategoryIcon(category.name)}
+                        </Avatar>
+                        <div style={{ flex: 1 }}>
+                          <Space>
+                            <span className="category-form-category-name" style={{ fontWeight: 600, color: '#b87a4a', textTransform: 'capitalize' }}>
+                              {category.displayName || category.name}
+                            </span>
+                            <Tag color="orange" className="category-form-index-tag">
+                              #{index + 1}
+                            </Tag>
+                          </Space>
+                          <div className="category-form-category-desc" style={{ color: '#c9a87c', fontSize: '0.75rem', marginTop: '4px' }}>
+                            ID: {category._id} • Created: {category.createdAt ? new Date(category.createdAt).toLocaleDateString() : 'Recently'}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
                         <Tooltip title="Edit category">
                           <Button
                             type="text"
@@ -362,7 +394,7 @@ function CreateCategory() {
                           >
                             Edit
                           </Button>
-                        </Tooltip>,
+                        </Tooltip>
                         <Tooltip title="Delete category">
                           <Button
                             type="text"
@@ -375,33 +407,10 @@ function CreateCategory() {
                             Delete
                           </Button>
                         </Tooltip>
-                      ]}
-                    >
-                      <List.Item.Meta
-                        avatar={
-                          <Avatar className="category-form-avatar">
-                            {getCategoryIcon(category.name)}
-                          </Avatar>
-                        }
-                        title={
-                          <Space>
-                            <span className="category-form-category-name">
-                              {category.displayName || category.name}
-                            </span>
-                            <Tag color="orange" className="category-form-index-tag">
-                              #{index + 1}
-                            </Tag>
-                          </Space>
-                        }
-                        description={
-                          <span className="category-form-category-desc">
-                            ID: {category._id} • Created: {category.createdAt ? new Date(category.createdAt).toLocaleDateString() : 'Recently'}
-                          </span>
-                        }
-                      />
-                    </List.Item>
-                  )}
-                />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <Empty
                   description="No categories yet"
@@ -437,7 +446,9 @@ function CreateCategory() {
               <div className="category-form-stat-card">
                 <div className="category-form-stat-icon">🍽️</div>
                 <div className="category-form-stat-value">
-                  {existingCategories[0] ? existingCategories[0].displayName || existingCategories[0].name : "N/A"}
+                  {existingCategories[existingCategories.length - 1] ? 
+                    (existingCategories[existingCategories.length - 1].displayName || 
+                     existingCategories[existingCategories.length - 1].name) : "N/A"}
                 </div>
                 <div className="category-form-stat-label">Latest Category</div>
               </div>

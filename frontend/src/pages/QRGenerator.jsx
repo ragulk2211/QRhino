@@ -18,7 +18,6 @@ import {
   Tag,
   Alert,
   Modal,
-  List,
   Avatar,
   Tooltip,
   QRCode,
@@ -51,7 +50,6 @@ import "../styles/qrGenerator.css";
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
-const { TabPane } = Tabs;
 
 function QRGenerator() {
   const navigate = useNavigate();
@@ -64,6 +62,7 @@ function QRGenerator() {
   const [allQRCodes, setAllQRCodes] = useState([]);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [selectedQR, setSelectedQR] = useState(null);
+  const [activeTab, setActiveTab] = useState("single");
 
   useEffect(() => {
     fetchRestaurants();
@@ -218,466 +217,485 @@ function QRGenerator() {
 
   const selectedRestaurantData = restaurants.find(r => r._id === selectedRestaurant);
 
+  // Create breadcrumb items for the new API
+  const breadcrumbItems = [
+    {
+      title: <a onClick={() => navigate("/admin")}>Dashboard</a>,
+      key: "dashboard"
+    },
+    {
+      title: "QR Generator",
+      key: "qr-generator"
+    }
+  ];
+
+  // Create tab items for the new API
+  const tabItems = [
+    {
+      key: "single",
+      label: (
+        <span>
+          <QrcodeOutlined className="qr-gen-tab-icon" /> Single QR
+        </span>
+      ),
+      children: (
+        <Row gutter={[24, 24]}>
+          <Col xs={24} lg={10}>
+            <Card 
+              className="qr-gen-form-card" 
+              title={
+                <Space>
+                  <QrcodeOutlined className="qr-gen-card-icon" />
+                  <span>Generate QR Code</span>
+                </Space>
+              }
+            >
+              <Form form={form} layout="vertical">
+                <Form.Item
+                  label={
+                    <Space>
+                      Select Restaurant
+                      <Tooltip title="Choose the restaurant to generate QR code for">
+                        <InfoCircleOutlined style={{ color: '#ff9f4a' }} />
+                      </Tooltip>
+                    </Space>
+                  }
+                  required
+                  className="qr-gen-form-item"
+                >
+                  <Select
+                    size="large"
+                    placeholder="Choose a restaurant"
+                    loading={isLoading && restaurants.length === 0}
+                    onChange={(value) => setSelectedRestaurant(value)}
+                    showSearch
+                    className="qr-gen-select"
+                    filterOption={(input, option) =>
+                      option?.children?.toString().toLowerCase().indexOf(input.toLowerCase()) >= 0
+                    }
+                  >
+                    {restaurants.map(restaurant => (
+                      <Option key={restaurant._id} value={restaurant._id}>
+                        <Space>
+                          <span>{restaurant.name}</span>
+                          <Tag color="orange" className="qr-gen-location-tag">
+                            {restaurant.location?.address?.city || restaurant.location || "Location"}
+                          </Tag>
+                        </Space>
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+
+                <Button
+                  type="primary"
+                  size="large"
+                  block
+                  onClick={generateQRCode}
+                  loading={isLoading}
+                  icon={<QrcodeOutlined />}
+                  disabled={!selectedRestaurant}
+                  className="qr-gen-generate-btn"
+                >
+                  Generate QR Code
+                </Button>
+              </Form>
+
+              {selectedRestaurantData && (
+                <div className="qr-gen-restaurant-info">
+                  <Divider className="qr-gen-divider" />
+                  <Space direction="vertical" size="small">
+                    <Text strong className="qr-gen-info-label">Selected Restaurant:</Text>
+                    <Text className="qr-gen-restaurant-name">{selectedRestaurantData.name}</Text>
+                    <Text type="secondary" className="qr-gen-restaurant-location">
+                      <GlobalOutlined /> {selectedRestaurantData.location?.address?.city || "Location not set"}
+                    </Text>
+                    {selectedRestaurantData.cuisine && (
+                      <div className="qr-gen-cuisine-tags">
+                        {selectedRestaurantData.cuisine.map((c, i) => (
+                          <Tag key={i} color="orange" className="qr-gen-cuisine-tag">{c}</Tag>
+                        ))}
+                      </div>
+                    )}
+                  </Space>
+                </div>
+              )}
+            </Card>
+          </Col>
+
+          <Col xs={24} lg={14}>
+            {qrCodeUrl ? (
+              <Card 
+                className="qr-gen-result-card" 
+                title={
+                  <Space>
+                    <CheckCircleOutlined className="qr-gen-success-icon" />
+                    <span>Your QR Code</span>
+                  </Space>
+                }
+              >
+                <div className="qr-gen-display">
+                  <div className="qr-gen-image-wrapper">
+                    <QRCode
+                      value={`${window.location.origin}/menu?restaurant=${selectedRestaurant}`}
+                      size={250}
+                      icon={selectedRestaurantData?.image || "https://via.placeholder.com/50"}
+                      iconSize={40}
+                      bordered={false}
+                      errorLevel="H"
+                      className="qr-gen-code"
+                    />
+                  </div>
+                  
+                  <div className="qr-gen-actions">
+                    <Space wrap size="middle">
+                      <Tooltip title="Download QR Code">
+                        <Button
+                          icon={<DownloadOutlined />}
+                          onClick={downloadQR}
+                          size="large"
+                          className="qr-gen-action-btn"
+                        >
+                          Download
+                        </Button>
+                      </Tooltip>
+                      
+                      <Tooltip title="Copy URL">
+                        <Button
+                          icon={<CopyOutlined />}
+                          onClick={copyToClipboard}
+                          size="large"
+                          className="qr-gen-action-btn"
+                        >
+                          Copy URL
+                        </Button>
+                      </Tooltip>
+                      
+                      <Tooltip title="Print">
+                        <Button
+                          icon={<PrinterOutlined />}
+                          onClick={() => printQR({ name: selectedRestaurantData?.name, url: qrCodeUrl, qrSrc: qrCodeUrl })}
+                          size="large"
+                          className="qr-gen-action-btn"
+                        >
+                          Print
+                        </Button>
+                      </Tooltip>
+                      
+                      <Tooltip title="Share">
+                        <Button
+                          icon={<ShareAltOutlined />}
+                          onClick={() => shareQR({ name: selectedRestaurantData?.name, url: qrCodeUrl })}
+                          size="large"
+                          className="qr-gen-action-btn"
+                        >
+                          Share
+                        </Button>
+                      </Tooltip>
+                    </Space>
+                  </div>
+
+                  <div className="qr-gen-info">
+                    <Alert
+                      message="How to use"
+                      description={
+                        <ul style={{ margin: 0, paddingLeft: 20 }}>
+                          <li>Display this QR code at your restaurant counter</li>
+                          <li>Print and place on tables for easy access</li>
+                          <li>Share digitally with customers via WhatsApp or Email</li>
+                          <li>Customers can scan with phone camera to view menu</li>
+                        </ul>
+                      }
+                      type="info"
+                      showIcon
+                      className="qr-gen-info-alert"
+                    />
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <Card className="qr-gen-empty-card">
+                <Empty
+                  description="No QR code generated yet"
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  className="qr-gen-empty"
+                >
+                  <Button 
+                    type="primary" 
+                    onClick={generateQRCode} 
+                    disabled={!selectedRestaurant}
+                    className="qr-gen-empty-btn"
+                  >
+                    Generate QR Code
+                  </Button>
+                </Empty>
+              </Card>
+            )}
+          </Col>
+        </Row>
+      )
+    },
+    {
+      key: "bulk",
+      label: (
+        <span>
+          <FileImageOutlined className="qr-gen-tab-icon" /> Bulk QR Codes
+        </span>
+      ),
+      children: (
+        <Card className="qr-gen-bulk-card">
+          <div className="qr-gen-bulk-header">
+            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+              <div className="qr-gen-bulk-stats">
+                <Row gutter={16}>
+                  <Col span={8}>
+                    <div className="qr-gen-stat-card-small">
+                      <div className="qr-gen-stat-icon-small">
+                        <GlobalOutlined />
+                      </div>
+                      <div className="qr-gen-stat-value-small">{restaurants.length}</div>
+                      <div className="qr-gen-stat-label-small">Total Restaurants</div>
+                    </div>
+                  </Col>
+                  <Col span={8}>
+                    <div className="qr-gen-stat-card-small">
+                      <div className="qr-gen-stat-icon-small">
+                        <QrcodeOutlined />
+                      </div>
+                      <div className="qr-gen-stat-value-small">{allQRCodes.length}</div>
+                      <div className="qr-gen-stat-label-small">Generated QR Codes</div>
+                    </div>
+                  </Col>
+                  <Col span={8}>
+                    <div className="qr-gen-stat-card-small">
+                      <div className="qr-gen-stat-icon-small">
+                        {allQRCodes.length === restaurants.length ? <CheckCircleOutlined /> : <LoadingOutlined />}
+                      </div>
+                      <div className="qr-gen-stat-value-small">
+                        {Math.round((allQRCodes.length / (restaurants.length || 1)) * 100)}%
+                      </div>
+                      <div className="qr-gen-stat-label-small">Progress</div>
+                    </div>
+                  </Col>
+                </Row>
+                <Progress
+                  percent={(allQRCodes.length / (restaurants.length || 1)) * 100}
+                  status={allQRCodes.length === restaurants.length ? "success" : "active"}
+                  strokeColor="#ff9f4a"
+                  className="qr-gen-progress"
+                />
+              </div>
+
+              <Space size="middle" wrap>
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<QrcodeOutlined />}
+                  onClick={generateAllQRCodes}
+                  loading={generatingAll}
+                  disabled={restaurants.length === 0}
+                  className="qr-gen-bulk-generate-btn"
+                >
+                  Generate All QR Codes
+                </Button>
+                {allQRCodes.length > 0 && (
+                  <Button
+                    size="large"
+                    icon={<DownloadOutlined />}
+                    onClick={downloadAllQRCodes}
+                    className="qr-gen-bulk-download-btn"
+                  >
+                    Download All
+                  </Button>
+                )}
+              </Space>
+            </Space>
+          </div>
+
+          {allQRCodes.length > 0 && (
+            <>
+              <Divider className="qr-gen-divider" />
+              <div className="qr-gen-bulk-grid">
+                <div className="qr-gen-bulk-grid-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
+                  {allQRCodes.map((qr) => (
+                    <Card
+                      key={qr.id}
+                      hoverable
+                      className="qr-gen-bulk-item"
+                      cover={
+                        <div className="qr-gen-bulk-cover">
+                          <QRCode
+                            value={qr.url}
+                            size={200}
+                            bordered={false}
+                            errorLevel="H"
+                            className="qr-gen-bulk-code"
+                          />
+                        </div>
+                      }
+                      actions={[
+                        <Tooltip title="Download" key="download">
+                          <Button
+                            type="text"
+                            icon={<DownloadOutlined />}
+                            onClick={() => downloadSingleQR(qr)}
+                            className="qr-gen-bulk-action"
+                          />
+                        </Tooltip>,
+                        <Tooltip title="Preview" key="preview">
+                          <Button
+                            type="text"
+                            icon={<EyeOutlined />}
+                            onClick={() => {
+                              setSelectedQR(qr);
+                              setPreviewVisible(true);
+                            }}
+                            className="qr-gen-bulk-action"
+                          />
+                        </Tooltip>,
+                        <Tooltip title="Share" key="share">
+                          <Button
+                            type="text"
+                            icon={<ShareAltOutlined />}
+                            onClick={() => shareQR(qr)}
+                            className="qr-gen-bulk-action"
+                          />
+                        </Tooltip>,
+                        <Tooltip title="Print" key="print">
+                          <Button
+                            type="text"
+                            icon={<PrinterOutlined />}
+                            onClick={() => printQR(qr)}
+                            className="qr-gen-bulk-action"
+                          />
+                        </Tooltip>
+                      ]}
+                    >
+                      <Card.Meta
+                        title={<span className="qr-gen-bulk-title">{qr.name}</span>}
+                        description={
+                          <>
+                            <Text type="secondary" className="qr-gen-bulk-location">
+                              {qr.location}
+                            </Text>
+                            <br />
+                            <Tag color="orange" className="qr-gen-bulk-cuisine-tag">
+                              {qr.cuisine}
+                            </Tag>
+                          </>
+                        }
+                      />
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+          
+          {allQRCodes.length === 0 && restaurants.length > 0 && !generatingAll && (
+            <Empty
+              description="Click 'Generate All QR Codes' to create QR codes for all restaurants"
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              className="qr-gen-bulk-empty"
+            />
+          )}
+        </Card>
+      )
+    },
+    {
+      key: "share",
+      label: (
+        <span>
+          <ShareAltOutlined className="qr-gen-tab-icon" /> Share Options
+        </span>
+      ),
+      children: (
+        <Card className="qr-gen-share-card">
+          <Title level={4} className="qr-gen-share-title">Share QR Codes with Customers</Title>
+          <Paragraph className="qr-gen-share-subtitle">
+            Easily share your restaurant QR codes through various channels
+          </Paragraph>
+          
+          <Row gutter={[24, 24]} className="qr-gen-share-grid">
+            <Col xs={24} sm={12}>
+              <Card size="small" className="qr-gen-share-method-card">
+                <div className="qr-gen-share-method-icon whatsapp">💬</div>
+                <Button
+                  block
+                  icon={<WhatsAppOutlined />}
+                  onClick={() => message.info("WhatsApp sharing coming soon")}
+                  className="qr-gen-share-btn whatsapp-btn"
+                >
+                  Share on WhatsApp
+                </Button>
+              </Card>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Card size="small" className="qr-gen-share-method-card">
+                <div className="qr-gen-share-method-icon email">📧</div>
+                <Button
+                  block
+                  icon={<MailOutlined />}
+                  onClick={() => message.info("Email sharing coming soon")}
+                  className="qr-gen-share-btn"
+                >
+                  Share via Email
+                </Button>
+              </Card>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Card size="small" className="qr-gen-share-method-card">
+                <div className="qr-gen-share-method-icon facebook">📘</div>
+                <Button
+                  block
+                  icon={<FacebookOutlined />}
+                  onClick={() => message.info("Facebook sharing coming soon")}
+                  className="qr-gen-share-btn"
+                >
+                  Share on Facebook
+                </Button>
+              </Card>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Card size="small" className="qr-gen-share-method-card">
+                <div className="qr-gen-share-method-icon twitter">🐦</div>
+                <Button
+                  block
+                  icon={<TwitterOutlined />}
+                  onClick={() => message.info("Twitter sharing coming soon")}
+                  className="qr-gen-share-btn"
+                >
+                  Share on Twitter
+                </Button>
+              </Card>
+            </Col>
+          </Row>
+
+          <Alert
+            message="💡 Pro Tip"
+            description="You can also download QR codes and print them for physical display at your restaurant"
+            type="info"
+            showIcon
+            className="qr-gen-tip-alert"
+          />
+        </Card>
+      )
+    }
+  ];
+
   return (
     <div className="qr-gen-container">
       <div className="qr-gen-content">
-        <Breadcrumb className="qr-gen-breadcrumb">
-          <Breadcrumb.Item>
-            <a onClick={() => navigate("/admin")}>Dashboard</a>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>QR Generator</Breadcrumb.Item>
-        </Breadcrumb>
+        {/* Fixed: Using items prop instead of Breadcrumb.Item */}
+        <Breadcrumb items={breadcrumbItems} className="qr-gen-breadcrumb" />
 
-        <Tabs defaultActiveKey="single" className="qr-gen-tabs">
-          <TabPane 
-            tab={<span><QrcodeOutlined className="qr-gen-tab-icon" /> Single QR</span>} 
-            key="single"
-          >
-            <Row gutter={[24, 24]}>
-              <Col xs={24} lg={10}>
-                <Card 
-                  className="qr-gen-form-card" 
-                  title={
-                    <Space>
-                      <QrcodeOutlined className="qr-gen-card-icon" />
-                      <span>Generate QR Code</span>
-                    </Space>
-                  }
-                >
-                  <Form form={form} layout="vertical">
-                    <Form.Item
-                      label={
-                        <Space>
-                          Select Restaurant
-                          <Tooltip title="Choose the restaurant to generate QR code for">
-                            <InfoCircleOutlined style={{ color: '#ff9f4a' }} />
-                          </Tooltip>
-                        </Space>
-                      }
-                      required
-                      className="qr-gen-form-item"
-                    >
-                      <Select
-                        size="large"
-                        placeholder="Choose a restaurant"
-                        loading={isLoading && restaurants.length === 0}
-                        onChange={(value) => setSelectedRestaurant(value)}
-                        showSearch
-                        className="qr-gen-select"
-                        filterOption={(input, option) =>
-                          option?.children?.toString().toLowerCase().indexOf(input.toLowerCase()) >= 0
-                        }
-                      >
-                        {restaurants.map(restaurant => (
-                          <Option key={restaurant._id} value={restaurant._id}>
-                            <Space>
-                              <span>{restaurant.name}</span>
-                              <Tag color="orange" className="qr-gen-location-tag">
-                                {restaurant.location?.address?.city || restaurant.location || "Location"}
-                              </Tag>
-                            </Space>
-                          </Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-
-                    <Button
-                      type="primary"
-                      size="large"
-                      block
-                      onClick={generateQRCode}
-                      loading={isLoading}
-                      icon={<QrcodeOutlined />}
-                      disabled={!selectedRestaurant}
-                      className="qr-gen-generate-btn"
-                    >
-                      Generate QR Code
-                    </Button>
-                  </Form>
-
-                  {selectedRestaurantData && (
-                    <div className="qr-gen-restaurant-info">
-                      <Divider className="qr-gen-divider" />
-                      <Space direction="vertical" size="small">
-                        <Text strong className="qr-gen-info-label">Selected Restaurant:</Text>
-                        <Text className="qr-gen-restaurant-name">{selectedRestaurantData.name}</Text>
-                        <Text type="secondary" className="qr-gen-restaurant-location">
-                          <GlobalOutlined /> {selectedRestaurantData.location?.address?.city || "Location not set"}
-                        </Text>
-                        {selectedRestaurantData.cuisine && (
-                          <div className="qr-gen-cuisine-tags">
-                            {selectedRestaurantData.cuisine.map((c, i) => (
-                              <Tag key={i} color="orange" className="qr-gen-cuisine-tag">{c}</Tag>
-                            ))}
-                          </div>
-                        )}
-                      </Space>
-                    </div>
-                  )}
-                </Card>
-              </Col>
-
-              <Col xs={24} lg={14}>
-                {qrCodeUrl ? (
-                  <Card 
-                    className="qr-gen-result-card" 
-                    title={
-                      <Space>
-                        <CheckCircleOutlined className="qr-gen-success-icon" />
-                        <span>Your QR Code</span>
-                      </Space>
-                    }
-                  >
-                    <div className="qr-gen-display">
-                      <div className="qr-gen-image-wrapper">
-                        <QRCode
-                          value={`${window.location.origin}/menu?restaurant=${selectedRestaurant}`}
-                          size={250}
-                          icon={selectedRestaurantData?.image || "https://via.placeholder.com/50"}
-                          iconSize={40}
-                          bordered={false}
-                          errorLevel="H"
-                          className="qr-gen-code"
-                        />
-                      </div>
-                      
-                      <div className="qr-gen-actions">
-                        <Space wrap size="middle">
-                          <Tooltip title="Download QR Code">
-                            <Button
-                              icon={<DownloadOutlined />}
-                              onClick={downloadQR}
-                              size="large"
-                              className="qr-gen-action-btn"
-                            >
-                              Download
-                            </Button>
-                          </Tooltip>
-                          
-                          <Tooltip title="Copy URL">
-                            <Button
-                              icon={<CopyOutlined />}
-                              onClick={copyToClipboard}
-                              size="large"
-                              className="qr-gen-action-btn"
-                            >
-                              Copy URL
-                            </Button>
-                          </Tooltip>
-                          
-                          <Tooltip title="Print">
-                            <Button
-                              icon={<PrinterOutlined />}
-                              onClick={() => printQR({ name: selectedRestaurantData?.name, url: qrCodeUrl, qrSrc: qrCodeUrl })}
-                              size="large"
-                              className="qr-gen-action-btn"
-                            >
-                              Print
-                            </Button>
-                          </Tooltip>
-                          
-                          <Tooltip title="Share">
-                            <Button
-                              icon={<ShareAltOutlined />}
-                              onClick={() => shareQR({ name: selectedRestaurantData?.name, url: qrCodeUrl })}
-                              size="large"
-                              className="qr-gen-action-btn"
-                            >
-                              Share
-                            </Button>
-                          </Tooltip>
-                        </Space>
-                      </div>
-
-                      <div className="qr-gen-info">
-                        <Alert
-                          message="How to use"
-                          description={
-                            <ul style={{ margin: 0, paddingLeft: 20 }}>
-                              <li>Display this QR code at your restaurant counter</li>
-                              <li>Print and place on tables for easy access</li>
-                              <li>Share digitally with customers via WhatsApp or Email</li>
-                              <li>Customers can scan with phone camera to view menu</li>
-                            </ul>
-                          }
-                          type="info"
-                          showIcon
-                          className="qr-gen-info-alert"
-                        />
-                      </div>
-                    </div>
-                  </Card>
-                ) : (
-                  <Card className="qr-gen-empty-card">
-                    <Empty
-                      description="No QR code generated yet"
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      className="qr-gen-empty"
-                    >
-                      <Button 
-                        type="primary" 
-                        onClick={generateQRCode} 
-                        disabled={!selectedRestaurant}
-                        className="qr-gen-empty-btn"
-                      >
-                        Generate QR Code
-                      </Button>
-                    </Empty>
-                  </Card>
-                )}
-              </Col>
-            </Row>
-          </TabPane>
-
-          <TabPane 
-            tab={<span><FileImageOutlined className="qr-gen-tab-icon" /> Bulk QR Codes</span>} 
-            key="bulk"
-          >
-            <Card className="qr-gen-bulk-card">
-              <div className="qr-gen-bulk-header">
-                <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-                  <div className="qr-gen-bulk-stats">
-                    <Row gutter={16}>
-                      <Col span={8}>
-                        <div className="qr-gen-stat-card-small">
-                          <div className="qr-gen-stat-icon-small">
-                            <GlobalOutlined />
-                          </div>
-                          <div className="qr-gen-stat-value-small">{restaurants.length}</div>
-                          <div className="qr-gen-stat-label-small">Total Restaurants</div>
-                        </div>
-                      </Col>
-                      <Col span={8}>
-                        <div className="qr-gen-stat-card-small">
-                          <div className="qr-gen-stat-icon-small">
-                            <QrcodeOutlined />
-                          </div>
-                          <div className="qr-gen-stat-value-small">{allQRCodes.length}</div>
-                          <div className="qr-gen-stat-label-small">Generated QR Codes</div>
-                        </div>
-                      </Col>
-                      <Col span={8}>
-                        <div className="qr-gen-stat-card-small">
-                          <div className="qr-gen-stat-icon-small">
-                            {allQRCodes.length === restaurants.length ? <CheckCircleOutlined /> : <LoadingOutlined />}
-                          </div>
-                          <div className="qr-gen-stat-value-small">
-                            {Math.round((allQRCodes.length / (restaurants.length || 1)) * 100)}%
-                          </div>
-                          <div className="qr-gen-stat-label-small">Progress</div>
-                        </div>
-                      </Col>
-                    </Row>
-                    <Progress
-                      percent={(allQRCodes.length / (restaurants.length || 1)) * 100}
-                      status={allQRCodes.length === restaurants.length ? "success" : "active"}
-                      strokeColor="#ff9f4a"
-                      className="qr-gen-progress"
-                    />
-                  </div>
-
-                  <Space size="middle" wrap>
-                    <Button
-                      type="primary"
-                      size="large"
-                      icon={<QrcodeOutlined />}
-                      onClick={generateAllQRCodes}
-                      loading={generatingAll}
-                      disabled={restaurants.length === 0}
-                      className="qr-gen-bulk-generate-btn"
-                    >
-                      Generate All QR Codes
-                    </Button>
-                    {allQRCodes.length > 0 && (
-                      <Button
-                        size="large"
-                        icon={<DownloadOutlined />}
-                        onClick={downloadAllQRCodes}
-                        className="qr-gen-bulk-download-btn"
-                      >
-                        Download All
-                      </Button>
-                    )}
-                  </Space>
-                </Space>
-              </div>
-
-              {allQRCodes.length > 0 && (
-                <>
-                  <Divider className="qr-gen-divider" />
-                  <div className="qr-gen-bulk-grid">
-                    <List
-                      grid={{
-                        gutter: 24,
-                        xs: 1,
-                        sm: 2,
-                        md: 3,
-                        lg: 4,
-                        xl: 4,
-                        xxl: 5,
-                      }}
-                      dataSource={allQRCodes}
-                      renderItem={(qr) => (
-                        <List.Item>
-                          <Card
-                            hoverable
-                            className="qr-gen-bulk-item"
-                            cover={
-                              <div className="qr-gen-bulk-cover">
-                                <QRCode
-                                  value={qr.url}
-                                  size={200}
-                                  bordered={false}
-                                  errorLevel="H"
-                                  className="qr-gen-bulk-code"
-                                />
-                              </div>
-                            }
-                            actions={[
-                              <Tooltip title="Download">
-                                <Button
-                                  type="text"
-                                  icon={<DownloadOutlined />}
-                                  onClick={() => downloadSingleQR(qr)}
-                                  className="qr-gen-bulk-action"
-                                />
-                              </Tooltip>,
-                              <Tooltip title="Preview">
-                                <Button
-                                  type="text"
-                                  icon={<EyeOutlined />}
-                                  onClick={() => {
-                                    setSelectedQR(qr);
-                                    setPreviewVisible(true);
-                                  }}
-                                  className="qr-gen-bulk-action"
-                                />
-                              </Tooltip>,
-                              <Tooltip title="Share">
-                                <Button
-                                  type="text"
-                                  icon={<ShareAltOutlined />}
-                                  onClick={() => shareQR(qr)}
-                                  className="qr-gen-bulk-action"
-                                />
-                              </Tooltip>,
-                              <Tooltip title="Print">
-                                <Button
-                                  type="text"
-                                  icon={<PrinterOutlined />}
-                                  onClick={() => printQR(qr)}
-                                  className="qr-gen-bulk-action"
-                                />
-                              </Tooltip>
-                            ]}
-                          >
-                            <Card.Meta
-                              title={<span className="qr-gen-bulk-title">{qr.name}</span>}
-                              description={
-                                <>
-                                  <Text type="secondary" className="qr-gen-bulk-location">
-                                    {qr.location}
-                                  </Text>
-                                  <br />
-                                  <Tag color="orange" className="qr-gen-bulk-cuisine-tag">
-                                    {qr.cuisine}
-                                  </Tag>
-                                </>
-                              }
-                            />
-                          </Card>
-                        </List.Item>
-                      )}
-                    />
-                  </div>
-                </>
-              )}
-              
-              {allQRCodes.length === 0 && restaurants.length > 0 && !generatingAll && (
-                <Empty
-                  description="Click 'Generate All QR Codes' to create QR codes for all restaurants"
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  className="qr-gen-bulk-empty"
-                />
-              )}
-            </Card>
-          </TabPane>
-
-          <TabPane 
-            tab={<span><ShareAltOutlined className="qr-gen-tab-icon" /> Share Options</span>} 
-            key="share"
-          >
-            <Card className="qr-gen-share-card">
-              <Title level={4} className="qr-gen-share-title">Share QR Codes with Customers</Title>
-              <Paragraph className="qr-gen-share-subtitle">
-                Easily share your restaurant QR codes through various channels
-              </Paragraph>
-              
-              <Row gutter={[24, 24]} className="qr-gen-share-grid">
-                <Col xs={24} sm={12}>
-                  <Card size="small" className="qr-gen-share-method-card">
-                    <div className="qr-gen-share-method-icon whatsapp">💬</div>
-                    <Button
-                      block
-                      icon={<WhatsAppOutlined />}
-                      onClick={() => message.info("WhatsApp sharing coming soon")}
-                      className="qr-gen-share-btn whatsapp-btn"
-                    >
-                      Share on WhatsApp
-                    </Button>
-                  </Card>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Card size="small" className="qr-gen-share-method-card">
-                    <div className="qr-gen-share-method-icon email">📧</div>
-                    <Button
-                      block
-                      icon={<MailOutlined />}
-                      onClick={() => message.info("Email sharing coming soon")}
-                      className="qr-gen-share-btn"
-                    >
-                      Share via Email
-                    </Button>
-                  </Card>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Card size="small" className="qr-gen-share-method-card">
-                    <div className="qr-gen-share-method-icon facebook">📘</div>
-                    <Button
-                      block
-                      icon={<FacebookOutlined />}
-                      onClick={() => message.info("Facebook sharing coming soon")}
-                      className="qr-gen-share-btn"
-                    >
-                      Share on Facebook
-                    </Button>
-                  </Card>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Card size="small" className="qr-gen-share-method-card">
-                    <div className="qr-gen-share-method-icon twitter">🐦</div>
-                    <Button
-                      block
-                      icon={<TwitterOutlined />}
-                      onClick={() => message.info("Twitter sharing coming soon")}
-                      className="qr-gen-share-btn"
-                    >
-                      Share on Twitter
-                    </Button>
-                  </Card>
-                </Col>
-              </Row>
-
-              <Alert
-                message="💡 Pro Tip"
-                description="You can also download QR codes and print them for physical display at your restaurant"
-                type="info"
-                showIcon
-                className="qr-gen-tip-alert"
-              />
-            </Card>
-          </TabPane>
-        </Tabs>
+        {/* Fixed: Using items prop instead of TabPane */}
+        <Tabs 
+          defaultActiveKey="single" 
+          className="qr-gen-tabs"
+          items={tabItems}
+          onChange={setActiveTab}
+        />
 
         {/* Preview Modal */}
         <Modal

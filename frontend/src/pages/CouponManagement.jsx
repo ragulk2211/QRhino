@@ -16,13 +16,13 @@ import {
   Tag,
   Tooltip,
   Popconfirm,
-  Statistic,
   Row,
   Col,
   Divider,
   Alert,
   Spin,
-  Empty
+  Empty,
+  App as AntApp
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -59,6 +59,9 @@ function CouponManagement() {
     totalUsage: 0
   });
 
+  // Use message from App context to avoid static method warning
+  const [messageApi, contextHolder] = message.useMessage();
+
   useEffect(() => {
     fetchCoupons();
   }, []);
@@ -71,11 +74,11 @@ function CouponManagement() {
       if (data.success) {
         setCoupons(data.coupons);
         calculateStats(data.coupons);
-        message.success(`Loaded ${data.coupons.length} coupons`);
+        messageApi.success(`Loaded ${data.coupons.length} coupons`);
       }
     } catch (error) {
       console.error("Error fetching coupons:", error);
-      message.error("Failed to fetch coupons");
+      messageApi.error("Failed to fetch coupons");
     } finally {
       setLoading(false);
     }
@@ -123,17 +126,17 @@ function CouponManagement() {
 
       const data = await response.json();
       if (data.success) {
-        message.success(editingCoupon ? "Coupon updated successfully!" : "Coupon created successfully!");
+        messageApi.success(editingCoupon ? "Coupon updated successfully!" : "Coupon created successfully!");
         setShowForm(false);
         setEditingCoupon(null);
         form.resetFields();
         fetchCoupons();
       } else {
-        message.error(data.message || "Operation failed");
+        messageApi.error(data.message || "Operation failed");
       }
     } catch (error) {
       console.error("Error:", error);
-      message.error("Network error. Please try again.");
+      messageApi.error("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -146,14 +149,14 @@ function CouponManagement() {
       });
       const data = await response.json();
       if (data.success) {
-        message.success("Coupon deleted successfully!");
+        messageApi.success("Coupon deleted successfully!");
         fetchCoupons();
       } else {
-        message.error(data.message || "Failed to delete coupon");
+        messageApi.error(data.message || "Failed to delete coupon");
       }
     } catch (error) {
       console.error("Error deleting coupon:", error);
-      message.error("Network error. Please try again.");
+      messageApi.error("Network error. Please try again.");
     }
   };
 
@@ -164,14 +167,14 @@ function CouponManagement() {
       });
       const data = await response.json();
       if (data.success) {
-        message.success("Default coupons seeded successfully!");
+        messageApi.success("Default coupons seeded successfully!");
         fetchCoupons();
       } else {
-        message.error("Failed to seed coupons");
+        messageApi.error("Failed to seed coupons");
       }
     } catch (error) {
       console.error("Error seeding coupons:", error);
-      message.error("Network error. Please try again.");
+      messageApi.error("Network error. Please try again.");
     }
   };
 
@@ -191,7 +194,7 @@ function CouponManagement() {
 
   const handleCopyCode = (code) => {
     navigator.clipboard.writeText(code);
-    message.success(`Coupon code "${code}" copied to clipboard!`);
+    messageApi.success(`Coupon code "${code}" copied to clipboard!`);
   };
 
   const columns = [
@@ -311,323 +314,335 @@ function CouponManagement() {
     },
   ];
 
+  // Modern Breadcrumb items API
+  const breadcrumbItems = [
+    {
+      title: (
+        <a onClick={() => navigate("/admin")} style={{ cursor: 'pointer' }}>
+          Dashboard
+        </a>
+      ),
+    },
+    {
+      title: "Coupon Management",
+    },
+  ];
+
   return (
-    <div className="coupon-container">
-      <div className="coupon-content">
-        <Breadcrumb className="coupon-breadcrumb">
-          <Breadcrumb.Item>
-            <a onClick={() => navigate("/admin")}>Dashboard</a>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>Coupon Management</Breadcrumb.Item>
-        </Breadcrumb>
+    <AntApp>
+      {contextHolder}
+      <div className="coupon-container">
+        <div className="coupon-content">
+          <Breadcrumb className="coupon-breadcrumb" items={breadcrumbItems} />
 
-        {/* Statistics Cards */}
-        <Row gutter={[24, 24]} className="coupon-stats-row">
-          <Col xs={24} sm={12} lg={6}>
-            <div className="coupon-stat-card">
-              <div className="coupon-stat-icon">
-                <GiftOutlined />
+          {/* Statistics Cards */}
+          <Row gutter={[24, 24]} className="coupon-stats-row">
+            <Col xs={24} sm={12} lg={6}>
+              <div className="coupon-stat-card">
+                <div className="coupon-stat-icon">
+                  <GiftOutlined />
+                </div>
+                <div className="coupon-stat-value">{stats.total}</div>
+                <div className="coupon-stat-label">Total Coupons</div>
               </div>
-              <div className="coupon-stat-value">{stats.total}</div>
-              <div className="coupon-stat-label">Total Coupons</div>
-            </div>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <div className="coupon-stat-card">
-              <div className="coupon-stat-icon active">
-                <CheckCircleOutlined />
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <div className="coupon-stat-card">
+                <div className="coupon-stat-icon active">
+                  <CheckCircleOutlined />
+                </div>
+                <div className="coupon-stat-value">{stats.active}</div>
+                <div className="coupon-stat-label">Active Coupons</div>
               </div>
-              <div className="coupon-stat-value">{stats.active}</div>
-              <div className="coupon-stat-label">Active Coupons</div>
-            </div>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <div className="coupon-stat-card">
-              <div className="coupon-stat-icon">
-                <PercentageOutlined />
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <div className="coupon-stat-card">
+                <div className="coupon-stat-icon">
+                  <PercentageOutlined />
+                </div>
+                <div className="coupon-stat-value">{stats.totalDiscount}%</div>
+                <div className="coupon-stat-label">Total Discount</div>
               </div>
-              <div className="coupon-stat-value">{stats.totalDiscount}%</div>
-              <div className="coupon-stat-label">Total Discount</div>
-            </div>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <div className="coupon-stat-card">
-              <div className="coupon-stat-icon">
-                <TagOutlined />
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <div className="coupon-stat-card">
+                <div className="coupon-stat-icon">
+                  <TagOutlined />
+                </div>
+                <div className="coupon-stat-value">{stats.totalUsage}</div>
+                <div className="coupon-stat-label">Total Usage</div>
               </div>
-              <div className="coupon-stat-value">{stats.totalUsage}</div>
-              <div className="coupon-stat-label">Total Usage</div>
-            </div>
-          </Col>
-        </Row>
+            </Col>
+          </Row>
 
-        {/* Action Buttons */}
-        <div className="coupon-actions">
-          <Space size="middle" wrap>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => {
-                setEditingCoupon(null);
-                form.resetFields();
-                setShowForm(!showForm);
-              }}
-              className="coupon-create-btn"
-            >
-              {showForm ? "Cancel" : "Create New Coupon"}
-            </Button>
-            <Button
-              icon={<DatabaseOutlined />}
-              onClick={handleSeed}
-              className="coupon-seed-btn"
-            >
-              Seed Default Coupons
-            </Button>
-          </Space>
-        </div>
-
-        {/* Create/Edit Form Modal */}
-        <Modal
-          title={
-            <Space>
-              {editingCoupon ? <EditOutlined /> : <PlusOutlined />}
-              <span>{editingCoupon ? "Edit Coupon" : "Create New Coupon"}</span>
-            </Space>
-          }
-          open={showForm}
-          onCancel={() => {
-            setShowForm(false);
-            setEditingCoupon(null);
-            form.resetFields();
-          }}
-          footer={null}
-          width={600}
-          className="coupon-form-modal"
-          destroyOnClose
-        >
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleCreateOrUpdate}
-            initialValues={{
-              discountPercent: 10,
-              minOrderAmount: 0,
-              isActive: true
-            }}
-          >
-            <Form.Item
-              name="code"
-              label="Coupon Code"
-              rules={[
-                { required: true, message: "Please enter coupon code" },
-                { min: 3, message: "Code must be at least 3 characters" },
-                { max: 20, message: "Code must be less than 20 characters" },
-                { pattern: /^[A-Z0-9]+$/, message: "Use uppercase letters and numbers only" }
-              ]}
-              tooltip="Use uppercase letters and numbers only"
-              className="coupon-form-item"
-            >
-              <Input
-                placeholder="e.g., SAVE20"
-                size="large"
-                prefix={<TagOutlined />}
-                maxLength={20}
-                showCount
-                onChange={(e) => {
-                  const value = e.target.value.toUpperCase();
-                  form.setFieldsValue({ code: value });
-                }}
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="description"
-              label="Description"
-              className="coupon-form-item"
-            >
-              <Input.TextArea
-                placeholder="Describe what this coupon offers"
-                rows={2}
-                maxLength={200}
-                showCount
-              />
-            </Form.Item>
-
-            <Row gutter={24}>
-              <Col xs={24} sm={12}>
-                <Form.Item
-                  name="discountPercent"
-                  label="Discount (%)"
-                  rules={[
-                    { required: true, message: "Please enter discount percentage" },
-                    { type: 'number', min: 1, max: 100, message: "Discount must be between 1 and 100" }
-                  ]}
-                  className="coupon-form-item"
-                >
-                  <InputNumber
-                    placeholder="10"
-                    min={1}
-                    max={100}
-                    size="large"
-                    style={{ width: "100%" }}
-                    prefix={<PercentageOutlined />}
-                    suffix="%"
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12}>
-                <Form.Item
-                  name="minOrderAmount"
-                  label="Minimum Order Amount (₹)"
-                  rules={[
-                    { type: 'number', min: 0, message: "Amount must be 0 or greater" }
-                  ]}
-                  className="coupon-form-item"
-                >
-                  <InputNumber
-                    placeholder="0"
-                    min={0}
-                    size="large"
-                    style={{ width: "100%" }}
-                    prefix={<DollarOutlined />}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Row gutter={24}>
-              <Col xs={24} sm={12}>
-                <Form.Item
-                  name="maxDiscountAmount"
-                  label="Maximum Discount Amount (₹)"
-                  tooltip="Leave empty for no limit"
-                  className="coupon-form-item"
-                >
-                  <InputNumber
-                    placeholder="No limit"
-                    min={0}
-                    size="large"
-                    style={{ width: "100%" }}
-                    prefix={<DollarOutlined />}
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12}>
-                <Form.Item
-                  name="maxUsage"
-                  label="Maximum Usage"
-                  tooltip="Leave empty for unlimited"
-                  className="coupon-form-item"
-                >
-                  <InputNumber
-                    placeholder="Unlimited"
-                    min={1}
-                    size="large"
-                    style={{ width: "100%" }}
-                    suffix="times"
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Form.Item
-              name="isActive"
-              label="Status"
-              valuePropName="checked"
-              className="coupon-form-item"
-            >
-              <Switch
-                checkedChildren="Active"
-                unCheckedChildren="Inactive"
-                defaultChecked
-              />
-            </Form.Item>
-
-            <Form.Item>
-              <Space size="middle">
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  size="large"
-                  loading={submitting}
-                  icon={editingCoupon ? <EditOutlined /> : <PlusOutlined />}
-                  className="coupon-submit-btn"
-                >
-                  {submitting ? "Saving..." : editingCoupon ? "Update Coupon" : "Create Coupon"}
-                </Button>
-                <Button
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingCoupon(null);
-                    form.resetFields();
-                  }}
-                  size="large"
-                >
-                  Cancel
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </Modal>
-
-        {/* Coupons Table */}
-        <Card className="coupon-table-card" title="Coupons List">
-          {loading ? (
-            <div className="coupon-loading">
-              <Spin size="large" />
-            </div>
-          ) : coupons.length === 0 ? (
-            <Empty
-              description="No coupons found"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              className="coupon-empty"
-            >
+          {/* Action Buttons */}
+          <div className="coupon-actions">
+            <Space size="middle" wrap>
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => {
                   setEditingCoupon(null);
                   form.resetFields();
-                  setShowForm(true);
+                  setShowForm(!showForm);
                 }}
+                className="coupon-create-btn"
               >
-                Create First Coupon
+                {showForm ? "Cancel" : "Create New Coupon"}
               </Button>
-            </Empty>
-          ) : (
-            <Table
-              columns={columns}
-              dataSource={coupons}
-              rowKey="_id"
-              pagination={{
-                pageSize: 10,
-                showTotal: (total) => `Total ${total} coupons`,
-                showSizeChanger: true,
-                showQuickJumper: true
-              }}
-              className="coupon-table"
-            />
-          )}
-        </Card>
+              <Button
+                icon={<DatabaseOutlined />}
+                onClick={handleSeed}
+                className="coupon-seed-btn"
+              >
+                Seed Default Coupons
+              </Button>
+            </Space>
+          </div>
 
-        {/* Tips Section */}
-        <Alert
-          message="💡 Pro Tips"
-          description={
-            <ul style={{ margin: 0, paddingLeft: 20 }}>
-              <li>Use unique, memorable coupon codes like "SAVE20", "WELCOME10", etc.</li>
-              <li>Set minimum order amounts to prevent abuse of discounts</li>
-              <li>Maximum discount helps control the total discount amount per order</li>
-              <li>Track usage counts to measure coupon performance</li>
-              <li>Deactivate expired coupons instead of deleting them</li>
-            </ul>
-          }
-          type="info"
-          showIcon
-          className="coupon-tips-alert"
-        />
+          {/* Create/Edit Form Modal - Fixed destroyOnClose to destroyOnHidden */}
+          <Modal
+            title={
+              <Space>
+                {editingCoupon ? <EditOutlined /> : <PlusOutlined />}
+                <span>{editingCoupon ? "Edit Coupon" : "Create New Coupon"}</span>
+              </Space>
+            }
+            open={showForm}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingCoupon(null);
+              form.resetFields();
+            }}
+            footer={null}
+            width={600}
+            className="coupon-form-modal"
+            destroyOnHidden
+          >
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={handleCreateOrUpdate}
+              initialValues={{
+                discountPercent: 10,
+                minOrderAmount: 0,
+                isActive: true
+              }}
+            >
+              <Form.Item
+                name="code"
+                label="Coupon Code"
+                rules={[
+                  { required: true, message: "Please enter coupon code" },
+                  { min: 3, message: "Code must be at least 3 characters" },
+                  { max: 20, message: "Code must be less than 20 characters" },
+                  { pattern: /^[A-Z0-9]+$/, message: "Use uppercase letters and numbers only" }
+                ]}
+                tooltip="Use uppercase letters and numbers only"
+                className="coupon-form-item"
+              >
+                <Input
+                  placeholder="e.g., SAVE20"
+                  size="large"
+                  prefix={<TagOutlined />}
+                  maxLength={20}
+                  showCount
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    form.setFieldsValue({ code: value });
+                  }}
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="description"
+                label="Description"
+                className="coupon-form-item"
+              >
+                <Input.TextArea
+                  placeholder="Describe what this coupon offers"
+                  rows={2}
+                  maxLength={200}
+                  showCount
+                />
+              </Form.Item>
+
+              <Row gutter={24}>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                    name="discountPercent"
+                    label="Discount (%)"
+                    rules={[
+                      { required: true, message: "Please enter discount percentage" },
+                      { type: 'number', min: 1, max: 100, message: "Discount must be between 1 and 100" }
+                    ]}
+                    className="coupon-form-item"
+                  >
+                    <InputNumber
+                      placeholder="10"
+                      min={1}
+                      max={100}
+                      size="large"
+                      style={{ width: "100%" }}
+                      prefix={<PercentageOutlined />}
+                      suffix="%"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                    name="minOrderAmount"
+                    label="Minimum Order Amount (₹)"
+                    rules={[
+                      { type: 'number', min: 0, message: "Amount must be 0 or greater" }
+                    ]}
+                    className="coupon-form-item"
+                  >
+                    <InputNumber
+                      placeholder="0"
+                      min={0}
+                      size="large"
+                      style={{ width: "100%" }}
+                      prefix={<DollarOutlined />}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={24}>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                    name="maxDiscountAmount"
+                    label="Maximum Discount Amount (₹)"
+                    tooltip="Leave empty for no limit"
+                    className="coupon-form-item"
+                  >
+                    <InputNumber
+                      placeholder="No limit"
+                      min={0}
+                      size="large"
+                      style={{ width: "100%" }}
+                      prefix={<DollarOutlined />}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                    name="maxUsage"
+                    label="Maximum Usage"
+                    tooltip="Leave empty for unlimited"
+                    className="coupon-form-item"
+                  >
+                    <InputNumber
+                      placeholder="Unlimited"
+                      min={1}
+                      size="large"
+                      style={{ width: "100%" }}
+                      suffix="times"
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Form.Item
+                name="isActive"
+                label="Status"
+                valuePropName="checked"
+                className="coupon-form-item"
+              >
+                <Switch
+                  checkedChildren="Active"
+                  unCheckedChildren="Inactive"
+                  defaultChecked
+                />
+              </Form.Item>
+
+              <Form.Item>
+                <Space size="middle">
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    size="large"
+                    loading={submitting}
+                    icon={editingCoupon ? <EditOutlined /> : <PlusOutlined />}
+                    className="coupon-submit-btn"
+                  >
+                    {submitting ? "Saving..." : editingCoupon ? "Update Coupon" : "Create Coupon"}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowForm(false);
+                      setEditingCoupon(null);
+                      form.resetFields();
+                    }}
+                    size="large"
+                  >
+                    Cancel
+                  </Button>
+                </Space>
+              </Form.Item>
+            </Form>
+          </Modal>
+
+          {/* Coupons Table */}
+          <Card className="coupon-table-card" title="Coupons List">
+            {loading ? (
+              <div className="coupon-loading">
+                <Spin size="large" />
+              </div>
+            ) : coupons.length === 0 ? (
+              <Empty
+                description="No coupons found"
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                className="coupon-empty"
+              >
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setEditingCoupon(null);
+                    form.resetFields();
+                    setShowForm(true);
+                  }}
+                >
+                  Create First Coupon
+                </Button>
+              </Empty>
+            ) : (
+              <Table
+                columns={columns}
+                dataSource={coupons}
+                rowKey="_id"
+                pagination={{
+                  pageSize: 10,
+                  showTotal: (total) => `Total ${total} coupons`,
+                  showSizeChanger: true,
+                  showQuickJumper: true
+                }}
+                className="coupon-table"
+              />
+            )}
+          </Card>
+
+          {/* Tips Section - Fixed Alert with title prop */}
+          <Alert
+            title="💡 Pro Tips"
+            description={
+              <ul style={{ margin: 0, paddingLeft: 20 }}>
+                <li>Use unique, memorable coupon codes like "SAVE20", "WELCOME10", etc.</li>
+                <li>Set minimum order amounts to prevent abuse of discounts</li>
+                <li>Maximum discount helps control the total discount amount per order</li>
+                <li>Track usage counts to measure coupon performance</li>
+                <li>Deactivate expired coupons instead of deleting them</li>
+              </ul>
+            }
+            type="info"
+            showIcon
+            className="coupon-tips-alert"
+          />
+        </div>
       </div>
-    </div>
+    </AntApp>
   );
 }
 

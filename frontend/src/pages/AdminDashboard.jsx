@@ -9,15 +9,11 @@ import {
   Space,
   Breadcrumb,
   Statistic,
-  List,
   Tag,
   Skeleton,
   Alert,
-  Divider,
-  Tooltip,
   Empty,
   Avatar,
-  Timeline,
   Badge,
   Progress
 } from "antd";
@@ -35,16 +31,13 @@ import {
   ThunderboltOutlined,
   StarOutlined,
   TrophyOutlined,
-  CheckCircleOutlined,
-  WarningOutlined,
-  InfoCircleOutlined,
   CalendarOutlined,
   DashboardOutlined
 } from "@ant-design/icons";
 import API_BASE_URL from "../config";
 import "../styles/AdminDashboard.css";
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -105,7 +98,6 @@ function AdminDashboard() {
 
   const fetchRecentActivities = async () => {
     try {
-      // In a real app, fetch from API
       const activities = [
         { id: 1, action: "New restaurant added", time: "2 minutes ago", type: "success", icon: <ShopOutlined /> },
         { id: 2, action: "Menu item updated", time: "15 minutes ago", type: "info", icon: <MenuOutlined /> },
@@ -164,14 +156,6 @@ function AdminDashboard() {
     { icon: "🎯", text: "Regularly update menu items to keep customers engaged" }
   ];
 
-  const getActivityIcon = (type) => {
-    switch(type) {
-      case 'success': return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
-      case 'warning': return <WarningOutlined style={{ color: '#faad14' }} />;
-      default: return <InfoCircleOutlined style={{ color: '#ff9f4a' }} />;
-    }
-  };
-
   const getProgressPercentage = () => {
     const total = stats.restaurants + stats.categories + stats.menuItems;
     const max = 100;
@@ -184,7 +168,7 @@ function AdminDashboard() {
       <Statistic
         title={title}
         value={loading ? "..." : value}
-        valueStyle={{ color: '#ff9f4a', fontWeight: 700 }}
+        styles={{ content: { color: '#ff9f4a', fontWeight: 700 } }}
         className="admin-dash-statistic"
       />
       {trend && !loading && (
@@ -196,15 +180,40 @@ function AdminDashboard() {
     </Card>
   );
 
+  // Modern Breadcrumb items API
+  const breadcrumbItems = [
+    {
+      title: (
+        <span>
+          <DashboardOutlined /> Dashboard
+        </span>
+      ),
+    },
+    {
+      title: "Admin Panel",
+    },
+  ];
+
+  // Modern Timeline items - Using CORRECT API with 'content' not 'children'
+  const timelineItems = tips.map((tip, index) => ({
+    key: index,
+    icon: (
+      <div className="admin-dash-timeline-dot">
+        {tip.icon}
+      </div>
+    ),
+    color: "orange",
+    content: (  // ✅ Using 'content' instead of 'children'
+      <Text className="admin-dash-tip-text">
+        {tip.text}
+      </Text>
+    )
+  }));
+
   return (
     <div className="admin-dash-container">
       <div className="admin-dash-content">
-        <Breadcrumb className="admin-dash-breadcrumb">
-          <Breadcrumb.Item>
-            <DashboardOutlined /> Dashboard
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>Admin Panel</Breadcrumb.Item>
-        </Breadcrumb>
+        <Breadcrumb className="admin-dash-breadcrumb" items={breadcrumbItems} />
 
         {/* Header Section */}
         <div className="admin-dash-header">
@@ -339,18 +348,15 @@ function AdminDashboard() {
               {recentActivities.length === 0 ? (
                 <Empty description="No recent activities" />
               ) : (
-                <List
-                  dataSource={recentActivities}
-                  renderItem={(item) => (
-                    <List.Item className="admin-dash-activity-item">
-                      <List.Item.Meta
-                        avatar={
-                          <Avatar
-                            icon={item.icon}
-                            className={`admin-dash-activity-avatar ${item.type}`}
-                          />
-                        }
-                        title={
+                <div className="admin-dash-activity-list">
+                  {recentActivities.map((item) => (
+                    <div key={item.id} className="admin-dash-activity-item">
+                      <div className="admin-dash-activity-item-content">
+                        <Avatar
+                          icon={item.icon}
+                          className={`admin-dash-activity-avatar ${item.type}`}
+                        />
+                        <div className="admin-dash-activity-details">
                           <Space>
                             <Text strong className="admin-dash-activity-action">
                               {item.action}
@@ -359,21 +365,19 @@ function AdminDashboard() {
                               {item.type}
                             </Tag>
                           </Space>
-                        }
-                        description={
                           <Text type="secondary" className="admin-dash-activity-time">
                             {item.time}
                           </Text>
-                        }
-                      />
-                    </List.Item>
-                  )}
-                />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </Card>
           </Col>
 
-          {/* Quick Tips Section */}
+          {/* Quick Tips Section - Using custom timeline to avoid deprecated warnings */}
           <Col xs={24} lg={10}>
             <Card
               title={
@@ -384,18 +388,20 @@ function AdminDashboard() {
               }
               className="admin-dash-tips-card"
             >
-              <Timeline
-                className="admin-dash-timeline"
-                items={tips.map((tip, index) => ({
-                  dot: <div className="admin-dash-timeline-dot">{tip.icon}</div>,
-                  children: (
-                    <Text className="admin-dash-tip-text">
-                      {tip.text}
-                    </Text>
-                  ),
-                  color: 'orange'
-                }))}
-              />
+              <div className="admin-dash-custom-timeline">
+                {tips.map((tip, index) => (
+                  <div key={index} className="admin-dash-custom-timeline-item">
+                    <div className="admin-dash-custom-timeline-dot">
+                      {tip.icon}
+                    </div>
+                    <div className="admin-dash-custom-timeline-content">
+                      <Text className="admin-dash-tip-text">
+                        {tip.text}
+                      </Text>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </Card>
           </Col>
         </Row>
@@ -422,7 +428,7 @@ function AdminDashboard() {
                     <Progress
                       percent={getProgressPercentage()}
                       strokeColor="#ff9f4a"
-                      trailColor="#ffe0c4"
+                      railColor="#ffe0c4"
                       className="admin-dash-progress-bar"
                     />
                   </div>
@@ -469,7 +475,7 @@ function AdminDashboard() {
         {/* Loading Alert */}
         {isLoading && (
           <Alert
-            message="Loading Dashboard Data"
+            title="Loading Dashboard Data"
             description="Please wait while we fetch the latest information"
             type="info"
             showIcon
@@ -480,7 +486,7 @@ function AdminDashboard() {
         {/* Welcome Alert */}
         {!isLoading && (
           <Alert
-            message="🎉 Welcome to Your Admin Dashboard"
+            title="🎉 Welcome to Your Admin Dashboard"
             description="Manage restaurants, menu items, QR codes, and coupons all from one place. Get started by creating your first restaurant!"
             type="success"
             showIcon

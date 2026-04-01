@@ -1,6 +1,7 @@
 /* =========================================
    MENU PAGE STYLES
    Light Orange & Cream Theme
+   Fixed Sticky Layout + Button Spacing
 ========================================= */
 
 :root {
@@ -30,13 +31,13 @@
   --tabs-height: 70px;
 }
 
-/* Container */
+/* Container - NO position: relative to allow sticky to work */
 .menu-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #fffef7 0%, #fffbf5 50%, #fff9f0 100%);
   padding: 24px;
   padding-bottom: 100px;
-  position: relative;
+  /* Removed position: relative - this was breaking sticky */
 }
 
 /* Loading Container */
@@ -146,6 +147,7 @@
 
 /* =========================================
    CATEGORY TABS - STICKY BELOW HEADER
+   Z-index: 80 (below header at 1000)
 ========================================= */
 .menu-category-tabs-wrapper {
   background: var(--cream-light);
@@ -496,6 +498,7 @@
 
 /* =========================================
    ADD ITEM BUTTON - FIXED POSITION BOTTOM RIGHT
+   Z-index: 100
 ========================================= */
 .menu-add-item-btn-wrapper {
   position: fixed;
@@ -528,12 +531,14 @@
 
 /* =========================================
    BACKTOP BUTTON - POSITIONED ABOVE ADD ITEM
+   Z-index: 101 (higher than Add Item at 100)
+   Bottom: 90px (60px gap from Add Item at 30px + 48px height + 12px gap)
 ========================================= */
 .menu-backtop {
   position: fixed;
-  bottom: 100px;
+  bottom: 90px;
   right: 30px;
-  z-index: 99;
+  z-index: 101;
 }
 
 .menu-backtop .ant-float-btn-body {
@@ -947,7 +952,7 @@
 }
 
 /* =========================================
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN - STICKY WORKS ON ALL SIZES
 ========================================= */
 @media (max-width: 1024px) {
   :root {
@@ -1005,6 +1010,7 @@
   }
   
   .menu-category-tabs-wrapper {
+    position: sticky;
     top: var(--header-height);
     padding: 8px;
     margin-bottom: 24px;
@@ -1036,7 +1042,7 @@
   }
   
   .menu-backtop {
-    bottom: 80px;
+    bottom: 72px;
     right: 20px;
   }
   
@@ -1089,6 +1095,7 @@
   }
   
   .menu-category-tabs-wrapper {
+    position: sticky;
     top: var(--header-height);
     padding: 6px;
   }
@@ -1142,7 +1149,7 @@
   }
   
   .menu-backtop {
-    bottom: 70px;
+    bottom: 63px;
     right: 15px;
   }
   

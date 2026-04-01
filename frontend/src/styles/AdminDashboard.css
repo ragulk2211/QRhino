@@ -1,6 +1,6 @@
 /* =========================================
    ADMIN DASHBOARD STYLES
-   Light Orange & Cream Theme - No Dark Colors
+   Light Orange & Cream Theme
    Prefix: admin-dash-
 ========================================= */
 
@@ -34,6 +34,7 @@
   --radius-full: 9999px;
   
   /* Spacing */
+  --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
@@ -96,18 +97,17 @@
   margin-bottom: var(--space-lg);
 }
 
-.admin-dash-breadcrumb .ant-breadcrumb a {
+.admin-dash-breadcrumb .ant-breadcrumb-link a {
   color: var(--light-orange-primary);
   transition: var(--transition);
 }
 
-.admin-dash-breadcrumb .ant-breadcrumb a:hover {
+.admin-dash-breadcrumb .ant-breadcrumb-link a:hover {
   color: var(--light-orange);
 }
 
-.admin-dash-breadcrumb .ant-breadcrumb li:last-child {
-  color: var(--brown-light);
-  font-weight: 500;
+.admin-dash-breadcrumb .ant-breadcrumb-separator {
+  color: var(--brown-soft);
 }
 
 /* Header */
@@ -332,6 +332,26 @@
   background: var(--light-orange-primary);
 }
 
+/* Custom Activity List */
+.admin-dash-activity-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.admin-dash-activity-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-dash-activity-list::-webkit-scrollbar-track {
+  background: var(--light-orange-pale);
+  border-radius: 10px;
+}
+
+.admin-dash-activity-list::-webkit-scrollbar-thumb {
+  background: var(--light-orange-primary);
+  border-radius: 10px;
+}
+
 .admin-dash-activity-item {
   padding: var(--space-md);
   border-bottom: 1px solid var(--light-orange-pale);
@@ -343,9 +363,20 @@
   border-radius: var(--radius-md);
 }
 
+.admin-dash-activity-item-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.admin-dash-activity-details {
+  flex: 1;
+}
+
 .admin-dash-activity-avatar {
   background: var(--cream-warm);
   color: var(--light-orange-primary);
+  flex-shrink: 0;
 }
 
 .admin-dash-activity-avatar.success {
@@ -356,6 +387,11 @@
 .admin-dash-activity-avatar.warning {
   background: rgba(250, 173, 20, 0.1);
   color: #faad14;
+}
+
+.admin-dash-activity-avatar.info {
+  background: rgba(255, 159, 74, 0.1);
+  color: var(--light-orange-primary);
 }
 
 .admin-dash-activity-action {
@@ -372,9 +408,15 @@
 
 .admin-dash-activity-time {
   font-size: 0.75rem;
+  display: block;
+  margin-top: var(--space-xs);
 }
 
 /* Timeline/Tips */
+.admin-dash-timeline {
+  padding: var(--space-md);
+}
+
 .admin-dash-timeline .ant-timeline-item {
   padding-bottom: var(--space-lg);
 }
@@ -484,6 +526,12 @@
   border-left: 4px solid #52c41a;
 }
 
+.admin-dash-welcome-alert .ant-alert-message,
+.admin-dash-loading-alert .ant-alert-message {
+  color: var(--brown-light);
+  font-weight: 600;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .admin-dash-container {
@@ -526,6 +574,15 @@
   .admin-dash-milestone-value {
     font-size: 1.5rem;
   }
+  
+  .admin-dash-activity-item-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .admin-dash-activity-details {
+    text-align: center;
+  }
 }
 
 @media (max-width: 480px) {
@@ -551,4 +608,101 @@
 /* Empty State */
 .ant-empty-description {
   color: var(--brown-soft);
+}
+
+/* Loading Skeleton Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Hover Effects */
+.admin-dash-stat-card,
+.admin-dash-action-card,
+.admin-dash-milestone {
+  will-change: transform;
+}
+
+/* Add this to your existing AdminDashboard.css file */
+
+/* Custom Timeline - Replaces deprecated Ant Design Timeline */
+.admin-dash-custom-timeline {
+  padding: var(--space-md);
+}
+
+.admin-dash-custom-timeline-item {
+  display: flex;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  position: relative;
+}
+
+.admin-dash-custom-timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 32px;
+  bottom: -20px;
+  width: 2px;
+  background: linear-gradient(135deg, var(--light-orange-pale), var(--light-orange-soft));
+}
+
+.admin-dash-custom-timeline-dot {
+  width: 32px;
+  height: 32px;
+  background: var(--cream-warm);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--light-orange-primary);
+  border: 1px solid var(--light-orange-pale);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.admin-dash-custom-timeline-content {
+  flex: 1;
+  padding-top: 4px;
+}
+
+.admin-dash-custom-timeline-content .admin-dash-tip-text {
+  color: var(--brown-soft);
+  line-height: 1.5;
+  display: block;
+}
+
+/* Responsive adjustments for custom timeline */
+@media (max-width: 768px) {
+  .admin-dash-custom-timeline-item {
+    gap: var(--space-md);
+  }
+  
+  .admin-dash-custom-timeline-dot {
+    width: 28px;
+    height: 28px;
+    font-size: 0.875rem;
+  }
+  
+  .admin-dash-custom-timeline-item:not(:last-child)::before {
+    left: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-dash-custom-timeline-dot {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+  }
+  
+  .admin-dash-custom-timeline-item:not(:last-child)::before {
+    left: 12px;
+  }
 }

@@ -767,3 +767,74 @@
 .restaurant-form-content > * {
   animation: restaurantFormFadeIn 0.3s ease;
 }
+
+
+/* Add this to your existing createRestaurant.css file */
+
+/* Alert component styles - Fix for new API */
+.restaurant-form-tips-alert {
+  border-radius: var(--radius-md);
+  margin-top: var(--space-md);
+  border: 1px solid var(--light-orange-pale);
+  background: linear-gradient(135deg, rgba(255, 159, 74, 0.05), rgba(255, 176, 71, 0.03));
+}
+
+.restaurant-form-tips-alert .ant-alert-message {
+  color: var(--brown-light);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.restaurant-form-tips-alert .ant-alert-description {
+  color: var(--brown-soft);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.restaurant-form-tips-alert .ant-alert-icon {
+  color: var(--light-orange-primary);
+  font-size: 1.25rem;
+}
+
+.restaurant-form-tips-alert .ant-alert-description ul {
+  margin: var(--space-sm) 0 0 0;
+  padding-left: 20px;
+}
+
+.restaurant-form-tips-alert .ant-alert-description li {
+  margin-bottom: var(--space-xs);
+  color: var(--brown-soft);
+}
+
+.restaurant-form-tips-alert .ant-alert-description li:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive adjustments for alert */
+@media (max-width: 768px) {
+  .restaurant-form-tips-alert .ant-alert-message {
+    font-size: 0.875rem;
+  }
+  
+  .restaurant-form-tips-alert .ant-alert-description {
+    font-size: 0.75rem;
+  }
+  
+  .restaurant-form-tips-alert .ant-alert-description ul {
+    padding-left: 16px;
+  }
+  
+  .restaurant-form-tips-alert .ant-alert-description li {
+    margin-bottom: var(--space-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .restaurant-form-tips-alert .ant-alert-description ul {
+    padding-left: 12px;
+  }
+  
+  .restaurant-form-tips-alert .ant-alert-description li {
+    font-size: 0.7rem;
+  }
+}

@@ -158,15 +158,24 @@ function CreateRestaurant() {
     }
   ];
 
+  // Modern Breadcrumb items API
+  const breadcrumbItems = [
+    {
+      title: (
+        <a onClick={() => navigate("/admin")} style={{ cursor: 'pointer' }}>
+          Dashboard
+        </a>
+      ),
+    },
+    {
+      title: "Create Restaurant",
+    },
+  ];
+
   return (
     <div className="restaurant-form-container">
       <div className="restaurant-form-content">
-        <Breadcrumb className="restaurant-form-breadcrumb">
-          <Breadcrumb.Item>
-            <a onClick={() => navigate("/admin")}>Dashboard</a>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>Create Restaurant</Breadcrumb.Item>
-        </Breadcrumb>
+        <Breadcrumb className="restaurant-form-breadcrumb" items={breadcrumbItems} />
 
         <Card className="restaurant-form-card">
           <div className="restaurant-form-header">
@@ -624,9 +633,9 @@ function CreateRestaurant() {
               </Space>
             </Form.Item>
 
-            {/* Tips Section */}
+            {/* Tips Section - Fixed Alert with title prop */}
             <Alert
-              message="💡 Pro Tips"
+              title="💡 Pro Tips"
               description={
                 <ul style={{ margin: 0, paddingLeft: 20 }}>
                   <li>Add high-quality images that showcase your restaurant's ambiance and food</li>

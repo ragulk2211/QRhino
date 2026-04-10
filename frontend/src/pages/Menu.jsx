@@ -1,11 +1,9 @@
+// Menu.jsx - Complete file
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Typography,
   Button,
-  Card,
-  Row,
-  Col,
   Space,
   Spin,
   Empty,
@@ -15,11 +13,9 @@ import {
   message,
   Badge,
   Divider,
-  Avatar,
   Rate,
-  Result,
-  FloatButton,
-  Drawer
+  Drawer,
+  Input
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -37,14 +33,13 @@ import {
   MinusOutlined,
   PlusCircleOutlined,
   ShopOutlined,
-  FilterOutlined,
-  UpOutlined
+  UpOutlined,
+  SearchOutlined
 } from "@ant-design/icons";
-import Header from "../components/Header";
 import API_BASE_URL from "../config";
-import "../styles/menu.css";
+import "../styles/menu.css"
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 function Menu() {
   const navigate = useNavigate();
@@ -66,12 +61,27 @@ function Menu() {
   const [modalVisible, setModalVisible] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [cartDrawerVisible, setCartDrawerVisible] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [pulseAnimation, setPulseAnimation] = useState(false);
 
   // Load cart from localStorage on mount
   useEffect(() => {
     loadCartFromStorage();
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Listen for scroll events to show/hide scroll to top button
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 400) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const loadCartFromStorage = () => {
@@ -118,6 +128,8 @@ function Menu() {
         return [...prevItems, { ...item, quantity: 1 }];
       }
     });
+    setPulseAnimation(true);
+    setTimeout(() => setPulseAnimation(false), 600);
     message.success({
       content: `${item.name} added to cart!`,
       icon: <CheckCircleOutlined />,
@@ -318,10 +330,16 @@ function Menu() {
     return type === "veg" ? <CheckCircleOutlined /> : <FireOutlined />;
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="menu-page">
-        <Header onSearch={setSearchTerm} />
         <div className="menu-loading-container">
           <Spin size="large" />
           <Text type="secondary">Loading delicious menu...</Text>
@@ -332,238 +350,196 @@ function Menu() {
 
   return (
     <div className="menu-page">
-      <Header onSearch={setSearchTerm} />
-
-      {/* Restaurant Header - Not Sticky */}
+      {/* Restaurant Header */}
       <div className="menu-restaurant-header">
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} md={8}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <Avatar size={56} icon={<ShopOutlined />} className="menu-restaurant-avatar" />
-              <div>
-                <Title level={4} className="menu-restaurant-name" style={{ marginBottom: 4 }}>
-                  {restaurantName || "Our Restaurant"}
-                </Title>
-                <Space size="small">
-                  <EnvironmentOutlined style={{ fontSize: 12, color: '#c9a87c' }} />
-                  <Text type="secondary" style={{ fontSize: 12 }}>{restaurantLocation}</Text>
-                </Space>
-                <div style={{ marginTop: 4 }}>
-                  <Rate disabled defaultValue={restaurantRating} allowHalf style={{ fontSize: 12 }} />
-                </div>
-              </div>
+        <div className="restaurant-header-top">
+          <div className="restaurant-title-section">
+            <h1 className="restaurant-brand">{restaurantName || "A TASTE OF HOME"}</h1>
+            <div className="restaurant-lang-badge">
+              <span>English</span>
+              <i className="fas fa-chevron-down"></i>
             </div>
-          </Col>
-
-          <Col xs={24} md={10}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center' }}>
-              <FilterOutlined style={{ color: '#b87a4a' }} />
-              <div className="menu-filter-buttons">
-                <Button
-                  onClick={() => setFoodTypeFilter("all")}
-                  type={foodTypeFilter === "all" ? "primary" : "default"}
-                  className={foodTypeFilter === "all" ? "menu-filter-active" : ""}
-                  size="middle"
-                >
-                  All
-                </Button>
-                <Button
-                  onClick={() => setFoodTypeFilter("veg")}
-                  type={foodTypeFilter === "veg" ? "primary" : "default"}
-                  icon={<CheckCircleOutlined />}
-                  className={foodTypeFilter === "veg" ? "menu-filter-active" : ""}
-                  size="middle"
-                >
-                  Vegetarian
-                </Button>
-                <Button
-                  onClick={() => setFoodTypeFilter("nonveg")}
-                  type={foodTypeFilter === "nonveg" ? "primary" : "default"}
-                  icon={<FireOutlined />}
-                  className={foodTypeFilter === "nonveg" ? "menu-filter-active" : ""}
-                  size="middle"
-                >
-                  Non-Vegetarian
-                </Button>
-              </div>
-            </div>
-          </Col>
-
-          <Col xs={24} md={6}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>
-              <Badge count={cartCount} className="menu-cart-badge" offset={[-5, 5]}>
-                <Button 
-                  icon={<ShoppingCartOutlined />} 
-                  onClick={() => setCartDrawerVisible(true)}
-                  className="menu-cart-btn"
-                  size="middle"
-                >
-                  Cart {cartCount > 0 && `(${cartCount})`}
-                </Button>
-              </Badge>
+          </div>
+          
+          <div className="restaurant-actions">
+            <Button 
+              icon={<ArrowLeftOutlined />} 
+              onClick={() => navigate("/")}
+              type="text"
+              className="back-icon-btn"
+            />
+            <Badge count={cartCount} className="menu-cart-badge">
               <Button 
-                icon={<ArrowLeftOutlined />} 
-                onClick={() => navigate("/")}
-                type="link"
-                style={{ color: '#b87a4a', padding: 0 }}
-              >
-                Back
-              </Button>
-            </div>
-          </Col>
-        </Row>
-      </div>
-
-      {/* Categories Tabs - STICKY BELOW HEADER */}
-      {Object.keys(menuData).length > 0 && (
-        <div className="menu-category-tabs-wrapper">
-          <div className="menu-category-tabs">
-            {Object.keys(menuData).map(category => (
-              <Button
-                key={category}
-                onClick={() => {
-                  setActiveCategory(category);
-                  const element = document.getElementById(`menu-${category}`);
-                  if (element) {
-                    const headerHeight = document.querySelector('.header')?.offsetHeight || 70;
-                    const tabsHeight = document.querySelector('.menu-category-tabs-wrapper')?.offsetHeight || 60;
-                    const offset = headerHeight + tabsHeight + 20;
-                    const elementPosition = element.getBoundingClientRect().top;
-                    const offsetPosition = elementPosition + window.pageYOffset - offset;
-                    window.scrollTo({
-                      top: offsetPosition,
-                      behavior: "smooth"
-                    });
-                  }
-                }}
-                className={`menu-category-tab ${activeCategory === category ? "active" : ""}`}
-              >
-                {category.charAt(0).toUpperCase() + category.slice(1)}
-              </Button>
-            ))}
+                icon={<ShoppingCartOutlined />} 
+                onClick={() => setCartDrawerVisible(true)}
+                type="text"
+                className="cart-icon-btn"
+              />
+            </Badge>
           </div>
         </div>
-      )}
+
+        {/* Location */}
+        <div className="restaurant-location">
+          <EnvironmentOutlined />
+          <span>{restaurantLocation || "Bahrain · Juffair"}</span>
+          <Rate disabled defaultValue={restaurantRating} allowHalf style={{ fontSize: 11, marginLeft: 6 }} />
+        </div>
+
+        {/* Filter Chips and Search Bar - Side by Side */}
+        <div className="filter-search-row">
+          <div className="filter-chips-wrapper">
+            <button 
+              onClick={() => setFoodTypeFilter("all")}
+              className={`filter-chip ${foodTypeFilter === "all" ? "active" : ""}`}
+            >
+              All
+            </button>
+            <button 
+              onClick={() => setFoodTypeFilter("veg")}
+              className={`filter-chip ${foodTypeFilter === "veg" ? "active" : ""}`}
+            >
+              <CheckCircleOutlined /> Veg
+            </button>
+            <button 
+              onClick={() => setFoodTypeFilter("nonveg")}
+              className={`filter-chip ${foodTypeFilter === "nonveg" ? "active" : ""}`}
+            >
+              <FireOutlined /> Non-Veg
+            </button>
+          </div>
+          
+          <div className="search-wrapper">
+            <Input
+              placeholder="Search..."
+              allowClear
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+              prefix={<SearchOutlined />}
+            />
+          </div>
+        </div>
+
+        {/* Category Tabs */}
+        {Object.keys(menuData).length > 0 && (
+          <div className="category-tabs-wrapper">
+            <div className="category-tabs">
+              {Object.keys(menuData).map(category => (
+                <button
+                  key={category}
+                  onClick={() => {
+                    setActiveCategory(category);
+                    const element = document.getElementById(`category-${category}`);
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  className={`category-tab ${activeCategory === category ? "active" : ""}`}
+                >
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Menu Items */}
       <div className="menu-items-container">
         {Object.keys(menuData).length === 0 ? (
-          <Result
-            icon={<MenuOutlined />}
-            title="No menu items found"
-            subTitle="Try adjusting your filters or search term"
-            extra={
-              <Button type="primary" onClick={() => {
-                setFoodTypeFilter("all");
-                setSearchTerm("");
-              }}>
-                Reset Filters
-              </Button>
-            }
-          />
+          <div className="empty-menu-state">
+            <MenuOutlined className="empty-icon" />
+            <h3>No menu items found</h3>
+            <p>Try adjusting your filters or search term</p>
+            <Button type="primary" onClick={() => {
+              setFoodTypeFilter("all");
+              setSearchTerm("");
+            }}>
+              Reset Filters
+            </Button>
+          </div>
         ) : (
           Object.keys(menuData).map(category => (
-            <section key={category} id={`menu-${category}`} className="menu-category-section">
+            <section key={category} id={`category-${category}`} className="menu-category-section">
               <div className="menu-category-header">
-                <Title level={3} className="menu-category-title">
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </Title>
-                <div className="menu-category-line"></div>
+                <h2 className="menu-category-title">{category.charAt(0).toUpperCase() + category.slice(1)}</h2>
+                <div className="category-title-underline"></div>
               </div>
-              <div className="menu-grid">
+              <div className="menu-list">
                 {menuData[category]?.map(food => (
-                  <Card
-                    key={food._id}
-                    hoverable
-                    className="menu-food-card"
-                    cover={
-                      <div className="menu-food-image">
-                        <img
-                          alt={food.name}
-                          src={food.image?.startsWith("http") ? food.image : `${API_BASE_URL}/uploads/${food.image}`}
-                          onError={(e) => {
-                            e.target.src = "https://via.placeholder.com/400x300?text=No+Image";
-                          }}
-                        />
-                        {food.bestseller && (
-                          <Tag color="orange" className="menu-bestseller-tag">
-                            <FireOutlined /> Best Seller
-                          </Tag>
-                        )}
-                        {food.discount > 0 && (
-                          <Tag color="red" className="menu-discount-tag">
-                            -{food.discount}%
-                          </Tag>
-                        )}
+                  <div key={food._id} className="menu-item-card">
+                    <div className="menu-item-image">
+                      <img
+                        src={food.image?.startsWith("http") ? food.image : `${API_BASE_URL}/uploads/${food.image}`}
+                        alt={food.name}
+                        onError={(e) => {
+                          e.target.src = "https://images.unsplash.com/photo-1550547660-d9450f859349?w=120&h=120&fit=crop";
+                        }}
+                      />
+                      {food.discount > 0 && (
+                        <span className="discount-badge">-{food.discount}%</span>
+                      )}
+                      {food.bestseller && (
+                        <span className="bestseller-badge">⭐ Bestseller</span>
+                      )}
+                    </div>
+                    <div className="menu-item-info">
+                      <div className="menu-item-header">
+                        <h3 className="menu-item-name">{food.name}</h3>
+                        <div className="menu-item-price">
+                          <span className="current-price">${food.price}</span>
+                          {food.discount > 0 && (
+                            <span className="original-price">${food.originalPrice || food.price}</span>
+                          )}
+                        </div>
                       </div>
-                    }
-                    actions={[
-                      <Tooltip title="View Details">
-                        <Button
-                          type="text"
-                          icon={<EyeOutlined />}
-                          onClick={() => viewDetails(food)}
-                        />
-                      </Tooltip>,
-                      <Tooltip title="Add to Cart">
-                        <Button
+                      <p className="menu-item-desc">{food.desc || "Delicious dish prepared with fresh ingredients"}</p>
+                      <div className="menu-item-meta">
+                        {food.kcal > 0 && (
+                          <span className="meta-badge">
+                            <FireOutlined /> {food.kcal}kcal
+                          </span>
+                        )}
+                        {food.time > 0 && (
+                          <span className="meta-badge">
+                            <ClockCircleOutlined /> {food.time}min
+                          </span>
+                        )}
+                        <Tag 
+                          icon={getFoodTypeIcon(food.foodType)} 
+                          color={getFoodTypeColor(food.foodType)}
+                          className="food-type-badge"
+                        >
+                          {food.foodType === "veg" ? "Veg" : "Non-Veg"}
+                        </Tag>
+                      </div>
+                      <div className="menu-item-actions">
+                        <Button 
                           type="primary"
                           icon={<ShoppingCartOutlined />}
                           onClick={() => addToCart(food)}
-                          className="menu-add-to-cart-btn"
+                          className="add-to-cart-btn"
                         >
                           Add
                         </Button>
-                      </Tooltip>,
-                      <Tooltip title="Delete Item">
-                        <Button
-                          type="text"
+                        <Button 
+                          icon={<EyeOutlined />}
+                          onClick={() => viewDetails(food)}
+                          className="view-btn"
+                        >
+                          View
+                        </Button>
+                        <Button 
                           danger
                           icon={<DeleteOutlined />}
                           onClick={() => deleteItem(food._id)}
+                          className="delete-btn"
+                          type="text"
                         />
-                      </Tooltip>
-                    ]}
-                  >
-                    <div className="menu-food-header">
-                      <Tag 
-                        icon={getFoodTypeIcon(food.foodType)} 
-                        color={getFoodTypeColor(food.foodType)}
-                        className="menu-food-type-tag"
-                      >
-                        {food.foodType === "veg" ? "Vegetarian" : "Non-Vegetarian"}
-                      </Tag>
-                      <Rate disabled defaultValue={food.rating || 4.5} allowHalf style={{ fontSize: 12 }} />
-                    </div>
-                    <Title level={4} className="menu-food-name">{food.name}</Title>
-                    <Paragraph ellipsis={{ rows: 2 }} className="menu-food-description">
-                      {food.desc || "Delicious dish prepared with fresh ingredients"}
-                    </Paragraph>
-                    <div className="menu-food-footer">
-                      <div className="menu-food-price">
-                        <Text strong className="menu-current-price">₹{food.price}</Text>
-                        {food.discount > 0 && (
-                          <Text delete className="menu-original-price">₹{food.originalPrice || food.price}</Text>
-                        )}
-                      </div>
-                      <div className="menu-food-meta">
-                        {food.kcal > 0 && (
-                          <Tooltip title="Calories">
-                            <Tag icon={<FireOutlined />} className="menu-meta-tag">
-                              {food.kcal} kcal
-                            </Tag>
-                          </Tooltip>
-                        )}
-                        {food.time > 0 && (
-                          <Tooltip title="Prep Time">
-                            <Tag icon={<ClockCircleOutlined />} className="menu-meta-tag">
-                              {food.time} min
-                            </Tag>
-                          </Tooltip>
-                        )}
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 ))}
               </div>
             </section>
@@ -571,131 +547,33 @@ function Menu() {
         )}
       </div>
 
-      {/* Cart Drawer */}
-      <Drawer
-        title={
-          <div className="cart-drawer-header">
-            <ShoppingCartOutlined />
-            <span>Your Cart ({cartCount} items)</span>
-          </div>
-        }
-        placement="right"
-        onClose={() => setCartDrawerVisible(false)}
-        open={cartDrawerVisible}
-        size="default"
-        className="cart-drawer"
-        extra={
-          cartItems.length > 0 && (
-            <Button type="link" danger onClick={clearCart}>
-              Clear All
-            </Button>
-          )
-        }
-        closeIcon={<CloseOutlined />}
-      >
-        {cartItems.length === 0 ? (
-          <Empty
-            description="Your cart is empty"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            className="cart-empty"
-          >
-            <Button 
-              type="primary" 
-              onClick={() => setCartDrawerVisible(false)}
-            >
-              Browse Menu
-            </Button>
-          </Empty>
-        ) : (
-          <div className="cart-drawer-content">
-            <div className="cart-items-list">
-              {cartItems.map((item) => (
-                <div key={item._id} className="cart-item">
-                  <div className="cart-item-image">
-                    <img
-                      src={item.image?.startsWith("http") ? item.image : `${API_BASE_URL}/uploads/${item.image}`}
-                      alt={item.name}
-                      onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/60x60?text=No+Image";
-                      }}
-                    />
-                    {item.discount > 0 && (
-                      <span className="cart-item-discount">-{item.discount}%</span>
-                    )}
-                  </div>
-                  <div className="cart-item-info">
-                    <div className="cart-item-name">{item.name}</div>
-                    <div className="cart-item-price">
-                      {item.discount > 0 ? (
-                        <>
-                          <span className="original-price">₹{item.price}</span>
-                          <span className="discounted-price">
-                            ₹{Math.round(item.price - (item.price * item.discount / 100))}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="current-price">₹{item.price}</span>
-                      )}
-                    </div>
-                    <div className="cart-item-actions">
-                      <div className="quantity-control">
-                        <Button
-                          size="small"
-                          icon={<MinusOutlined />}
-                          onClick={() => updateQuantity(item._id, (item.quantity || 1) - 1)}
-                        />
-                        <span className="quantity">{item.quantity || 1}</span>
-                        <Button
-                          size="small"
-                          icon={<PlusCircleOutlined />}
-                          onClick={() => updateQuantity(item._id, (item.quantity || 1) + 1)}
-                        />
-                      </div>
-                      <Button
-                        type="text"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => removeFromCart(item._id)}
-                        size="small"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+      {/* My Order Section - Bottom Right */}
+      {cartItems.length > 0 && (
+        <div className={`my-order-floating ${pulseAnimation ? 'pulse' : ''}`} onClick={() => setCartDrawerVisible(true)}>
+          <div className="my-order-content">
+            <div className="order-icon-wrapper">
+              <ShoppingCartOutlined className="order-icon" />
+              <span className="order-badge">{cartCount}</span>
             </div>
-
-            <Divider className="cart-divider" />
-
-            <div className="cart-summary">
-              <div className="cart-subtotal">
-                <Text type="secondary">Subtotal</Text>
-                <Text strong className="subtotal-amount">₹{Math.round(cartTotal)}</Text>
-              </div>
-              <div className="cart-delivery">
-                <Text type="secondary">Delivery Fee</Text>
-                <Text>Free</Text>
-              </div>
-              <Divider className="cart-divider-small" />
-              <div className="cart-total">
-                <Text strong className="total-label">Total</Text>
-                <Text strong className="total-amount">₹{Math.round(cartTotal)}</Text>
-              </div>
+            <div className="order-details">
+              <span className="order-label">MY ORDER</span>
+              <span className="order-count">
+                <span>{cartCount}</span> {cartCount === 1 ? 'item' : 'items'}
+              </span>
             </div>
-
-            <Button
-              type="primary"
-              size="large"
-              block
-              className="checkout-btn"
-              onClick={proceedToCheckout}
-            >
-              Proceed to Checkout
-            </Button>
+            <div className="order-divider"></div>
+            <div className="order-total-section">
+              <span className="total-label">TOTAL</span>
+              <span className="order-total">
+                ${Math.round(cartTotal)}<small>USD</small>
+              </span>
+            </div>
+            <i className="fas fa-chevron-right order-arrow"></i>
           </div>
-        )}
-      </Drawer>
+        </div>
+      )}
 
-      {/* Add Item Button - Fixed Position Bottom Right */}
+      {/* Add Item Button - Bottom Left */}
       <div className="menu-add-item-btn-wrapper">
         <Button
           type="primary"
@@ -707,112 +585,102 @@ function Menu() {
         </Button>
       </div>
 
+      {/* Cart Drawer */}
+      <Drawer
+        title="My Order"
+        placement="right"
+        onClose={() => setCartDrawerVisible(false)}
+        open={cartDrawerVisible}
+        className="cart-drawer"
+        closeIcon={<CloseOutlined />}
+      >
+        {cartItems.length === 0 ? (
+          <Empty description="Your cart is empty" />
+        ) : (
+          <>
+            <div className="cart-items-list">
+              {cartItems.map((item) => (
+                <div key={item._id} className="cart-item">
+                  <div className="cart-item-image">
+                    <img 
+                      src={item.image?.startsWith("http") ? item.image : `${API_BASE_URL}/uploads/${item.image}`} 
+                      alt={item.name}
+                      onError={(e) => {
+                        e.target.src = "https://images.unsplash.com/photo-1550547660-d9450f859349?w=60&h=60&fit=crop";
+                      }}
+                    />
+                  </div>
+                  <div className="cart-item-info">
+                    <div className="cart-item-name">{item.name}</div>
+                    <div className="cart-item-price">
+                      ${item.discount > 0 ? Math.round(item.price - (item.price * item.discount / 100)) : item.price}
+                    </div>
+                    <div className="quantity-control">
+                      <Button size="small" icon={<MinusOutlined />} onClick={() => updateQuantity(item._id, (item.quantity || 1) - 1)} />
+                      <span>{item.quantity || 1}</span>
+                      <Button size="small" icon={<PlusCircleOutlined />} onClick={() => updateQuantity(item._id, (item.quantity || 1) + 1)} />
+                    </div>
+                  </div>
+                  <Button type="text" danger icon={<DeleteOutlined />} onClick={() => removeFromCart(item._id)} />
+                </div>
+              ))}
+            </div>
+            <Divider />
+            <div className="cart-summary">
+              <div className="cart-total-row">
+                <span>Total</span>
+                <span className="cart-total-amount">${Math.round(cartTotal)}</span>
+              </div>
+              <Button type="primary" block className="checkout-btn" onClick={proceedToCheckout}>
+                Proceed to Checkout
+              </Button>
+            </div>
+          </>
+        )}
+      </Drawer>
+
       {/* Food Details Modal */}
       <Modal
         open={modalVisible}
         footer={null}
         onCancel={() => setModalVisible(false)}
-        width={800}
-        className="menu-food-modal"
-        closeIcon={<CloseOutlined />}
+        className="food-detail-modal"
       >
         {selectedFood && (
-          <div className="menu-modal-content">
-            <div className="menu-modal-image">
-              <img
-                src={selectedFood.image?.startsWith("http") ? selectedFood.image : `${API_BASE_URL}/uploads/${selectedFood.image}`}
-                alt={selectedFood.name}
-                onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/400x300?text=No+Image";
-                }}
-              />
-              {selectedFood.discount > 0 && (
-                <Tag color="red" className="menu-modal-discount">-{selectedFood.discount}% OFF</Tag>
-              )}
+          <div className="food-detail-content">
+            <img 
+              src={selectedFood.image?.startsWith("http") ? selectedFood.image : `${API_BASE_URL}/uploads/${selectedFood.image}`} 
+              alt={selectedFood.name} 
+              className="food-detail-image"
+              onError={(e) => {
+                e.target.src = "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=300&fit=crop";
+              }}
+            />
+            <h2>{selectedFood.name}</h2>
+            <p>{selectedFood.desc || "Delicious dish prepared with fresh ingredients"}</p>
+            <div className="food-detail-meta">
+              {selectedFood.kcal > 0 && <span><FireOutlined /> {selectedFood.kcal} kcal</span>}
+              {selectedFood.time > 0 && <span><ClockCircleOutlined /> {selectedFood.time} min</span>}
             </div>
-            <div className="menu-modal-info">
-              <Tag 
-                icon={getFoodTypeIcon(selectedFood.foodType)} 
-                color={getFoodTypeColor(selectedFood.foodType)}
-                className="menu-modal-type"
-              >
-                {selectedFood.foodType === "veg" ? "Vegetarian" : "Non-Vegetarian"}
-              </Tag>
-              <Title level={2} className="menu-modal-name">{selectedFood.name}</Title>
-              <div className="menu-modal-rating">
-                <Rate disabled defaultValue={selectedFood.rating || 4.5} allowHalf />
-                <Text type="secondary">(120+ reviews)</Text>
-              </div>
-              <Paragraph className="menu-modal-description">
-                {selectedFood.desc || "Delicious dish prepared with fresh ingredients by our expert chefs."}
-              </Paragraph>
-              <div className="menu-modal-meta">
-                <Space size="large">
-                  {selectedFood.kcal > 0 && (
-                    <div className="menu-modal-meta-item">
-                      <FireOutlined />
-                      <Text>{selectedFood.kcal} kcal</Text>
-                    </div>
-                  )}
-                  {selectedFood.time > 0 && (
-                    <div className="menu-modal-meta-item">
-                      <ClockCircleOutlined />
-                      <Text>{selectedFood.time} min</Text>
-                    </div>
-                  )}
-                </Space>
-              </div>
-              <Divider />
-              <div className="menu-modal-price">
-                <div>
-                  <Text type="secondary">Price</Text>
-                  <Title level={2} className="menu-modal-current-price">₹{selectedFood.price}</Title>
-                  {selectedFood.discount > 0 && (
-                    <Text delete className="menu-modal-original-price">₹{selectedFood.originalPrice || selectedFood.price}</Text>
-                  )}
-                </div>
-                <Button 
-                  type="primary" 
-                  size="large" 
-                  icon={<ShoppingCartOutlined />}
-                  onClick={() => {
-                    addToCart(selectedFood);
-                    setModalVisible(false);
-                  }}
-                  className="menu-modal-add-btn"
-                >
-                  Add to Cart
-                </Button>
-              </div>
-              <div className="menu-modal-actions">
-                <Button 
-                  icon={<EditOutlined />} 
-                  onClick={() => navigate(`/edit-item/${selectedFood._id}`)}
-                >
-                  Edit Item
-                </Button>
-                <Button 
-                  danger 
-                  icon={<DeleteOutlined />}
-                  onClick={() => {
-                    deleteItem(selectedFood._id);
-                    setModalVisible(false);
-                  }}
-                >
-                  Delete Item
-                </Button>
-              </div>
+            <div className="food-detail-price">${selectedFood.price}</div>
+            <div className="food-detail-actions">
+              <Button type="primary" block onClick={() => { addToCart(selectedFood); setModalVisible(false); }}>
+                Add to Cart
+              </Button>
+              <Button onClick={() => navigate(`/edit-item/${selectedFood._id}`)}>
+                <EditOutlined /> Edit
+              </Button>
             </div>
           </div>
         )}
       </Modal>
 
-      {/* BackTop Button - Positioned Above Add Item Button */}
-      <FloatButton.BackTop 
-        icon={<UpOutlined />}
-        visibilityHeight={400}
-        className="menu-backtop"
-      />
+      {/* Scroll to Top */}
+      {showScrollTop && (
+        <div className="menu-backtop-wrapper" onClick={scrollToTop}>
+          <UpOutlined />
+        </div>
+      )}
     </div>
   );
 }

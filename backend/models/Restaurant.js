@@ -15,6 +15,42 @@ const RestaurantSchema = new mongoose.Schema({
     type: String
   },
 
+  email: {
+    type: String
+  },
+
+  description: {
+    type: String
+  },
+
+  cuisine: {
+    type: String
+  },
+
+  priceRange: {
+    type: Number,
+    default: 0
+  },
+
+  deliveryTime: {
+    type: Number,
+    default: 0
+  },
+
+  isOpen: {
+    type: Boolean,
+    default: true
+  },
+
+  rating: {
+    type: Number,
+    default: 0
+  },
+
+  timings: {
+    type: String
+  },
+
   image: {
     type: String,
     default: null

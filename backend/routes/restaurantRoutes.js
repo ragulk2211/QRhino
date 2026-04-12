@@ -46,10 +46,37 @@ router.get("/:id", async (req, res) => {
 // POST create restaurant — multer runs BEFORE the handler, so req.body is always ready
 router.post("/", upload, async (req, res) => {
   try {
-    const { name = "", location = "", phone = "" } = req.body
+    const { name = "", location = "", phone = "", email = "", description = "", cuisine = "", priceRange = 0, deliveryTime = 0, isOpen = true, rating = 0, timings = "" } = req.body
     const image = req.file ? req.file.filename : null
 
-    const restaurant = new Restaurant({ name, location, phone, image })
+    // Parse location if it's a JSON string
+    let locationString = location
+    if (typeof location === 'string' && location.startsWith('{')) {
+      try {
+        const locationObj = JSON.parse(location)
+        locationString = `${locationObj.address || ''}, ${locationObj.city || ''}, ${locationObj.state || ''} - ${locationObj.pincode || ''}`.trim()
+        if (locationObj.landmark) {
+          locationString += ` (Near ${locationObj.landmark})`
+        }
+      } catch (e) {
+        locationString = location
+      }
+    }
+
+    const restaurant = new Restaurant({ 
+      name, 
+      location: locationString, 
+      phone, 
+      email,
+      description,
+      cuisine,
+      priceRange,
+      deliveryTime,
+      isOpen,
+      rating,
+      timings,
+      image 
+    })
     await restaurant.save()
 
     res.status(201).json(restaurant)
@@ -62,8 +89,35 @@ router.post("/", upload, async (req, res) => {
 // PUT update restaurant
 router.put("/:id", upload, async (req, res) => {
   try {
-    const { name = "", location = "", phone = "" } = req.body
-    const updateData = { name, location, phone }
+    const { name = "", location = "", phone = "", email = "", description = "", cuisine = "", priceRange = 0, deliveryTime = 0, isOpen = true, rating = 0, timings = "" } = req.body
+    
+    // Parse location if it's a JSON string
+    let locationString = location
+    if (typeof location === 'string' && location.startsWith('{')) {
+      try {
+        const locationObj = JSON.parse(location)
+        locationString = `${locationObj.address || ''}, ${locationObj.city || ''}, ${locationObj.state || ''} - ${locationObj.pincode || ''}`.trim()
+        if (locationObj.landmark) {
+          locationString += ` (Near ${locationObj.landmark})`
+        }
+      } catch (e) {
+        locationString = location
+      }
+    }
+
+    const updateData = { 
+      name, 
+      location: locationString, 
+      phone, 
+      email,
+      description,
+      cuisine,
+      priceRange,
+      deliveryTime,
+      isOpen,
+      rating,
+      timings
+    }
 
     // Only update image if a new file was uploaded
     if (req.file) {

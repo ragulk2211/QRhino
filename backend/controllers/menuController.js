@@ -1,10 +1,8 @@
-const { ObjectId } = require("mongodb")
-const { getDB } = require("../config/db")
+const Menu = require("../models/Menu")
 
 exports.getMenu = async (req, res) => {
   try {
-    const db = getDB()
-    const menu = await db.collection("menu").find().toArray()
+    const menu = await Menu.find()
     res.json(menu)
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch menu" })
@@ -13,71 +11,27 @@ exports.getMenu = async (req, res) => {
 
 exports.addMenu = async (req, res) => {
   try {
-    const db = getDB()
     const { name, desc, price, kcal, time, category } = req.body
 
     const imgUrl = req.file
       ? `http://localhost:5000/uploads/${req.file.filename}`
       : ""
 
-    const newItem = {
+    const newItem = new Menu({
       name,
       desc,
       price,
       kcal,
       time,
       category,
-      image: imgUrl,
-      createdAt: new Date()
-    }
+      image: imgUrl
+    })
 
-    const result = await db.collection("menu").insertOne(newItem)
+    await newItem.save()
 
-    res.status(201).json(result)
+    res.status(201).json(newItem)
 
   } catch (error) {
     res.status(500).json({ error: "Failed to add item" })
-  }
-}
-
-exports.deleteMenu = async (req, res) => {
-  try {
-    const db = getDB()
-
-    await db.collection("menu").deleteOne({
-      _id: new ObjectId(req.params.id)
-    })
-
-    res.json({ message: "Item removed successfully" })
-
-  } catch (error) {
-    res.status(500).json({ error: "Delete failed" })
-  }
-}
-
-exports.updateMenu = async (req, res) => {
-  try {
-    const db = getDB()
-
-    const { name, desc, price, kcal, time, category } = req.body
-
-    await db.collection("menu").updateOne(
-      { _id: new ObjectId(req.params.id) },
-      {
-        $set: {
-          name,
-          desc,
-          price,
-          kcal,
-          time,
-          category
-        }
-      }
-    )
-
-    res.json({ message: "Updated successfully" })
-
-  } catch (error) {
-    res.status(500).json({ error: "Update failed" })
   }
 }

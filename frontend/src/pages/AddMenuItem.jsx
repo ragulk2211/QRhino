@@ -113,20 +113,15 @@ function AddMenuItem() {
   const fetchCategories = async () => {
     setCategoriesLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/menu`);
+      const res = await fetch(`${API_BASE_URL}/api/categories`);
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
       const data = await res.json();
-      const uniqueCategories = [...new Set(data.map(item => item.category))].filter(Boolean);
-      if (uniqueCategories.length > 0) {
-        setCategories(uniqueCategories);
-      } else {
-        setCategories(["burgers", "pizza", "pasta", "soups", "salad", "desserts", "beverages"]);
-      }
+      setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching categories:", error);
-      setCategories(["burgers", "pizza", "pasta", "soups", "salad", "desserts", "beverages"]);
+      setCategories([]);
     } finally {
       setCategoriesLoading(false);
     }
@@ -275,6 +270,7 @@ function AddMenuItem() {
     setIsLoading(true);
     
     try {
+      const selectedCategory = categories.find(cat => cat._id === values.category);
       const formDataToSend = new FormData();
       formDataToSend.append("name", values.name.trim());
       formDataToSend.append("description", values.description.trim());
@@ -282,7 +278,8 @@ function AddMenuItem() {
       formDataToSend.append("discount", parseInt(values.discount) || 0);
       formDataToSend.append("kcal", parseInt(values.kcal) || 0);
       formDataToSend.append("time", parseInt(values.time) || 0);
-      formDataToSend.append("category", values.category);
+      formDataToSend.append("category", selectedCategory ? selectedCategory.name : "");
+      formDataToSend.append("categoryId", values.category);
       formDataToSend.append("foodType", values.foodType);
       formDataToSend.append("restaurantId", values.restaurantId);
       formDataToSend.append("image", imageFile);
@@ -630,8 +627,7 @@ function AddMenuItem() {
                         size="large"
                         style={{ width: "100%" }}
                         prefix={<FireOutlined />}
-                        formatter={value => value ? `${value} kcal` : '0 kcal'}
-                        parser={value => value ? value.replace(' kcal', '') : '0'}
+                        suffix="kcal"
                         onKeyDown={(e) => {
                           const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
                           if (!allowedKeys.includes(e.key) && !(e.key >= '0' && e.key <= '9')) {
@@ -646,8 +642,8 @@ function AddMenuItem() {
                       name="time"
                       label={
                         <Space>
-                          Prep Time (minutes)
-                          <Tooltip title="Enter preparation time in minutes (numbers only)">
+                          Prep Time (mins)
+                          <Tooltip title="Enter preparation time in minutes">
                             <InfoCircleOutlined style={{ color: '#ff8c42' }} />
                           </Tooltip>
                         </Space>
@@ -662,8 +658,7 @@ function AddMenuItem() {
                         size="large"
                         style={{ width: "100%" }}
                         prefix={<ClockCircleOutlined />}
-                        formatter={value => value ? `${value} min` : '0 min'}
-                        parser={value => value ? value.replace(' min', '') : '0'}
+                        suffix="mins"
                         onKeyDown={(e) => {
                           const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
                           if (!allowedKeys.includes(e.key) && !(e.key >= '0' && e.key <= '9')) {
@@ -695,8 +690,8 @@ function AddMenuItem() {
                         }
                       >
                         {categories.map(cat => (
-                          <Option key={cat} value={cat}>
-                            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                          <Option key={cat._id} value={cat._id}>
+                            {cat.name}
                           </Option>
                         ))}
                       </Select>
@@ -729,181 +724,102 @@ function AddMenuItem() {
 
                 <Row gutter={[24, 16]}>
                   <Col xs={24} sm={12}>
-                    <Form.Item name="isSpicy" label="Spicy" valuePropName="checked" className="menu-item-form-item">
+                    <Form.Item
+                      name="isSpicy"
+                      label="Spicy"
+                      valuePropName="checked"
+                      className="menu-item-form-item"
+                    >
                       <Switch 
-                        checkedChildren="🌶️ Spicy" 
-                        unCheckedChildren="Not Spicy"
+                        checkedChildren="🌶️" 
+                        unCheckedChildren="😊"
                       />
                     </Form.Item>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <Form.Item name="isRecommended" label="Recommendation" valuePropName="checked" className="menu-item-form-item">
+                    <Form.Item
+                      name="isRecommended"
+                      label="Recommended"
+                      valuePropName="checked"
+                      className="menu-item-form-item"
+                    >
                       <Switch 
-                        checkedChildren="⭐ Recommended" 
-                        unCheckedChildren="Not Recommended"
+                        checkedChildren="⭐" 
+                        unCheckedChildren=""
                       />
                     </Form.Item>
                   </Col>
                 </Row>
 
                 <Form.Item
-                  label="Item Image"
-                  required
+                  label="Image"
                   validateStatus={formErrors.image ? "error" : ""}
                   help={formErrors.image}
-                  tooltip="Upload a high-quality image of the dish (JPEG, PNG, WEBP up to 5MB)"
                   className="menu-item-form-item"
                 >
-                  <div className="menu-item-upload-area">
-                    {!imagePreview ? (
-                      <Upload.Dragger
-                        beforeUpload={handleImageUpload}
-                        showUploadList={false}
-                        accept="image/jpeg,image/jpg,image/png,image/webp"
-                        disabled={uploading}
-                      >
-                        <p className="ant-upload-drag-icon">
-                          {uploading ? <LoadingOutlined spin /> : <PictureOutlined />}
-                        </p>
-                        <p className="ant-upload-text">
-                          {uploading ? "Processing image..." : "Click or drag file to upload"}
-                        </p>
-                        <p className="ant-upload-hint">
-                          Support for JPG, PNG, WEBP. Max size 5MB. Recommended size: 800x600px
-                        </p>
-                      </Upload.Dragger>
+                  <Upload
+                    listType="picture-card"
+                    showUploadList={false}
+                    beforeUpload={handleImageUpload}
+                    accept="image/*"
+                    maxCount={1}
+                  >
+                    {imagePreview ? (
+                      <div style={{ position: 'relative' }}>
+                        <Image
+                          src={imagePreview}
+                          alt="Preview"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          preview={{
+                            visible: previewVisible,
+                            onVisibleChange: (visible) => setPreviewVisible(visible),
+                            src: previewImage,
+                          }}
+                        />
+                        <Button
+                          icon={<DeleteOutlined />}
+                          size="small"
+                          danger
+                          style={{ position: 'absolute', top: 5, right: 5 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveImage();
+                          }}
+                        />
+                      </div>
                     ) : (
-                      <div className="menu-item-image-preview">
-                        <div className="menu-item-image-preview-container">
-                          <Image
-                            src={imagePreview}
-                            alt="Preview"
-                            width={200}
-                            height={200}
-                            style={{ objectFit: "cover", borderRadius: 12, cursor: "pointer" }}
-                            preview={{
-                              visible: previewVisible,
-                              onVisibleChange: setPreviewVisible,
-                              src: imagePreview
-                            }}
-                            onClick={handlePreview}
-                          />
-                          <div className="menu-item-image-actions">
-                            <Tooltip title="Preview">
-                              <Button
-                                icon={<EyeOutlined />}
-                                onClick={handlePreview}
-                                size="small"
-                              />
-                            </Tooltip>
-                            <Tooltip title="Remove">
-                              <Button
-                                danger
-                                icon={<DeleteOutlined />}
-                                onClick={handleRemoveImage}
-                                size="small"
-                              />
-                            </Tooltip>
-                          </div>
-                        </div>
+                      <div>
+                        {uploading ? <LoadingOutlined /> : <PictureOutlined />}
+                        <div style={{ marginTop: 8 }}>Upload</div>
                       </div>
                     )}
-                  </div>
+                  </Upload>
                 </Form.Item>
 
                 <Divider />
 
                 <Form.Item>
-                  <Space size="middle" wrap>
+                  <Space>
                     <Button
                       type="primary"
                       htmlType="submit"
                       size="large"
-                      loading={isLoading}
                       icon={<SaveOutlined />}
+                      loading={isLoading}
                       className="menu-item-submit-btn"
                     >
-                      {isLoading ? "Adding Menu Item..." : "Add Menu Item"}
+                      Add Menu Item
                     </Button>
                     <Button
-                      onClick={onReset}
                       size="large"
                       icon={<ClearOutlined />}
-                      disabled={isLoading}
+                      onClick={onReset}
                       className="menu-item-reset-btn"
                     >
-                      Reset Form
+                      Reset
                     </Button>
                   </Space>
                 </Form.Item>
-
-                {formData.name && (
-                  <Alert
-                    title="📝 Form Summary"
-                    description={
-                      <div style={{ marginTop: 8 }}>
-                        <Row gutter={[8, 8]}>
-                          <Col span={12}><Text strong>Item Name:</Text> {formData.name}</Col>
-                          <Col span={12}><Text strong>Restaurant:</Text> {getRestaurantName(formData.restaurantId)}</Col>
-                          <Col span={12}><Text strong>Price:</Text> ₹{formData.price}</Col>
-                          <Col span={12}><Text strong>Category:</Text> {formData.category}</Col>
-                        </Row>
-                      </div>
-                    }
-                    type="info"
-                    showIcon
-                    className="menu-item-summary-alert"
-                  />
-                )}
-
-                {(!restaurants.length && !restaurantsLoading) && (
-                  <Alert
-                    title="⚠️ Connection Issue"
-                    description={
-                      <div>
-                        <p>Unable to connect to the server. Please check:</p>
-                        <ul style={{ margin: '8px 0 0 20px' }}>
-                          <li>Your internet connection</li>
-                          <li>Backend server is running on {API_BASE_URL}</li>
-                          <li>API endpoint is accessible</li>
-                        </ul>
-                        <Button 
-                          size="small" 
-                          onClick={() => {
-                            fetchRestaurants();
-                            fetchCategories();
-                          }}
-                          style={{ marginTop: 12 }}
-                          type="primary"
-                        >
-                          Retry Connection
-                        </Button>
-                      </div>
-                    }
-                    type="error"
-                    showIcon
-                    icon={<WarningOutlined />}
-                    className="menu-item-connection-alert"
-                  />
-                )}
-
-                <Alert
-                  title="💡 Pro Tips"
-                  description={
-                    <ul style={{ margin: 0, paddingLeft: 20 }}>
-                      <li>Use high-quality, well-lit images for better presentation</li>
-                      <li>Include key ingredients in the description for dietary information</li>
-                      <li>Set competitive prices based on local market rates</li>
-                      <li>Add discount offers to attract more customers</li>
-                      <li>Mark items as "Recommended" to highlight customer favorites</li>
-                      <li>All number fields (Price, Discount, Calories, Time) accept only numeric values</li>
-                      <li>Item name and description support text with special characters</li>
-                    </ul>
-                  }
-                  type="info"
-                  showIcon
-                  className="menu-item-tips-alert"
-                />
               </Form>
             </Card>
           </div>

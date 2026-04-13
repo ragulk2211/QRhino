@@ -1,0 +1,970 @@
+/* FoodCard Styles - Cream Color Theme with Professional Grid Layout */
+/* foodcard.css - Professional styling for Food Card component */
+
+/* =========================================
+   CSS VARIABLES - Consolidated and Cleaned
+========================================= */
+:root {
+  /* Colors - Cream/Brown Theme */
+  --cream-primary: #fff9f0;
+  --cream-secondary: #fff5e6;
+  --cream-dark: #f5e6d3;
+  --cream-darker: #e8d9c4;
+  --cream-border: #f0e1ce;
+  --gold-primary: #c9a87b;
+  --gold-dark: #b58d5c;
+  --gold-light: #e6d5b8;
+  --brown-dark: #8b6b4d;
+  --brown-text: #5a3e2b;
+  --brown-light: #b49476;
+  
+  /* Colors - Functional */
+  --color-primary: #b88b4a;
+  --color-primary-dark: #9c6e3d;
+  --color-primary-light: #d4a373;
+  --color-primary-alpha: rgba(184, 139, 74, 0.2);
+  --color-primary-soft: #f5efe0;
+  
+  /* Status Colors */
+  --success: #2ecc71;
+  --success-dark: #27ae60;
+  --danger: #e74c3c;
+  --warning: #f39c12;
+  
+  /* Text Colors */
+  --color-text-dark: #1a1a1a;
+  --color-text-muted: #6b7280;
+  --color-text-light: #9ca3af;
+  --color-text-white: #ffffff;
+  
+  /* Background Colors */
+  --color-bg-white: #ffffff;
+  --color-bg-light: #fefefe;
+  --color-bg-overlay: rgba(0, 0, 0, 0.5);
+  --color-bg-overlay-light: rgba(0, 0, 0, 0.3);
+  
+  /* Border Colors */
+  --color-border: #e5e7eb;
+  
+  /* Shadows - Cream Theme */
+  --shadow-sm: 0 2px 10px rgba(139, 107, 77, 0.08);
+  --shadow-md: 0 5px 20px rgba(139, 107, 77, 0.12);
+  --shadow-lg: 0 8px 30px rgba(139, 107, 77, 0.15);
+  --shadow-xl: 0 15px 40px rgba(139, 107, 77, 0.2);
+  --shadow-hover: 0 20px 40px rgba(139, 107, 77, 0.15);
+  --shadow-primary: 0 8px 16px rgba(184, 139, 74, 0.3);
+  --shadow-success: 0 8px 16px rgba(139, 154, 110, 0.3);
+  --shadow-badge: 0 2px 4px rgba(184, 139, 74, 0.2);
+  
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+  
+  /* Spacing */
+  --spacing-2xs: 3px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-size-2xs: 0.65rem;
+  --font-size-xs: 0.7rem;
+  --font-size-sm: 0.85rem;
+  --font-size-md: 0.9rem;
+  --font-size-lg: 0.95rem;
+  --font-size-xl: 1rem;
+  --font-size-2xl: 1.1rem;
+  --font-size-3xl: 1.2rem;
+  --font-size-4xl: 1.25rem;
+  --font-size-5xl: 1.3rem;
+  --font-size-6xl: 1.4rem;
+  
+  /* Transitions */
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-default: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-transform: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-scale: transform 0.5s ease;
+  
+  /* Z-index layers */
+  --z-base: 1;
+  --z-overlay: 2;
+  --z-tooltip: 3;
+  
+  /* Card Dimensions */
+  --card-max-width: 320px;
+  --card-min-height: 380px;
+  --image-height: 220px;
+  --button-height: 40px;
+  --badge-padding: 4px 10px;
+}
+
+/* =========================================
+   BASE STYLES
+========================================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: linear-gradient(135deg, var(--cream-primary) 0%, var(--cream-secondary) 100%);
+  color: var(--brown-text);
+}
+
+/* =========================================
+   FIXED: Grid Container - No huge empty space
+========================================= */
+.food-grid-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, var(--cream-primary) 0%, var(--cream-secondary) 100%);
+  border-radius: var(--radius-2xl);
+}
+
+/* =========================================
+   FIXED: Responsive Grid - Auto-fit for better layout
+========================================= */
+.food-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  margin: 0 auto;
+}
+
+/* =========================================
+   FOOD CARD - Main Component
+========================================= */
+.food-card {
+  background: linear-gradient(135deg, #ffffff 0%, var(--cream-primary) 100%);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  border: 1px solid var(--cream-border);
+  animation: fadeInUp 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+/* Staggered Animation for Cards */
+.food-card:nth-child(1) { animation-delay: 0.1s; }
+.food-card:nth-child(2) { animation-delay: 0.2s; }
+.food-card:nth-child(3) { animation-delay: 0.3s; }
+.food-card:nth-child(4) { animation-delay: 0.4s; }
+.food-card:nth-child(5) { animation-delay: 0.5s; }
+.food-card:nth-child(6) { animation-delay: 0.6s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card Hover Effect */
+.food-card:hover {
+  transform: translateY(-10px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--gold-light);
+  background: linear-gradient(135deg, #ffffff 0%, var(--cream-secondary) 100%);
+}
+
+/* =========================================
+   IMAGE SECTION
+========================================= */
+.image-wrapper {
+  position: relative;
+  width: 100%;
+  height: var(--image-height);
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--gold-light), var(--cream-dark));
+  flex-shrink: 0;
+}
+
+.image-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.food-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  object-position: center;
+}
+
+.food-card:hover .food-img {
+  transform: scale(1.08);
+}
+
+/* Image Overlay */
+.image-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(201, 168, 123, 0.2), rgba(139, 107, 77, 0.85));
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0;
+  transition: var(--transition);
+  z-index: var(--z-overlay);
+}
+
+.food-card:hover .image-overlay {
+  opacity: 1;
+  backdrop-filter: blur(8px);
+}
+
+.view-details-icon {
+  font-size: 1.5rem;
+  animation: bounce 0.5s ease;
+}
+
+.view-details-text {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* =========================================
+   BADGES
+========================================= */
+.badges-container {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: calc(var(--z-overlay) + 1);
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* Discount Badge */
+.discount-badge {
+  background: linear-gradient(135deg, var(--warning), #e67e22);
+  color: white;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 800;
+  box-shadow: var(--shadow-md);
+  animation: pulse 2s infinite;
+  letter-spacing: 0.5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.2;
+}
+
+.discount-percent {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.discount-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: var(--shadow-sm);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 8px rgba(243, 156, 18, 0.2);
+  }
+}
+
+/* New Badge */
+.new-badge {
+  background: linear-gradient(135deg, var(--success), var(--success-dark));
+  color: white;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 800;
+  box-shadow: var(--shadow-md);
+  letter-spacing: 0.5px;
+}
+
+/* Popular Badge */
+.popular-badge {
+  background: linear-gradient(135deg, #ff9800, #f57c00);
+  color: white;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 800;
+  box-shadow: var(--shadow-md);
+  letter-spacing: 0.5px;
+}
+
+/* =========================================
+   CONTENT SECTION
+========================================= */
+.food-content {
+  padding: var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: var(--spacing-md);
+}
+
+/* Header Section */
+.food-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.food-title {
+  font-size: var(--font-size-4xl);
+  font-weight: 700;
+  color: var(--brown-text);
+  margin: 0;
+  line-height: 1.3;
+  flex: 1;
+  word-break: break-word;
+  transition: color 0.3s ease;
+}
+
+.food-card:hover .food-title {
+  color: var(--gold-primary);
+}
+
+/* Badges Container */
+.food-badges {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.category-badge {
+  background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+  color: white;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  transition: var(--transition-default);
+}
+
+.category-badge:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Food Type Badge */
+.food-type-badge {
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition-default);
+}
+
+.food-type-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 1.5s infinite;
+}
+
+.food-type-badge.veg {
+  background: linear-gradient(135deg, var(--success), var(--success-dark));
+  color: white;
+}
+
+.food-type-badge.nonveg {
+  background: linear-gradient(135deg, var(--danger), #c0392b);
+  color: white;
+}
+
+/* Description */
+.food-description {
+  color: var(--brown-light);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 44px;
+  transition: color 0.3s ease;
+}
+
+/* =========================================
+   META INFORMATION
+========================================= */
+.food-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) 0;
+  border-top: 2px solid var(--cream-border);
+  border-bottom: 2px solid var(--cream-border);
+  margin: 4px 0;
+  background: linear-gradient(135deg, var(--cream-primary), var(--cream-secondary));
+  border-radius: var(--radius-md);
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex: 1;
+  justify-content: center;
+  transition: var(--transition-default);
+}
+
+.meta-item:hover {
+  transform: translateY(-2px);
+}
+
+.meta-icon {
+  font-size: var(--font-size-lg);
+  transition: transform 0.3s ease;
+}
+
+.meta-item:hover .meta-icon {
+  transform: scale(1.1);
+}
+
+.meta-value {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--brown-text);
+  transition: color 0.3s ease;
+}
+
+.meta-divider {
+  width: 1px;
+  height: 24px;
+  background: linear-gradient(to bottom, transparent, var(--cream-border), transparent);
+}
+
+/* =========================================
+   PRICE AND CART SECTION
+========================================= */
+.price-cart-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-xs);
+  padding-top: var(--spacing-sm);
+}
+
+.price-info {
+  flex: 1;
+}
+
+.discounted-price,
+.regular-price {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.currency {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--brown-light);
+}
+
+.amount {
+  font-size: var(--font-size-5xl);
+  font-weight: 800;
+  color: var(--gold-primary);
+  line-height: 1;
+}
+
+.original-price-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+}
+
+.original-price {
+  font-size: var(--font-size-xs);
+  color: var(--brown-light);
+  text-decoration: line-through;
+}
+
+.savings-badge {
+  background: linear-gradient(135deg, var(--success), var(--success-dark));
+  color: white;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* =========================================
+   CART BUTTON
+========================================= */
+.cart-btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+  color: white;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  position: relative;
+  overflow: hidden;
+  min-width: 120px;
+  box-shadow: var(--shadow-sm);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.cart-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.cart-btn:hover::before {
+  left: 100%;
+}
+
+.cart-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.cart-btn:active {
+  transform: translateY(0);
+}
+
+.cart-btn.added {
+  background: linear-gradient(135deg, var(--success), var(--success-dark));
+  animation: addedShake 0.5s ease;
+}
+
+@keyframes addedShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+.cart-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.9;
+}
+
+.btn-icon {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.3s ease;
+}
+
+.cart-btn:not(.added):hover .btn-icon {
+  transform: translateX(-2px);
+}
+
+.cart-btn.added .btn-icon {
+  animation: checkmarkSpin 0.5s ease;
+}
+
+@keyframes checkmarkSpin {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.2);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+.btn-text {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* =========================================
+   SECTION HEADER
+========================================= */
+.menu-section-header {
+  text-align: center;
+  margin-bottom: 40px;
+  animation: fadeInDown 0.6s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menu-section-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--brown-text);
+  margin-bottom: 10px;
+  position: relative;
+  display: inline-block;
+}
+
+.menu-section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold-primary), var(--gold-dark));
+  border-radius: var(--radius-full);
+  animation: expandWidth 0.6s ease-out;
+}
+
+@keyframes expandWidth {
+  from {
+    width: 0;
+  }
+  to {
+    width: 60px;
+  }
+}
+
+.menu-section-subtitle {
+  color: var(--brown-light);
+  font-size: var(--font-size-md);
+  margin-top: 15px;
+}
+
+/* =========================================
+   NO ITEMS STATE
+========================================= */
+.no-items {
+  text-align: center;
+  padding: 60px 20px;
+  background: linear-gradient(135deg, var(--cream-primary), var(--cream-secondary));
+  border-radius: var(--radius-xl);
+  color: var(--brown-light);
+  font-size: var(--font-size-lg);
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* =========================================
+   RESPONSIVE DESIGN
+========================================= */
+@media (max-width: 1200px) {
+  .food-grid {
+    gap: 25px;
+  }
+  
+  .food-grid-container {
+    padding: 30px 20px;
+  }
+}
+
+@media (max-width: 900px) {
+  .food-grid {
+    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  
+  .food-grid-container {
+    padding: 25px 15px;
+  }
+  
+  .image-wrapper {
+    height: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .food-grid {
+    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+  
+  .image-wrapper {
+    height: 180px;
+  }
+  
+  .food-content {
+    padding: var(--spacing-lg);
+  }
+  
+  .food-title {
+    font-size: var(--font-size-3xl);
+  }
+  
+  .menu-section-title {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .food-grid {
+    gap: 20px;
+    grid-template-columns: 1fr;
+  }
+  
+  .food-card {
+    max-width: 100%;
+  }
+  
+  .image-wrapper {
+    height: 200px;
+  }
+  
+  .price-cart-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+  
+  .cart-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .food-grid-container {
+    padding: 20px 12px;
+  }
+  
+  .image-wrapper {
+    height: 180px;
+  }
+  
+  .food-content {
+    padding: var(--spacing-md);
+  }
+  
+  .food-title {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .food-header {
+    flex-direction: column;
+  }
+  
+  .food-badges {
+    width: 100%;
+  }
+  
+  .menu-section-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* =========================================
+   ACCESSIBILITY & UTILITIES
+========================================= */
+.food-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--gold-primary);
+  transform: scale(1.02);
+}
+
+.cart-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--gold-primary);
+}
+
+/* Loading Animation */
+.food-card.loading {
+  pointer-events: none;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cream-primary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--gold-dark), var(--brown-dark));
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .food-card:hover {
+    transform: none;
+  }
+  
+  .food-card:hover .food-img {
+    transform: none;
+  }
+  
+  .image-overlay {
+    opacity: 1;
+    background: linear-gradient(to top, rgba(139, 107, 77, 0.7), transparent);
+  }
+  
+  .cart-btn:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .food-card:hover {
+    transform: none;
+  }
+  
+  .food-card:hover .food-img {
+    transform: none;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .food-grid-container {
+    background: white;
+    padding: 20px;
+  }
+  
+  .food-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+  
+  .cart-btn,
+  .image-overlay,
+  .discount-badge {
+    display: none;
+  }
+}

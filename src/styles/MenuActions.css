@@ -1,0 +1,307 @@
+/* Menu Actions Container */
+.menu-actions-container {
+  background: linear-gradient(135deg, var(--cream-light) 0%, var(--cream) 100%);
+  padding: 2rem;
+  border-radius: 24px;
+  margin: 2rem auto;
+  max-width: 800px;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative Background Elements */
+.menu-actions-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(184, 149, 110, 0.03) 0%, transparent 70%);
+  pointer-events: none;
+  animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.menu-actions-wrapper {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+/* Base Button Styles */
+.action-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+  overflow: hidden;
+  min-width: 200px;
+  backdrop-filter: blur(10px);
+}
+
+/* Button Icon */
+.btn-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke: currentColor;
+  stroke-width: 2;
+  transition: var(--transition);
+}
+
+/* Button Text */
+.btn-text {
+  position: relative;
+  z-index: 2;
+}
+
+/* Add Menu Button Styles */
+.add-menu-btn {
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+}
+
+.add-menu-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.add-menu-btn:hover::before {
+  left: 100%;
+}
+
+.add-menu-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+  background: linear-gradient(135deg, #229954 0%, #1e8449 100%);
+}
+
+.add-menu-btn:active {
+  transform: translateY(0);
+}
+
+/* Remove Menu Button Styles */
+.remove-menu-btn {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.remove-menu-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.remove-menu-btn:hover::before {
+  left: 100%;
+}
+
+.remove-menu-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+}
+
+.remove-menu-btn:active {
+  transform: translateY(0);
+}
+
+/* Ripple Effect */
+.action-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: ripple-animation 0.6s linear;
+  pointer-events: none;
+}
+
+@keyframes ripple-animation {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Loading State */
+.action-btn.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.action-btn.loading .btn-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Disabled State */
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .menu-actions-container {
+    margin: 1rem;
+    padding: 1.5rem;
+    border-radius: 20px;
+  }
+
+  .menu-actions-wrapper {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .action-btn {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    min-width: auto;
+  }
+
+  .btn-text {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-actions-container {
+    margin: 0.75rem;
+    padding: 1rem;
+    border-radius: 16px;
+  }
+
+  .action-btn {
+    padding: 0.75rem 1.25rem;
+  }
+
+  .btn-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .btn-text {
+    font-size: 0.875rem;
+  }
+}
+
+/* Hover Effects for Touch Devices */
+@media (hover: hover) {
+  .action-btn:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Animation for Button Appear */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menu-actions-container {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Focus Styles */
+.action-btn:focus-visible {
+  outline: 2px solid var(--brown);
+  outline-offset: 2px;
+}
+
+/* Optional: Add Tooltip on Hover */
+.action-btn {
+  position: relative;
+}
+
+.action-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text-dark);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: var(--transition);
+  margin-bottom: 0.5rem;
+  z-index: 10;
+}
+
+.action-btn:hover::after {
+  opacity: 1;
+}
+
+/* Custom tooltip for add button */
+.add-menu-btn::after {
+  content: "Add new items to your menu";
+}
+
+.remove-menu-btn::after {
+  content: "Remove existing items from your menu";
+}
+
+/* Responsive tooltip */
+@media (max-width: 768px) {
+  .action-btn::after {
+    display: none;
+  }
+}

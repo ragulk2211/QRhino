@@ -1,0 +1,708 @@
+/* =========================================
+   ADMIN DASHBOARD STYLES
+   Light Orange & Cream Theme
+   Prefix: admin-dash-
+========================================= */
+
+/* Light Color Variables */
+:root {
+  --light-orange: #ffb347;
+  --light-orange-primary: #ff9f4a;
+  --light-orange-soft: #ffc08a;
+  --light-orange-pale: #ffe0c4;
+  --cream: #fffef7;
+  --cream-light: #ffffff;
+  --cream-soft: #fffbf5;
+  --cream-warm: #fff9f0;
+  --peach: #ffe5cc;
+  --apricot: #ffd9b5;
+  --brown-soft: #c9a87c;
+  --brown-light: #b87a4a;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-orange: 0 4px 12px rgba(255, 159, 74, 0.15);
+  --shadow-orange-lg: 0 8px 24px rgba(255, 159, 74, 0.2);
+  
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  
+  /* Transitions */
+  --transition: all 0.3s ease;
+}
+
+/* Container */
+.admin-dash-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fffef7 0%, #fffbf5 50%, #fff9f0 100%);
+  padding: var(--space-lg);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Content Wrapper */
+.admin-dash-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  animation: adminDashFadeIn 0.5s ease;
+}
+
+@keyframes adminDashFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom Scrollbar */
+.admin-dash-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.admin-dash-container::-webkit-scrollbar-track {
+  background: #fff9f0;
+  border-radius: 10px;
+}
+
+.admin-dash-container::-webkit-scrollbar-thumb {
+  background: var(--light-orange-primary);
+  border-radius: 10px;
+}
+
+.admin-dash-container::-webkit-scrollbar-thumb:hover {
+  background: var(--light-orange);
+}
+
+/* Breadcrumb */
+.admin-dash-breadcrumb {
+  margin-bottom: var(--space-lg);
+}
+
+.admin-dash-breadcrumb .ant-breadcrumb-link a {
+  color: var(--light-orange-primary);
+  transition: var(--transition);
+}
+
+.admin-dash-breadcrumb .ant-breadcrumb-link a:hover {
+  color: var(--light-orange);
+}
+
+.admin-dash-breadcrumb .ant-breadcrumb-separator {
+  color: var(--brown-soft);
+}
+
+/* Header */
+.admin-dash-header {
+  background: var(--cream-light);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  margin-bottom: var(--space-xl);
+  border: 1px solid var(--light-orange-pale);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+}
+
+.admin-dash-header:hover {
+  box-shadow: var(--shadow-orange);
+  border-color: var(--light-orange-soft);
+}
+
+.admin-dash-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.admin-dash-header-avatar {
+  background: var(--cream-warm);
+  color: var(--light-orange-primary);
+  border: 2px solid var(--light-orange-pale);
+}
+
+.admin-dash-title {
+  margin: 0;
+  color: var(--brown-light);
+  font-weight: 700;
+}
+
+.admin-dash-subtitle {
+  display: block;
+  margin-top: var(--space-xs);
+  color: var(--brown-soft);
+}
+
+.admin-dash-time-tag {
+  background: var(--cream-warm);
+  border: 1px solid var(--light-orange-pale);
+  color: var(--light-orange-primary);
+  border-radius: var(--radius-full);
+}
+
+.admin-dash-back-btn {
+  border-radius: var(--radius-full);
+  border: 1px solid var(--light-orange-pale);
+  background: white;
+  color: var(--brown-light);
+  transition: var(--transition);
+  height: 40px;
+}
+
+.admin-dash-back-btn:hover {
+  border-color: var(--light-orange-primary);
+  color: var(--light-orange-primary);
+  transform: translateY(-2px);
+}
+
+/* Stats Section */
+.admin-dash-stats-section {
+  margin-bottom: var(--space-xl);
+}
+
+.admin-dash-section-header {
+  margin-bottom: var(--space-lg);
+}
+
+.admin-dash-section-title {
+  color: var(--brown-light);
+  margin-bottom: var(--space-xs);
+  font-weight: 600;
+}
+
+/* Stat Card */
+.admin-dash-stat-card {
+  background: var(--cream-light);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--light-orange-pale);
+  transition: var(--transition);
+  height: 100%;
+  text-align: center;
+}
+
+.admin-dash-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-orange);
+  border-color: var(--light-orange-soft);
+}
+
+.admin-dash-stat-icon {
+  font-size: 2.5rem;
+  color: var(--light-orange-primary);
+  margin-bottom: var(--space-md);
+}
+
+.admin-dash-statistic .ant-statistic-title {
+  color: var(--brown-soft);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.admin-dash-stat-trend {
+  margin-top: var(--space-sm);
+}
+
+.admin-dash-trend-tag {
+  background: var(--cream-warm);
+  border: 1px solid var(--light-orange-pale);
+  color: var(--light-orange-primary);
+  border-radius: var(--radius-full);
+}
+
+.admin-dash-stat-skeleton {
+  margin-top: var(--space-sm);
+}
+
+/* Quick Actions Section */
+.admin-dash-actions-section {
+  margin-bottom: var(--space-xl);
+}
+
+/* Action Card */
+.admin-dash-action-card {
+  background: var(--cream-light);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--light-orange-pale);
+  transition: var(--transition);
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+}
+
+.admin-dash-action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-orange);
+  border-color: var(--light-orange-soft);
+}
+
+.admin-dash-action-icon {
+  font-size: 2rem;
+  width: 60px;
+  height: 60px;
+  background: var(--cream-warm);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.admin-dash-action-card:hover .admin-dash-action-icon {
+  transform: scale(1.05);
+}
+
+.admin-dash-action-content {
+  flex: 1;
+}
+
+.admin-dash-action-title {
+  margin: 0 0 var(--space-xs) 0;
+  color: var(--brown-light);
+  font-weight: 600;
+}
+
+.admin-dash-action-desc {
+  display: block;
+  margin-bottom: var(--space-sm);
+  color: var(--brown-soft);
+  font-size: 0.875rem;
+}
+
+.admin-dash-action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--light-orange-primary);
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.admin-dash-action-card:hover .admin-dash-action-link {
+  gap: var(--space-md);
+}
+
+/* Activity Card */
+.admin-dash-activity-card,
+.admin-dash-tips-card {
+  background: var(--cream-light);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--light-orange-pale);
+  height: 100%;
+}
+
+.admin-dash-activity-card .ant-card-head,
+.admin-dash-tips-card .ant-card-head {
+  border-bottom: 1px solid var(--light-orange-pale);
+  background: var(--cream-warm);
+}
+
+.admin-dash-activity-card .ant-card-head-title,
+.admin-dash-tips-card .ant-card-head-title {
+  font-weight: 600;
+  color: var(--brown-light);
+}
+
+.admin-dash-badge .ant-badge-count {
+  background: var(--light-orange-primary);
+}
+
+/* Custom Activity List */
+.admin-dash-activity-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.admin-dash-activity-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-dash-activity-list::-webkit-scrollbar-track {
+  background: var(--light-orange-pale);
+  border-radius: 10px;
+}
+
+.admin-dash-activity-list::-webkit-scrollbar-thumb {
+  background: var(--light-orange-primary);
+  border-radius: 10px;
+}
+
+.admin-dash-activity-item {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--light-orange-pale);
+  transition: var(--transition);
+}
+
+.admin-dash-activity-item:hover {
+  background: var(--cream-soft);
+  border-radius: var(--radius-md);
+}
+
+.admin-dash-activity-item-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.admin-dash-activity-details {
+  flex: 1;
+}
+
+.admin-dash-activity-avatar {
+  background: var(--cream-warm);
+  color: var(--light-orange-primary);
+  flex-shrink: 0;
+}
+
+.admin-dash-activity-avatar.success {
+  background: rgba(82, 196, 26, 0.1);
+  color: #52c41a;
+}
+
+.admin-dash-activity-avatar.warning {
+  background: rgba(250, 173, 20, 0.1);
+  color: #faad14;
+}
+
+.admin-dash-activity-avatar.info {
+  background: rgba(255, 159, 74, 0.1);
+  color: var(--light-orange-primary);
+}
+
+.admin-dash-activity-action {
+  color: var(--brown-light);
+}
+
+.admin-dash-activity-tag {
+  background: var(--cream-warm);
+  border: 1px solid var(--light-orange-pale);
+  color: var(--light-orange-primary);
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+}
+
+.admin-dash-activity-time {
+  font-size: 0.75rem;
+  display: block;
+  margin-top: var(--space-xs);
+}
+
+/* Timeline/Tips */
+.admin-dash-timeline {
+  padding: var(--space-md);
+}
+
+.admin-dash-timeline .ant-timeline-item {
+  padding-bottom: var(--space-lg);
+}
+
+.admin-dash-timeline-dot {
+  width: 32px;
+  height: 32px;
+  background: var(--cream-warm);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--light-orange-primary);
+  border: 1px solid var(--light-orange-pale);
+}
+
+.admin-dash-tip-text {
+  color: var(--brown-soft);
+  line-height: 1.5;
+}
+
+/* Progress Section */
+.admin-dash-progress-section {
+  margin-top: var(--space-xl);
+}
+
+.admin-dash-progress-card {
+  background: linear-gradient(135deg, var(--cream-warm), var(--cream-light));
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--light-orange-pale);
+}
+
+.admin-dash-progress-left {
+  text-align: center;
+}
+
+.admin-dash-progress-icon {
+  font-size: 3rem;
+  color: var(--light-orange-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.admin-dash-progress-title {
+  margin: 0;
+  color: var(--brown-light);
+}
+
+.admin-dash-progress-stats {
+  padding: var(--space-md);
+}
+
+.admin-dash-progress-item {
+  margin-bottom: var(--space-lg);
+}
+
+.admin-dash-progress-label {
+  color: var(--brown-soft);
+  margin-bottom: var(--space-sm);
+  font-weight: 500;
+}
+
+.admin-dash-progress-bar .ant-progress-bg {
+  background: var(--light-orange-primary);
+}
+
+/* Milestone */
+.admin-dash-milestone {
+  text-align: center;
+  padding: var(--space-md);
+  background: var(--cream-soft);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+
+.admin-dash-milestone:hover {
+  transform: translateY(-2px);
+  background: var(--cream-warm);
+}
+
+.admin-dash-milestone-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--light-orange-primary);
+}
+
+.admin-dash-milestone-label {
+  color: var(--brown-soft);
+  font-size: 0.75rem;
+  margin-top: var(--space-xs);
+}
+
+/* Alerts */
+.admin-dash-loading-alert,
+.admin-dash-welcome-alert {
+  margin-top: var(--space-lg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--light-orange-pale);
+}
+
+.admin-dash-loading-alert {
+  background: rgba(255, 159, 74, 0.05);
+}
+
+.admin-dash-welcome-alert {
+  background: rgba(82, 196, 26, 0.05);
+  border-left: 4px solid #52c41a;
+}
+
+.admin-dash-welcome-alert .ant-alert-message,
+.admin-dash-loading-alert .ant-alert-message {
+  color: var(--brown-light);
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .admin-dash-container {
+    padding: var(--space-md);
+  }
+  
+  .admin-dash-header {
+    padding: var(--space-lg);
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-dash-container {
+    padding: var(--space-sm);
+  }
+  
+  .admin-dash-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .admin-dash-header-left {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .admin-dash-title {
+    font-size: 1.5rem;
+  }
+  
+  .admin-dash-action-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .admin-dash-action-link {
+    justify-content: center;
+  }
+  
+  .admin-dash-milestone-value {
+    font-size: 1.5rem;
+  }
+  
+  .admin-dash-activity-item-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .admin-dash-activity-details {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-dash-stat-icon {
+    font-size: 2rem;
+  }
+  
+  .admin-dash-action-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+  }
+  
+  .admin-dash-milestone-value {
+    font-size: 1.25rem;
+  }
+  
+  .admin-dash-section-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* Empty State */
+.ant-empty-description {
+  color: var(--brown-soft);
+}
+
+/* Loading Skeleton Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Hover Effects */
+.admin-dash-stat-card,
+.admin-dash-action-card,
+.admin-dash-milestone {
+  will-change: transform;
+}
+
+/* Add this to your existing AdminDashboard.css file */
+
+/* Custom Timeline - Replaces deprecated Ant Design Timeline */
+.admin-dash-custom-timeline {
+  padding: var(--space-md);
+}
+
+.admin-dash-custom-timeline-item {
+  display: flex;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  position: relative;
+}
+
+.admin-dash-custom-timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 32px;
+  bottom: -20px;
+  width: 2px;
+  background: linear-gradient(135deg, var(--light-orange-pale), var(--light-orange-soft));
+}
+
+.admin-dash-custom-timeline-dot {
+  width: 32px;
+  height: 32px;
+  background: var(--cream-warm);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--light-orange-primary);
+  border: 1px solid var(--light-orange-pale);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.admin-dash-custom-timeline-content {
+  flex: 1;
+  padding-top: 4px;
+}
+
+.admin-dash-custom-timeline-content .admin-dash-tip-text {
+  color: var(--brown-soft);
+  line-height: 1.5;
+  display: block;
+}
+
+/* Responsive adjustments for custom timeline */
+@media (max-width: 768px) {
+  .admin-dash-custom-timeline-item {
+    gap: var(--space-md);
+  }
+  
+  .admin-dash-custom-timeline-dot {
+    width: 28px;
+    height: 28px;
+    font-size: 0.875rem;
+  }
+  
+  .admin-dash-custom-timeline-item:not(:last-child)::before {
+    left: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-dash-custom-timeline-dot {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+  }
+  
+  .admin-dash-custom-timeline-item:not(:last-child)::before {
+    left: 12px;
+  }
+}

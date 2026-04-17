@@ -108,6 +108,10 @@ function EditMenuItem() {
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
 
+<<<<<<< HEAD
+=======
+      // Fix: Don't use placeholder.com
+>>>>>>> 05ec542275b1e10bcf483ed8339c70e7aa99c497
       let imageUrl = "";
       if (data.image) {
         if (data.image.startsWith("http")) {
@@ -653,9 +657,14 @@ function EditMenuItem() {
               </Space>
             </div>
 
+<<<<<<< HEAD
             {/* FIXED: Changed Alert component - removed 'message' prop, using 'title' instead */}
             <Alert
               title="💡 Pro Tips"
+=======
+            <Alert
+              message="💡 Pro Tips"
+>>>>>>> 05ec542275b1e10bcf483ed8339c70e7aa99c497
               description={
                 <ul style={{ margin: 0, paddingLeft: 20 }}>
                   <li>Set attractive discounts to boost sales</li>

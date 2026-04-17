@@ -69,8 +69,7 @@ function Menu() {
       } else {
         setShowScrollTop(false);
       }
-      // Check if scrolled past header for category tabs styling
-      if (window.scrollY > 60) {
+      if (window.scrollY > 100) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
@@ -341,6 +340,8 @@ function Menu() {
               prefix={<SearchOutlined />}
             />
           </div>
+        </div>
+        <div className="filter-tabs-row">
           <div className="filter-tabs">
             <button 
               onClick={() => setFoodTypeFilter("all")}
@@ -364,7 +365,6 @@ function Menu() {
         </div>
       </div>
 
-      {/* Category Tabs - FIXED/STICKY */}
       {Object.keys(menuData).length > 0 && (
         <div className={`category-tabs-wrapper ${isScrolled ? 'scrolled' : ''}`}>
           <div className="category-tabs">
@@ -623,7 +623,6 @@ function Menu() {
                 <EditOutlined /> Edit
               </Button>
             </div>
-            
           </div>
         )}
       </Modal>

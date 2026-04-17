@@ -13,6 +13,7 @@ const paymentRoutes = require("./routes/paymentRoutes")
 const categoryRoutes = require("./routes/categoryRoutes")
 const orderRoutes = require("./routes/orderRoutes")
 const couponRoutes = require("./routes/couponRoutes")
+const adminRoutes = require("./routes/adminRoutes")
 
 const Restaurant = require("./models/Restaurant")
 const Menu = require("./models/Menu")
@@ -66,6 +67,7 @@ app.use("/api/payments", paymentRoutes)
 app.use("/api/categories", categoryRoutes)
 app.use("/api/orders", orderRoutes)
 app.use("/api/coupons", couponRoutes)
+app.use("/api/admin", adminRoutes)
 
 
 // =========================

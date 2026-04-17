@@ -1,8 +1,9 @@
-import "../styles/card.css"
-import { useNavigate } from "react-router-dom"
+// Card.jsx
+import { useNavigate } from "react-router-dom";
+import "./Card.css";
 
 function CategoryCard({ category }) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <div
@@ -10,19 +11,21 @@ function CategoryCard({ category }) {
       onClick={() => navigate(category.path)}
       role="button"
       tabIndex={0}
-      onKeyPress={(e) => {
+      onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
-          navigate(category.path)
+          navigate(category.path);
         }
       }}
     >
-      <img src={category.image} alt={category.title} loading="lazy" />
-      <div className="card-overlay">
-        <h2>{category.title}</h2>
-        <p>{category.desc}</p>
+      <div className="category-card-image">
+        <img src={category.image} alt={category.title} loading="lazy" />
+      </div>
+      <div className="category-card-overlay">
+        <h3 className="category-card-title">{category.title}</h3>
+        <p className="category-card-desc">{category.desc}</p>
       </div>
     </div>
-  )
+  );
 }
 
-export default CategoryCard
+export default CategoryCard;

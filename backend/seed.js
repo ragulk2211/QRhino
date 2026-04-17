@@ -4,6 +4,8 @@ const { connectDB } = require("./config/db")
 const Restaurant = require("./models/Restaurant")
 const Menu = require("./models/Menu")
 const Payment = require("./models/payment")
+const User = require("./models/users")
+const bcrypt = require("bcryptjs")
 
 async function seed() {
 
@@ -96,6 +98,24 @@ async function seed() {
   }
 
   console.log("✅ Database seeding complete")
+
+  // Create super admin user
+  const superAdminCount = await User.countDocuments({ role: "superadmin" })
+  
+  if (superAdminCount === 0) {
+    const hashedPassword = await bcrypt.hash("superadmin123", 10)
+    
+    await User.create({
+      name: "Super Admin",
+      email: "super@admin.com",
+      password: hashedPassword,
+      role: "superadmin"
+    })
+    
+    console.log("✅ Super admin user created")
+  } else {
+    console.log("ℹ️  Super admin already exists, skipping")
+  }
 
   process.exit(0)
 

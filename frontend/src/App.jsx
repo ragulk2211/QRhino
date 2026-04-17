@@ -9,30 +9,33 @@ import CreateCategory from "./pages/CreateCategory"
 import QRGenerator from "./pages/QRGenerator"
 import EditRestaurant from "./pages/EditRestaurant"
 import Kitchen from "./pages/Kitchen"
-import Cart from "./pages/cart";
+import Cart from "./pages/cart"
 import Breakfast from "./pages/Breakfast"
 import Burgers from "./pages/Burgers"
 import EditMenuItem from "./pages/EditMenuItem"
-
-import RestaurantMenu from "./pages/RestaurantMenu";
-
+import RestaurantMenu from "./pages/RestaurantMenu"
 import CouponManagement from "./pages/CouponManagement"
-
+import Login from "./pages/Login"
+import SuperAdminDashboard from "./pages/SuperAdminDashboard"
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
-
         <Route path="/menu/main" element={<Menu />} />
-
         <Route path="/menu/:restaurantId" element={<Menu />} />
-
         <Route path="/cart" element={<Cart />} />
+        <Route path="/breakfast" element={<Breakfast />} />
+        <Route path="/burgers" element={<Burgers />} />
+        <Route path="/login" element={<Login />} />
+
+        {/* Kitchen */}
         <Route path="/kitchen" element={<Kitchen />} />
 
+        {/* Admin */}
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/create-restaurant" element={<CreateRestaurant />} />
         <Route path="/admin/edit-restaurant/:id" element={<EditRestaurant />} />
@@ -40,13 +43,12 @@ function App() {
         <Route path="/admin/add-item" element={<AddMenuItem />} />
         <Route path="/admin/qr-generator" element={<QRGenerator />} />
         <Route path="/admin/coupons" element={<CouponManagement />} />
-        
+
+        {/* Super Admin */}
+        <Route path="/superadmin" element={<SuperAdminDashboard />} />
+
+        {/* Menu Management */}
         <Route path="/add-item" element={<AddMenuItem />} />
-
-        <Route path="/breakfast" element={<Breakfast />} />
-
-        <Route path="/burgers" element={<Burgers />} />
-
         <Route path="/edit-item/:id" element={<EditMenuItem />} />
         <Route path="/restaurant/menu" element={<RestaurantMenu />} />
 

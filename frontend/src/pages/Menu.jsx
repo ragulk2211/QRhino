@@ -1,22 +1,19 @@
-// Menu.jsx - Complete fixed file
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Typography,
   Button,
-  Space,
   Spin,
   Empty,
-  Tag,
   Modal,
   message,
   Badge,
   Divider,
   Drawer,
-  Input
+  Input,
+  Tag
 } from "antd";
 import {
-  ArrowLeftOutlined,
   ShoppingCartOutlined,
   PlusOutlined,
   DeleteOutlined,
@@ -30,7 +27,8 @@ import {
   MinusOutlined,
   PlusCircleOutlined,
   UpOutlined,
-  SearchOutlined
+  SearchOutlined,
+  ArrowLeftOutlined
 } from "@ant-design/icons";
 import API_BASE_URL from "../config";
 import "../styles/menu.css";
@@ -56,21 +54,26 @@ function Menu() {
   const [cartDrawerVisible, setCartDrawerVisible] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [pulseAnimation, setPulseAnimation] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  // Load cart from localStorage on mount
   useEffect(() => {
     loadCartFromStorage();
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Listen for scroll events
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 400) {
         setShowScrollTop(true);
       } else {
         setShowScrollTop(false);
+      }
+      // Check if scrolled past header for category tabs styling
+      if (window.scrollY > 60) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
       }
     };
     window.addEventListener('scroll', handleScroll);
@@ -123,11 +126,7 @@ function Menu() {
     });
     setPulseAnimation(true);
     setTimeout(() => setPulseAnimation(false), 600);
-    message.success({
-      content: `${item.name} added to cart!`,
-      icon: <CheckCircleOutlined />,
-      duration: 2
-    });
+    message.success(`${item.name} added to cart!`);
   };
 
   const removeFromCart = (itemId) => {
@@ -156,20 +155,6 @@ function Menu() {
     );
   };
 
-  const clearCart = () => {
-    Modal.confirm({
-      title: "Clear Cart",
-      content: "Are you sure you want to clear your entire cart?",
-      okText: "Yes",
-      cancelText: "No",
-      okButtonProps: { danger: true },
-      onOk: () => {
-        setCartItems([]);
-        message.success("Cart cleared");
-      }
-    });
-  };
-
   const proceedToCheckout = () => {
     if (cartItems.length === 0) {
       message.warning("Your cart is empty");
@@ -179,12 +164,10 @@ function Menu() {
     navigate("/cart");
   };
 
-  // FETCH MENU
   useEffect(() => {
     fetchMenu();
   }, [restaurantId, categoryParam]);
 
-  // Filter menu data based on foodTypeFilter and searchTerm
   useEffect(() => {
     let filtered = { ...originalData };
     
@@ -258,7 +241,7 @@ function Menu() {
         grouped[category].push(item);
       });
 
-      const categoryOrder = ["burgers", "salad", "rajasthani", "arabic-food", "pizza", "starters", "soups", "others"];
+      const categoryOrder = ["burgers", "pizza", "salad", "rajasthani", "arabic-food", "starters", "soups", "others"];
       const sortedGrouped = {};
       categoryOrder.forEach(cat => {
         if (grouped[cat]) sortedGrouped[cat] = grouped[cat];
@@ -350,7 +333,7 @@ function Menu() {
           </button>
           <div className="search-wrapper-header">
             <Input
-              placeholder="Search for delicious food..."
+              placeholder="Search menu..."
               allowClear
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -358,32 +341,32 @@ function Menu() {
               prefix={<SearchOutlined />}
             />
           </div>
-        </div>
-        
-        <div className="filter-tabs">
-          <button 
-            onClick={() => setFoodTypeFilter("all")}
-            className={`filter-tab ${foodTypeFilter === "all" ? "active" : ""}`}
-          >
-            All
-          </button>
-          <button 
-            onClick={() => setFoodTypeFilter("veg")}
-            className={`filter-tab ${foodTypeFilter === "veg" ? "active" : ""}`}
-          >
-            <CheckCircleOutlined /> Veg
-          </button>
-          <button 
-            onClick={() => setFoodTypeFilter("nonveg")}
-            className={`filter-tab ${foodTypeFilter === "nonveg" ? "active" : ""}`}
-          >
-            <FireOutlined /> Non-Veg
-          </button>
+          <div className="filter-tabs">
+            <button 
+              onClick={() => setFoodTypeFilter("all")}
+              className={`filter-tab ${foodTypeFilter === "all" ? "active" : ""}`}
+            >
+              All
+            </button>
+            <button 
+              onClick={() => setFoodTypeFilter("veg")}
+              className={`filter-tab ${foodTypeFilter === "veg" ? "active" : ""}`}
+            >
+              <CheckCircleOutlined /> Veg
+            </button>
+            <button 
+              onClick={() => setFoodTypeFilter("nonveg")}
+              className={`filter-tab ${foodTypeFilter === "nonveg" ? "active" : ""}`}
+            >
+              <FireOutlined /> Non-Veg
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Category Tabs - FIXED/STICKY */}
       {Object.keys(menuData).length > 0 && (
-        <div className="category-tabs-wrapper">
+        <div className={`category-tabs-wrapper ${isScrolled ? 'scrolled' : ''}`}>
           <div className="category-tabs">
             {Object.keys(menuData).map(category => (
               <button
@@ -392,7 +375,7 @@ function Menu() {
                   setActiveCategory(category);
                   const element = document.getElementById(`category-${category}`);
                   if (element) {
-                    const offset = 70;
+                    const offset = 120;
                     const elementPosition = element.getBoundingClientRect().top;
                     const offsetPosition = elementPosition + window.pageYOffset - offset;
                     window.scrollTo({
@@ -447,7 +430,7 @@ function Menu() {
                           <span className="discount-badge">-{food.discount}%</span>
                         )}
                         {food.bestseller && (
-                          <span className="bestseller-badge">⭐</span>
+                          <span className="bestseller-badge">⭐ Bestseller</span>
                         )}
                       </div>
                       <div className="menu-item-info">
@@ -490,6 +473,7 @@ function Menu() {
                             icon={<ShoppingCartOutlined />}
                             onClick={() => addToCart(food)}
                             className="add-to-cart-btn"
+                            size="small"
                           >
                             Add
                           </Button>
@@ -497,6 +481,7 @@ function Menu() {
                             icon={<EyeOutlined />}
                             onClick={() => viewDetails(food)}
                             className="view-btn"
+                            size="small"
                           >
                             View
                           </Button>
@@ -506,6 +491,7 @@ function Menu() {
                             onClick={() => deleteItem(food._id)}
                             className="delete-btn"
                             type="text"
+                            size="small"
                           />
                         </div>
                       </div>
@@ -637,6 +623,7 @@ function Menu() {
                 <EditOutlined /> Edit
               </Button>
             </div>
+            
           </div>
         )}
       </Modal>

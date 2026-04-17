@@ -51,7 +51,6 @@
   box-shadow: var(--shadow-md);
   overflow: hidden;
   transition: var(--transition);
-  animation: fadeUp 0.5s ease;
 }
 
 .edit-menu-card:hover {
@@ -276,22 +275,6 @@
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
-}
-
-/* Food Type Icons */
-.veg-icon, .nonveg-icon {
-  font-size: 16px;
-  margin-right: 4px;
-}
-
-.food-type-group .ant-radio-wrapper {
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  transition: var(--transition);
-}
-
-.food-type-group .ant-radio-wrapper:hover {
-  background: var(--cream-soft);
 }
 
 /* Alerts */

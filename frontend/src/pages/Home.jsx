@@ -1,5 +1,29 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button, message, Input } from "antd";
+import {
+  ShoppingOutlined,
+  CustomerServiceOutlined,
+  MenuOutlined,
+  UserOutlined,
+  EnvironmentOutlined,
+  StarOutlined,
+  FireOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  PhoneOutlined,
+  MailOutlined,
+  WhatsAppOutlined,
+  FacebookOutlined,
+  InstagramOutlined,
+  TwitterOutlined,
+  LinkedinOutlined,
+  SearchOutlined,
+  RocketOutlined,
+  SecurityScanOutlined,
+  GiftOutlined,
+  ThunderboltOutlined
+} from "@ant-design/icons";
 import "../styles/home.css";
 
 function Home() {
@@ -13,23 +37,22 @@ function Home() {
   const API_BASE_URL = useMemo(() => "http://localhost:5000", []);
 
   const [restaurants, setRestaurants] = useState([]);
-  const [loading, setLoading] = useState({ restaurants: false });
-  const [error, setError] = useState({ restaurants: null });
+  const [filteredRestaurants, setFilteredRestaurants] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [showExpertModal, setShowExpertModal] = useState(false);
   const [expertForm, setExpertForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [formErrors, setFormErrors] = useState({});
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hoveredCard, setHoveredCard] = useState(null);
   const [imageErrors, setImageErrors] = useState({});
 
-  // Permanent placeholder image (base64 encoded fallback to avoid external requests)
   const PLACEHOLDER_IMAGE = useMemo(() => 
-    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23e8d9cc'/%3E%3Ctext x='50%25' y='50%25' font-size='16' text-anchor='middle' dy='.3em' fill='%238b6946'%3ENo Image Available%3C/text%3E%3C/svg%3E",
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3ede8'/%3E%3Ctext x='50%25' y='50%25' font-size='16' text-anchor='middle' dy='.3em' fill='%238b7355'%3ENo Image Available%3C/text%3E%3C/svg%3E",
     []
   );
 
-  // Intersection Observer for scroll animations
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
       (entries) => {
@@ -48,7 +71,6 @@ function Home() {
     return () => observerRef.current?.disconnect();
   }, []);
 
-  // Modal click outside handler
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (modalRef.current && !modalRef.current.contains(e.target)) {
@@ -67,21 +89,21 @@ function Home() {
     };
   }, [showExpertModal]);
 
-  // Fetch restaurants
   const fetchRestaurants = useCallback(async () => {
-    setLoading(prev => ({ ...prev, restaurants: true }));
-    setError(prev => ({ ...prev, restaurants: null }));
+    setLoading(true);
+    setError(null);
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/restaurants`);
       if (!res.ok) throw new Error("Failed to fetch restaurants");
       const data = await res.json();
       setRestaurants(data.slice(0, 6));
+      setFilteredRestaurants(data.slice(0, 6));
     } catch (err) {
-      setError(prev => ({ ...prev, restaurants: "Failed to load restaurants" }));
+      setError("Failed to load restaurants");
       console.error("Error fetching restaurants:", err);
     } finally {
-      setLoading(prev => ({ ...prev, restaurants: false }));
+      setLoading(false);
     }
   }, [API_BASE_URL]);
 
@@ -89,37 +111,43 @@ function Home() {
     fetchRestaurants();
   }, [fetchRestaurants]);
 
-  // Get image URL helper with permanent fallback
+  // Search functionality
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredRestaurants(restaurants);
+    } else {
+      const filtered = restaurants.filter(restaurant =>
+        restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        restaurant.location?.address?.city?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredRestaurants(filtered);
+    }
+  }, [searchTerm, restaurants]);
+
   const getImageUrl = useCallback(
-    (image, type = "restaurant") => {
+    (image) => {
       if (!image) return PLACEHOLDER_IMAGE;
       if (image.startsWith("http")) return image;
       if (image.startsWith("data:")) return image;
-      if (type === "menu") return `${API_BASE_URL}${image}`;
       return `${API_BASE_URL}/uploads/${image}`;
     },
     [API_BASE_URL, PLACEHOLDER_IMAGE]
   );
 
-  // Handle image errors permanently
-  const handleImageError = useCallback((itemId, type = "restaurant") => {
+  const handleImageError = useCallback((restaurantId) => {
     setImageErrors(prev => ({
       ...prev,
-      [`${type}-${itemId}`]: true
+      [restaurantId]: true
     }));
   }, []);
 
-  // Get final image source with error handling
-  const getImageSource = useCallback((item, type = "restaurant") => {
-    const errorKey = `${type}-${item._id || item.name}`;
-    if (imageErrors[errorKey]) {
+  const getImageSource = useCallback((restaurant) => {
+    if (imageErrors[restaurant._id]) {
       return PLACEHOLDER_IMAGE;
     }
-    const imageUrl = getImageUrl(item.image, type);
-    return imageUrl || PLACEHOLDER_IMAGE;
+    return getImageUrl(restaurant.image) || PLACEHOLDER_IMAGE;
   }, [getImageUrl, imageErrors, PLACEHOLDER_IMAGE]);
 
-  // Form validation
   const validateForm = useCallback(() => {
     const errors = {};
     if (!expertForm.name.trim()) errors.name = "Name is required";
@@ -155,6 +183,7 @@ function Home() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       setFormSubmitted(true);
       setIsSubmitting(false);
+      message.success("Request sent successfully! Our expert will contact you soon.");
 
       setTimeout(() => {
         setShowExpertModal(false);
@@ -165,7 +194,6 @@ function Home() {
     [validateForm]
   );
 
-  // Handle restaurant click
   const handleRestaurantClick = useCallback(
     (id) => {
       navigate(`/menu/main?restaurant=${id}`);
@@ -173,12 +201,6 @@ function Home() {
     [navigate]
   );
 
-  // Handle back to home
-  const handleBackToHome = useCallback(() => {
-    navigate("/");
-  }, [navigate]);
-
-  // Loading skeletons
   const renderRestaurantSkeleton = () => (
     <>
       {[1, 2, 3, 4, 5, 6].map((_, i) => (
@@ -196,7 +218,6 @@ function Home() {
 
   return (
     <div className="home-container">
-      {/* Floating decorative elements - Background Layer */}
       <div className="floating-elements">
         <div className="floating-orb orb-1"></div>
         <div className="floating-orb orb-2"></div>
@@ -208,25 +229,53 @@ function Home() {
         <div className="floating-bubble bubble-4"></div>
         <div className="floating-bubble bubble-5"></div>
         <div className="floating-bubble bubble-6"></div>
+        <div className="floating-bubble bubble-7"></div>
+        <div className="floating-bubble bubble-8"></div>
+        <div className="floating-bubble bubble-9"></div>
+        <div className="floating-bubble bubble-10"></div>
+        <div className="floating-bubble bubble-11"></div>
+        <div className="floating-bubble bubble-12"></div>
+        <div className="floating-bubble bubble-13"></div>
+        <div className="floating-bubble bubble-14"></div>
+        <div className="floating-bubble bubble-15"></div>
+        <div className="floating-bubble bubble-16"></div>
+        <div className="floating-bubble bubble-17"></div>
+        <div className="floating-bubble bubble-18"></div>
+        <div className="floating-bubble bubble-19"></div>
+        <div className="floating-bubble bubble-20"></div>
       </div>
 
-      {/* Hero Section */}
       <section className="hero-section" ref={heroRef}>
         <div className="hero-overlay"></div>
         
-        {/* Floating Food Icons */}
+        {/* Floating Food Icons - Food Items Only */}
         <div className="floating-food-icons">
-          <div className="food-icon icon-1 slow-float">🍽️</div>
-          <div className="food-icon icon-2 slower-float">🍜</div>
-          <div className="food-icon icon-3 slow-float">🍣</div>
-          <div className="food-icon icon-4 slower-float">🍝</div>
-          <div className="food-icon icon-5 slow-float">🥗</div>
-          <div className="food-icon icon-6 slower-float">🍖</div>
-          <div className="food-icon icon-7 slow-float">🍕</div>
-          <div className="food-icon icon-8 slower-float">🍔</div>
+          <div className="food-icon icon-1 slow-float">
+            <img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png" alt="fine dining" />
+          </div>
+          <div className="food-icon icon-2 slower-float">
+            <img src="https://cdn-icons-png.flaticon.com/512/1998/1998629.png" alt="noodles" />
+          </div>
+          <div className="food-icon icon-3 slow-float">
+            <img src="https://cdn-icons-png.flaticon.com/512/3082/3082383.png" alt="sushi" />
+          </div>
+          <div className="food-icon icon-4 slower-float">
+            <img src="https://cdn-icons-png.flaticon.com/512/1069/1069701.png" alt="pasta" />
+          </div>
+          <div className="food-icon icon-5 slow-float">
+            <img src="https://cdn-icons-png.flaticon.com/512/1098/1098591.png" alt="salad" />
+          </div>
+          <div className="food-icon icon-6 slower-float">
+            <img src="https://cdn-icons-png.flaticon.com/512/1998/1998612.png" alt="meat" />
+          </div>
+          <div className="food-icon icon-7 slow-float">
+            <img src="https://cdn-icons-png.flaticon.com/512/1046/1046779.png" alt="pizza" />
+          </div>
+          <div className="food-icon icon-8 slower-float">
+            <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" alt="burger" />
+          </div>
         </div>
 
-        {/* Left Side Content */}
         <div className="hero-content-wrapper">
           <div className="hero-content animate-on-scroll">
             <h1 className="hero-title">
@@ -241,33 +290,32 @@ function Home() {
             </p>
 
             <div className="hero-actions">
-              <button
+              <Button 
+                size="large" 
+                icon={<CustomerServiceOutlined />} 
+                onClick={() => setShowExpertModal(true)} 
                 className="hero-btn primary"
-                onClick={() => navigate('/menu/main')}
-              >
-                Explore Menu
-              </button>
-
-              <button
-                className="hero-btn secondary"
-                onClick={() => setShowExpertModal(true)}
               >
                 Talk to Expert
-              </button>
+              </Button>
 
-              <button
-                className="hero-btn admin"
-                onClick={() => navigate('/admin')}
+              <Button 
+                size="large" 
+                icon={<UserOutlined />} 
+                onClick={() => navigate('/admin')} 
+                className="hero-btn secondary"
               >
                 Admin Panel
-              </button>
+              </Button>
 
-              <button
-                className="hero-btn kitchen"
-                onClick={() => navigate('/kitchen')}
+              <Button 
+                size="large" 
+                icon={<FireOutlined />} 
+                onClick={() => navigate('/kitchen')} 
+                className="hero-btn secondary"
               >
-                👨‍🍳 Kitchen Panel
-              </button>
+                Kitchen Panel
+              </Button>
             </div>
 
             <div className="hero-stats">
@@ -289,108 +337,83 @@ function Home() {
       </section>
 
       <main className="main-content">
-        {/* Back to Home Button */}
-        <div className="back-to-home-wrapper">
-          <button className="back-to-home-btn" onClick={handleBackToHome}>
-            <span className="back-icon">←</span>
-            <span>Back to Home</span>
-          </button>
-        </div>
-
-        {/* Restaurants Section */}
+        {/* Restaurants Section with Search Bar */}
         <section className="restaurants-section animate-on-scroll" ref={featuredRef}>
-          <div className="section-header">
-            <h2 className="section-title">
-              Popular <span className="gradient-text">Restaurants</span>
-            </h2>
-            <p className="section-description">
-              Discover the most beloved dining spots in your area
-            </p>
+          <div className="section-header-with-search">
+            <div className="section-header">
+              <h2 className="section-title">
+                Popular <span className="gradient-text">Restaurants</span>
+              </h2>
+              <p className="section-description">
+                Discover the most beloved dining spots in your area
+              </p>
+            </div>
+            <div className="restaurant-search">
+              <Input
+                placeholder="Search by restaurant name or city..."
+                prefix={<SearchOutlined style={{ color: '#ea580c' }} />}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                allowClear
+                size="large"
+                className="restaurant-search-input"
+              />
+            </div>
           </div>
 
           <div className="restaurants-grid">
-            {loading.restaurants ? (
+            {loading ? (
               renderRestaurantSkeleton()
-            ) : error.restaurants ? (
+            ) : error ? (
               <div className="error-state">
-                <p>{error.restaurants}</p>
-                <button onClick={fetchRestaurants} className="retry-btn">
-                  Retry
-                </button>
+                <p>{error}</p>
+                <Button type="primary" onClick={fetchRestaurants}>Retry</Button>
               </div>
-            ) : restaurants.length === 0 ? (
+            ) : filteredRestaurants.length === 0 ? (
               <div className="error-state">
-                <p>No restaurants found. Please add a restaurant from the Admin Panel.</p>
-                <button onClick={() => navigate('/admin')} className="retry-btn">
-                  Go to Admin
-                </button>
+                <p>No restaurants found matching "{searchTerm}"</p>
+                <Button type="primary" onClick={() => setSearchTerm("")}>Clear Search</Button>
               </div>
             ) : (
-              restaurants.map((restaurant, index) => (
-                <article
-                  key={restaurant._id}
-                  className="restaurant-card"
-                  onClick={() => handleRestaurantClick(restaurant._id)}
-                  onMouseEnter={() => setHoveredCard(`restaurant-${index}`)}
-                  onMouseLeave={() => setHoveredCard(null)}
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
+              filteredRestaurants.map((restaurant) => (
+                <div key={restaurant._id} className="restaurant-card" onClick={() => handleRestaurantClick(restaurant._id)}>
                   <div className="card-media">
-                    <img
-                      src={getImageSource(restaurant, "restaurant")}
-                      alt={restaurant.name}
-                      loading="lazy"
-                      onError={() => handleImageError(restaurant._id, "restaurant")}
-                    />
+                    <img src={getImageSource(restaurant)} alt={restaurant.name} loading="lazy" onError={() => handleImageError(restaurant._id)} />
                     <div className="card-overlay"></div>
                   </div>
-
                   <div className="card-body">
                     <h3 className="card-title">{restaurant.name}</h3>
-
                     <div className="card-meta">
                       <div className="meta-item">
-                        <span className="meta-icon">📍</span>
-                        <span className="meta-text">{restaurant.location?.address?.city || "Prime Location"}</span>
+                        <EnvironmentOutlined className="meta-icon" />
+                        <span>{restaurant.location?.address?.city || "Prime Location"}</span>
                       </div>
                       <div className="meta-item">
-                        <span className="meta-icon">⭐</span>
-                        <span className="meta-text">{restaurant.rating || "4.5"} (120+ reviews)</span>
+                        <StarOutlined className="meta-icon" />
+                        <span>{restaurant.rating || "4.5"} (120+ reviews)</span>
                       </div>
                     </div>
-
-                    <button className="card-btn">
-                      View Menu
-                      <span className="btn-arrow">→</span>
-                    </button>
+                    <button className="card-btn">View Menu <span className="btn-arrow">→</span></button>
                   </div>
-                </article>
+                </div>
               ))
             )}
           </div>
         </section>
 
-        {/* Features Section */}
+        {/* Why Choose Us Section with Ant Design Icons */}
         <section className="features-section animate-on-scroll">
           <div className="section-header centered">
-            <h2 className="section-title">
-              Why Choose <span className="gradient-text">Us</span>
-            </h2>
+            <h2 className="section-title">Why Choose <span className="gradient-text">Us</span></h2>
           </div>
-
           <div className="features-grid">
             {[
-              { icon: "🍽️", title: "Premium Quality", desc: "Hand-picked restaurants with exceptional standards" },
-              { icon: "🚚", title: "Fast Delivery", desc: "Quick and reliable delivery to your doorstep" },
-              { icon: "💳", title: "Secure Payment", desc: "Multiple secure payment options available" },
-              { icon: "🎉", title: "Special Offers", desc: "Exclusive deals and loyalty rewards" }
+              { icon: <RocketOutlined />, title: "Premium Quality", desc: "Hand-picked restaurants with exceptional standards" },
+              { icon: <ThunderboltOutlined />, title: "Fast Delivery", desc: "Quick and reliable delivery to your doorstep" },
+              { icon: <SecurityScanOutlined />, title: "Secure Payment", desc: "Multiple secure payment options available" },
+              { icon: <GiftOutlined />, title: "Special Offers", desc: "Exclusive deals and loyalty rewards" }
             ].map((feature, index) => (
-              <div 
-                key={index} 
-                className="feature-card"
-                onMouseEnter={() => setHoveredCard(`feature-${index}`)}
-                onMouseLeave={() => setHoveredCard(null)}
-              >
+              <div key={index} className="feature-card">
                 <div className="feature-icon-wrapper">
                   <div className="feature-icon">{feature.icon}</div>
                 </div>
@@ -402,127 +425,41 @@ function Home() {
         </section>
       </main>
 
-      {/* Floating Action Buttons */}
-      <div className="floating-buttons">
-        <button 
-          className="floating-btn expert"
-          onClick={() => setShowExpertModal(true)}
-          aria-label="Talk to Expert"
-        >
-          <span className="btn-icon">👨‍🍳</span>
-        </button>
-
-        <button 
-          className="floating-btn cart"
-          onClick={() => navigate("/cart")}
-          aria-label="View Cart"
-        >
-          <span className="btn-icon">🛒</span>
-        </button>
-      </div>
-
-      {/* Scroll to top button */}
-      <button 
-        className="scroll-top"
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        aria-label="Scroll to top"
-      >
-        ↑
-      </button>
-
       {/* Expert Consultation Modal */}
       {showExpertModal && (
         <div className="modal-overlay">
           <div className="modal-container" ref={modalRef}>
-            <button 
-              className="modal-close"
-              onClick={() => setShowExpertModal(false)}
-              aria-label="Close modal"
-            >
-              ×
-            </button>
-
+            <button className="modal-close" onClick={() => setShowExpertModal(false)}>×</button>
             <div className="modal-header">
               <h3 className="modal-title">Talk to Our Expert</h3>
-              <p className="modal-subtitle">
-                Get personalized recommendations from our culinary experts
-              </p>
+              <p className="modal-subtitle">Get personalized recommendations from our culinary experts</p>
             </div>
-
             {formSubmitted ? (
               <div className="success-message">
-                <div className="success-icon">✓</div>
+                <CheckCircleOutlined className="success-icon" />
                 <h4>Request Sent Successfully!</h4>
                 <p>Our expert will contact you within 24 hours.</p>
               </div>
             ) : (
               <form onSubmit={handleExpertSubmit} className="premium-form">
                 <div className="form-group">
-                  <input
-                    type="text"
-                    name="name"
-                    value={expertForm.name}
-                    onChange={handleExpertFormChange}
-                    placeholder="Your Name"
-                    className={formErrors.name ? "error" : ""}
-                  />
-                  {formErrors.name && (
-                    <span className="error-message">{formErrors.name}</span>
-                  )}
+                  <input type="text" name="name" value={expertForm.name} onChange={handleExpertFormChange} placeholder="Your Name" className={formErrors.name ? "error" : ""} />
+                  {formErrors.name && <span className="error-message">{formErrors.name}</span>}
                 </div>
-
                 <div className="form-group">
-                  <input
-                    type="email"
-                    name="email"
-                    value={expertForm.email}
-                    onChange={handleExpertFormChange}
-                    placeholder="Email Address"
-                    className={formErrors.email ? "error" : ""}
-                  />
-                  {formErrors.email && (
-                    <span className="error-message">{formErrors.email}</span>
-                  )}
+                  <input type="email" name="email" value={expertForm.email} onChange={handleExpertFormChange} placeholder="Email Address" className={formErrors.email ? "error" : ""} />
+                  {formErrors.email && <span className="error-message">{formErrors.email}</span>}
                 </div>
-
                 <div className="form-group">
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={expertForm.phone}
-                    onChange={handleExpertFormChange}
-                    placeholder="Phone Number"
-                    className={formErrors.phone ? "error" : ""}
-                  />
-                  {formErrors.phone && (
-                    <span className="error-message">{formErrors.phone}</span>
-                  )}
+                  <input type="tel" name="phone" value={expertForm.phone} onChange={handleExpertFormChange} placeholder="Phone Number" className={formErrors.phone ? "error" : ""} />
+                  {formErrors.phone && <span className="error-message">{formErrors.phone}</span>}
                 </div>
-
                 <div className="form-group">
-                  <textarea
-                    name="message"
-                    value={expertForm.message}
-                    onChange={handleExpertFormChange}
-                    placeholder="Your Message (Optional)"
-                    rows="4"
-                  />
+                  <textarea name="message" value={expertForm.message} onChange={handleExpertFormChange} placeholder="Your Message (Optional)" rows="4" />
                 </div>
-
-                <button 
-                  type="submit" 
-                  className="submit-btn"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <span className="spinner"></span>
-                      Submitting...
-                    </>
-                  ) : (
-                    "Send Request"
-                  )}
-                </button>
+                <Button type="primary" htmlType="submit" block size="large" loading={isSubmitting} icon={<CustomerServiceOutlined />} className="submit-btn">
+                  {isSubmitting ? "Submitting..." : "Send Request"}
+                </Button>
               </form>
             )}
           </div>
@@ -539,48 +476,48 @@ function Home() {
         <div className="footer-content">
           <div className="footer-grid">
             <div className="footer-section">
-              <h4>📞 Contact Us</h4>
-              <p>Phone: +91 98765 43210</p>
-              <p>WhatsApp: +91 98765 43211</p>
-              <p>Email: support@qrhino.com</p>
+              <h4><PhoneOutlined /> Contact Us</h4>
+              <p><PhoneOutlined /> Phone: +91 98765 43210</p>
+              <p><WhatsAppOutlined /> WhatsApp: +91 98765 43211</p>
+              <p><MailOutlined /> Email: support@qrhino.com</p>
             </div>
             <div className="footer-section">
-              <h4>🕐 Operating Hours</h4>
+              <h4><ClockCircleOutlined /> Operating Hours</h4>
               <p>Monday - Friday: 9AM - 11PM</p>
               <p>Saturday - Sunday: 10AM - 12AM</p>
               <p>Holidays: 10AM - 10PM</p>
             </div>
             <div className="footer-section">
-              <h4>📍 Our Locations</h4>
+              <h4><EnvironmentOutlined /> Our Locations</h4>
               <p>Main Branch: Downtown</p>
               <p>Branch 2: Westside Mall</p>
               <p>Branch 3: Airport Road</p>
             </div>
             <div className="footer-section">
-              <h4>🍕 Popular Categories</h4>
+              <h4><FireOutlined /> Popular Categories</h4>
               <p>Burgers • Pizzas • Biryani</p>
               <p>Desserts • Beverages</p>
               <p>Starters • Main Course</p>
             </div>
           </div>
-          
           <div className="footer-social">
-            <span className="social-icon">📘</span>
-            <span className="social-icon">📸</span>
-            <span className="social-icon">🐦</span>
-            <span className="social-icon">💼</span>
+            <FacebookOutlined className="social-icon facebook" />
+            <InstagramOutlined className="social-icon instagram" />
+            <TwitterOutlined className="social-icon twitter" />
+            <LinkedinOutlined className="social-icon linkedin" />
           </div>
-          
           <div className="footer-links">
-            <button onClick={() => navigate("/menu/main")}>🍴 Menu</button>
-            <button onClick={() => navigate("/cart")}>🛒 Cart</button>
-            <button onClick={() => navigate("/kitchen")}>👨‍🍳 Kitchen</button>
-            <button onClick={() => navigate("/admin")}>⚙️ Admin</button>
+            <Button type="link" onClick={() => setShowExpertModal(true)} icon={<CustomerServiceOutlined />}>
+              Talk to Expert
+            </Button>
+            <Button type="link" onClick={() => navigate("/kitchen")} icon={<FireOutlined />}>
+              Kitchen Panel
+            </Button>
+            <Button type="link" onClick={() => navigate("/admin")} icon={<UserOutlined />}>
+              Admin Panel
+            </Button>
           </div>
-          
-          <p className="footer-copyright">
-            © 2024 QRhino. All rights reserved. Made with ❤️
-          </p>
+          <p className="footer-copyright">© 2024 QRhino. All rights reserved. Made with love</p>
         </div>
       </footer>
     </div>

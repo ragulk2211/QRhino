@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Typography,
@@ -11,7 +11,12 @@ import {
   Divider,
   Drawer,
   Input,
-  Tag
+  Dropdown,
+  Space,
+  Tooltip,
+  Popconfirm,
+  Row,
+  Col
 } from "antd";
 import {
   ShoppingCartOutlined,
@@ -28,12 +33,15 @@ import {
   PlusCircleOutlined,
   UpOutlined,
   SearchOutlined,
-  ArrowLeftOutlined
+  ArrowLeftOutlined,
+  StarOutlined,
+  FilterOutlined,
+  DownOutlined
 } from "@ant-design/icons";
 import API_BASE_URL from "../config";
 import "../styles/menu.css";
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 function Menu() {
   const navigate = useNavigate();
@@ -54,53 +62,87 @@ function Menu() {
   const [cartDrawerVisible, setCartDrawerVisible] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [pulseAnimation, setPulseAnimation] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [favorites, setFavorites] = useState([]);
+  const [imageErrors, setImageErrors] = useState({});
+  const [isManualScroll, setIsManualScroll] = useState(false);
+  const categoryRefs = useRef({});
+  const categoryTabsRef = useRef(null);
+  const headerRef = useRef(null);
+  const scrollTimer = useRef(null);
+
+  const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop";
 
   useEffect(() => {
     loadCartFromStorage();
+    loadFavoritesFromStorage();
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  // Handle scroll for active category highlighting
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 400) {
-        setShowScrollTop(true);
-      } else {
-        setShowScrollTop(false);
-      }
-      if (window.scrollY > 100) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
+      setShowScrollTop(window.scrollY > 400);
+      
+      // Update active category based on scroll position
+      if (!isManualScroll && Object.keys(menuData).length > 0) {
+        const categories = Object.keys(menuData);
+        for (let i = categories.length - 1; i >= 0; i--) {
+          const category = categories[i];
+          const element = categoryRefs.current[category];
+          if (element) {
+            const rect = element.getBoundingClientRect();
+            const offset = 80;
+            if (rect.top <= offset) {
+              if (activeCategory !== category) {
+                setActiveCategory(category);
+              }
+              break;
+            }
+          }
+        }
       }
     };
+    
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimer.current) clearTimeout(scrollTimer.current);
+    };
+  }, [menuData, isManualScroll, activeCategory]);
 
   const loadCartFromStorage = () => {
     const savedCart = localStorage.getItem("cart");
     if (savedCart) {
       try {
-        const parsedCart = JSON.parse(savedCart);
-        setCartItems(parsedCart);
+        setCartItems(JSON.parse(savedCart));
       } catch (e) {
         console.error("Error loading cart:", e);
       }
     }
   };
 
-  const handleStorageChange = (e) => {
-    if (e.key === "cart") {
-      loadCartFromStorage();
+  const loadFavoritesFromStorage = () => {
+    const savedFavorites = localStorage.getItem("favorites");
+    if (savedFavorites) {
+      try {
+        setFavorites(JSON.parse(savedFavorites));
+      } catch (e) {
+        console.error("Error loading favorites:", e);
+      }
     }
+  };
+
+  const handleStorageChange = (e) => {
+    if (e.key === "cart") loadCartFromStorage();
+    if (e.key === "favorites") loadFavoritesFromStorage();
   };
 
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cartItems));
+    localStorage.setItem("favorites", JSON.stringify(favorites));
     window.dispatchEvent(new Event('storage'));
-  }, [cartItems]);
+  }, [cartItems, favorites]);
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
   const cartTotal = cartItems.reduce((sum, item) => {
@@ -109,6 +151,34 @@ function Menu() {
       : item.price;
     return sum + price * (item.quantity || 1);
   }, 0);
+
+  const toggleFavorite = (item) => {
+    setFavorites(prev => {
+      const exists = prev.find(fav => fav._id === item._id);
+      if (exists) {
+        message.info(`${item.name} removed from favorites`);
+        return prev.filter(fav => fav._id !== item._id);
+      } else {
+        message.success(`${item.name} added to favorites`);
+        return [...prev, item];
+      }
+    });
+  };
+
+  const isFavorite = (itemId) => favorites.some(fav => fav._id === itemId);
+
+  const handleImageError = (itemId) => {
+    setImageErrors(prev => ({ ...prev, [itemId]: true }));
+  };
+
+  const getImageSrc = (food) => {
+    if (imageErrors[food._id]) return PLACEHOLDER_IMAGE;
+    if (food.image) {
+      if (food.image.startsWith("http")) return food.image;
+      return `${API_BASE_URL}/uploads/${food.image}`;
+    }
+    return PLACEHOLDER_IMAGE;
+  };
 
   const addToCart = (item) => {
     setCartItems(prevItems => {
@@ -119,9 +189,8 @@ function Menu() {
             ? { ...cartItem, quantity: (cartItem.quantity || 1) + 1 }
             : cartItem
         );
-      } else {
-        return [...prevItems, { ...item, quantity: 1 }];
       }
+      return [...prevItems, { ...item, quantity: 1 }];
     });
     setPulseAnimation(true);
     setTimeout(() => setPulseAnimation(false), 600);
@@ -136,7 +205,7 @@ function Menu() {
       cancelText: "No",
       okButtonProps: { danger: true },
       onOk: () => {
-        setCartItems(prevItems => prevItems.filter(item => item._id !== itemId));
+        setCartItems(prev => prev.filter(item => item._id !== itemId));
         message.success("Item removed from cart");
       }
     });
@@ -147,8 +216,8 @@ function Menu() {
       removeFromCart(itemId);
       return;
     }
-    setCartItems(prevItems =>
-      prevItems.map(item =>
+    setCartItems(prev =>
+      prev.map(item =>
         item._id === itemId ? { ...item, quantity: newQuantity } : item
       )
     );
@@ -173,12 +242,17 @@ function Menu() {
     if (foodTypeFilter !== "all") {
       const typeFiltered = {};
       Object.keys(originalData).forEach(category => {
-        const matchedItems = originalData[category].filter(
-          item => item.foodType?.toLowerCase() === foodTypeFilter.toLowerCase()
-        );
-        if (matchedItems.length > 0) {
-          typeFiltered[category] = matchedItems;
-        }
+        const matchedItems = originalData[category].filter(item => {
+          const foodType = item.foodType?.toLowerCase() || '';
+          if (foodTypeFilter === "veg") {
+            return foodType === 'veg' || foodType === 'vegetarian' || foodType === 'vegan';
+          } else if (foodTypeFilter === "nonveg") {
+            return foodType === 'nonveg' || foodType === 'non-veg' || foodType === 'non veg' || 
+                   foodType === 'meat' || foodType === 'chicken' || foodType === 'fish';
+          }
+          return true;
+        });
+        if (matchedItems.length > 0) typeFiltered[category] = matchedItems;
       });
       filtered = typeFiltered;
     }
@@ -190,9 +264,7 @@ function Menu() {
           item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.category?.toLowerCase().includes(searchTerm.toLowerCase())
         );
-        if (items.length > 0) {
-          searchFiltered[category] = items;
-        }
+        if (items.length > 0) searchFiltered[category] = items;
       });
       filtered = searchFiltered;
     }
@@ -211,9 +283,7 @@ function Menu() {
       try {
         const catRes = await fetch(`${API_BASE_URL}/api/categories`);
         const categories = await catRes.json();
-        categories.forEach(cat => {
-          catMap[cat._id] = cat.name;
-        });
+        categories.forEach(cat => { catMap[cat._id] = cat.name; });
         setCategoryMap(catMap);
       } catch (e) {
         console.error("Category fetch error:", e);
@@ -230,24 +300,17 @@ function Menu() {
 
       const grouped = {};
       data.forEach(item => {
-        let category;
-        if (item.categoryId && catMap[item.categoryId]) {
-          category = catMap[item.categoryId];
-        } else {
-          category = item.category?.toLowerCase() || "others";
-        }
+        let category = (item.categoryId && catMap[item.categoryId]) 
+          ? catMap[item.categoryId] 
+          : (item.category?.toLowerCase() || "others");
         if (!grouped[category]) grouped[category] = [];
         grouped[category].push(item);
       });
 
       const categoryOrder = ["burgers", "pizza", "salad", "rajasthani", "arabic-food", "starters", "soups", "others"];
       const sortedGrouped = {};
-      categoryOrder.forEach(cat => {
-        if (grouped[cat]) sortedGrouped[cat] = grouped[cat];
-      });
-      Object.keys(grouped).forEach(cat => {
-        if (!categoryOrder.includes(cat)) sortedGrouped[cat] = grouped[cat];
-      });
+      categoryOrder.forEach(cat => { if (grouped[cat]) sortedGrouped[cat] = grouped[cat]; });
+      Object.keys(grouped).forEach(cat => { if (!categoryOrder.includes(cat)) sortedGrouped[cat] = grouped[cat]; });
 
       setMenuData(sortedGrouped);
       setOriginalData(sortedGrouped);
@@ -286,26 +349,63 @@ function Menu() {
     setModalVisible(true);
   };
 
-  const getFoodTypeColor = (type) => {
-    return type === "veg" ? "success" : "error";
+  const getFoodTypeDisplay = (foodType) => {
+    const type = foodType?.toLowerCase() || '';
+    if (type === 'veg' || type === 'vegetarian' || type === 'vegan') {
+      return { text: 'VEG', color: '#22c55e' };
+    }
+    return { text: 'NON-VEG', color: '#ef4444' };
   };
 
-  const getFoodTypeIcon = (type) => {
-    return type === "veg" ? <CheckCircleOutlined /> : <FireOutlined />;
+  const getDiscountedPrice = (price, discount) => {
+    if (discount > 0 && discount < 100) {
+      return Math.round(price - (price * discount / 100));
+    }
+    return price;
   };
+
+  const scrollToCategory = useCallback((category) => {
+    const element = categoryRefs.current[category];
+    if (element) {
+      setIsManualScroll(true);
+      setActiveCategory(category);
+      
+      // Offset for fixed header (category tabs are fixed at top)
+      const fixedOffset = 60;
+      
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+      
+      window.scrollTo({
+        top: elementPosition - fixedOffset,
+        behavior: "smooth"
+      });
+      
+      if (scrollTimer.current) clearTimeout(scrollTimer.current);
+      scrollTimer.current = setTimeout(() => {
+        setIsManualScroll(false);
+      }, 800);
+    }
+  }, []);
 
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: "smooth"
+      behavior: 'smooth'
     });
   };
 
-  const getDiscountedPrice = (price, discount) => {
-    if (discount > 0) {
-      return Math.round(price - (price * discount / 100));
+  const filterMenuItems = [
+    { key: 'all', label: 'All Items' },
+    { key: 'veg', label: 'Vegetarian' },
+    { key: 'nonveg', label: 'Non-Vegetarian' },
+  ];
+
+  const getFilterLabel = () => {
+    switch(foodTypeFilter) {
+      case 'veg': return 'Veg';
+      case 'nonveg': return 'Non-Veg';
+      default: return 'All';
     }
-    return price;
   };
 
   if (isLoading) {
@@ -321,213 +421,208 @@ function Menu() {
 
   return (
     <div className="menu-page">
-      <div className="menu-header">
+      {/* Header with Search and Filter */}
+      <div className="menu-header" ref={headerRef}>
         <div className="header-row">
-          <button 
-            onClick={() => navigate("/")}
-            className="back-btn"
-            aria-label="Go back"
-          >
+          <button onClick={() => navigate("/")} className="back-btn">
             <ArrowLeftOutlined />
           </button>
-          <div className="search-wrapper-header">
+          
+          <div className="search-wrapper">
             <Input
-              placeholder="Search menu..."
+              placeholder="Search menu items..."
               allowClear
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input-header"
+              className="search-input"
               prefix={<SearchOutlined />}
             />
           </div>
-        </div>
-        <div className="filter-tabs-row">
-          <div className="filter-tabs">
-            <button 
-              onClick={() => setFoodTypeFilter("all")}
-              className={`filter-tab ${foodTypeFilter === "all" ? "active" : ""}`}
-            >
-              All
+          
+          <Dropdown
+            menu={{
+              items: filterMenuItems,
+              onClick: ({ key }) => setFoodTypeFilter(key),
+              selectedKeys: [foodTypeFilter]
+            }}
+            trigger={['click']}
+            placement="bottomRight"
+          >
+            <button className="filter-btn">
+              <FilterOutlined /> {getFilterLabel()} <DownOutlined />
             </button>
-            <button 
-              onClick={() => setFoodTypeFilter("veg")}
-              className={`filter-tab ${foodTypeFilter === "veg" ? "active" : ""}`}
-            >
-              <CheckCircleOutlined /> Veg
-            </button>
-            <button 
-              onClick={() => setFoodTypeFilter("nonveg")}
-              className={`filter-tab ${foodTypeFilter === "nonveg" ? "active" : ""}`}
-            >
-              <FireOutlined /> Non-Veg
-            </button>
-          </div>
+          </Dropdown>
         </div>
       </div>
 
+      {/* Category Tabs - FIXED ON TOP when scrolling */}
       {Object.keys(menuData).length > 0 && (
-        <div className={`category-tabs-wrapper ${isScrolled ? 'scrolled' : ''}`}>
+        <div className="category-tabs-wrapper" ref={categoryTabsRef}>
           <div className="category-tabs">
             {Object.keys(menuData).map(category => (
               <button
                 key={category}
-                onClick={() => {
-                  setActiveCategory(category);
-                  const element = document.getElementById(`category-${category}`);
-                  if (element) {
-                    const offset = 120;
-                    const elementPosition = element.getBoundingClientRect().top;
-                    const offsetPosition = elementPosition + window.pageYOffset - offset;
-                    window.scrollTo({
-                      top: offsetPosition,
-                      behavior: 'smooth'
-                    });
-                  }
-                }}
+                onClick={() => scrollToCategory(category)}
                 className={`category-tab ${activeCategory === category ? "active" : ""}`}
               >
-                {category.charAt(0).toUpperCase() + category.slice(1)}
+                {category === "arabic-food" ? "Arabic Food" : category.charAt(0).toUpperCase() + category.slice(1)}
               </button>
             ))}
           </div>
         </div>
       )}
 
+      {/* Menu Items */}
       <div className="menu-items-container">
         {Object.keys(menuData).length === 0 ? (
           <div className="empty-menu-state">
             <MenuOutlined className="empty-icon" />
-            <h3>No menu items found</h3>
+            <Title level={3}>No menu items found</Title>
             <p>Try adjusting your filters or search term</p>
-            <Button type="primary" onClick={() => {
-              setFoodTypeFilter("all");
-              setSearchTerm("");
-            }}>
+            <Button type="primary" onClick={() => { setFoodTypeFilter("all"); setSearchTerm(""); }}>
               Reset Filters
             </Button>
           </div>
         ) : (
           Object.keys(menuData).map(category => (
-            <section key={category} id={`category-${category}`} className="menu-category-section">
+            <section 
+              key={category} 
+              ref={el => categoryRefs.current[category] = el}
+              className="menu-category-section"
+            >
               <div className="menu-category-header">
-                <h2 className="menu-category-title">{category.charAt(0).toUpperCase() + category.slice(1)}</h2>
+                <h2 className="menu-category-title">
+                  {category === "arabic-food" ? "Arabic Food" : category.charAt(0).toUpperCase() + category.slice(1)}
+                </h2>
                 <div className="category-title-underline"></div>
               </div>
-              <div className="menu-list">
+              
+              <Row gutter={[16, 16]} className="menu-grid-row">
                 {menuData[category]?.map(food => {
                   const discountedPrice = getDiscountedPrice(food.price, food.discount);
+                  const foodTypeDisplay = getFoodTypeDisplay(food.foodType);
+                  const hasValidDiscount = food.discount > 0 && food.discount < 100 && discountedPrice !== food.price;
+                  
                   return (
-                    <div key={food._id} className="menu-item-card">
-                      <div className="menu-item-image">
-                        <img
-                          src={food.image?.startsWith("http") ? food.image : `${API_BASE_URL}/uploads/${food.image}`}
-                          alt={food.name}
-                          onError={(e) => {
-                            e.target.src = "https://images.unsplash.com/photo-1550547660-d9450f859349?w=120&h=120&fit=crop";
-                          }}
-                        />
-                        {food.discount > 0 && (
-                          <span className="discount-badge">-{food.discount}%</span>
-                        )}
-                        {food.bestseller && (
-                          <span className="bestseller-badge">⭐ Bestseller</span>
-                        )}
-                      </div>
-                      <div className="menu-item-info">
-                        <div className="menu-item-header">
-                          <h3 className="menu-item-name">{food.name}</h3>
-                          <div className="menu-item-price">
-                            {food.discount > 0 ? (
-                              <>
-                                <span className="current-price">${discountedPrice}</span>
-                                <span className="original-price">${food.price}</span>
-                              </>
-                            ) : (
-                              <span className="current-price">${food.price}</span>
+                    <Col xs={24} sm={12} md={8} lg={8} xl={6} key={food._id}>
+                      <div className="menu-card">
+                        <div className="menu-card-image">
+                          <img
+                            src={getImageSrc(food)}
+                            alt={food.name}
+                            onError={() => handleImageError(food._id)}
+                          />
+                          {hasValidDiscount && (
+                            <span className="discount-badge">-{food.discount}%</span>
+                          )}
+                        </div>
+                        
+                        <div className="menu-card-content">
+                          <h3 className="menu-card-title">{food.name}</h3>
+                          
+                          <p className="menu-card-description">{food.desc || "Delicious dish prepared with fresh ingredients"}</p>
+                          
+                          <div className="menu-card-meta">
+                            {food.kcal > 0 && (
+                              <span className="meta-badge">
+                                <FireOutlined /> {food.kcal}kcal
+                              </span>
                             )}
+                            {food.time > 0 && (
+                              <span className="meta-badge">
+                                <ClockCircleOutlined /> {food.time}min
+                              </span>
+                            )}
+                            <span className={`meta-badge food-type ${foodTypeDisplay.text === 'VEG' ? 'veg' : 'nonveg'}`}>
+                              {foodTypeDisplay.text}
+                            </span>
+                          </div>
+                          
+                          <div className="menu-card-price-row">
+                            <div className="menu-card-price">
+                              {hasValidDiscount ? (
+                                <>
+                                  <span className="current-price">${discountedPrice}</span>
+                                  <span className="original-price">${food.price}</span>
+                                </>
+                              ) : (
+                                <span className="current-price">${food.price}</span>
+                              )}
+                            </div>
+                            <button 
+                              className="card-add-btn"
+                              onClick={() => addToCart(food)}
+                            >
+                              <ShoppingCartOutlined /> Add
+                            </button>
+                          </div>
+                          
+                          <div className="menu-card-actions">
+                            <button 
+                              className="card-action-btn view-btn"
+                              onClick={() => viewDetails(food)}
+                            >
+                              <EyeOutlined /> View
+                            </button>
+                            <button 
+                              className="card-action-btn edit-btn"
+                              onClick={() => navigate(`/edit-item/${food._id}`)}
+                            >
+                              <EditOutlined /> Edit
+                            </button>
+                            <Popconfirm
+                              title="Delete Item"
+                              description="Are you sure you want to delete this item?"
+                              onConfirm={() => deleteItem(food._id)}
+                              okText="Yes"
+                              cancelText="No"
+                              okButtonProps={{ danger: true }}
+                            >
+                              <button className="card-action-btn delete-btn">
+                                <DeleteOutlined /> Del
+                              </button>
+                            </Popconfirm>
                           </div>
                         </div>
-                        <p className="menu-item-desc">{food.desc || "Delicious dish prepared with fresh ingredients"}</p>
-                        <div className="menu-item-meta">
-                          {food.kcal > 0 && (
-                            <span className="meta-badge">
-                              <FireOutlined /> {food.kcal}kcal
-                            </span>
-                          )}
-                          {food.time > 0 && (
-                            <span className="meta-badge">
-                              <ClockCircleOutlined /> {food.time}min
-                            </span>
-                          )}
-                          <Tag 
-                            icon={getFoodTypeIcon(food.foodType)} 
-                            color={getFoodTypeColor(food.foodType)}
-                            className="food-type-badge"
-                          >
-                            {food.foodType === "veg" ? "Veg" : "Non-Veg"}
-                          </Tag>
-                        </div>
-                        <div className="menu-item-actions">
-                          <Button 
-                            type="primary"
-                            icon={<ShoppingCartOutlined />}
-                            onClick={() => addToCart(food)}
-                            className="add-to-cart-btn"
-                            size="small"
-                          >
-                            Add
-                          </Button>
-                          <Button 
-                            icon={<EyeOutlined />}
-                            onClick={() => viewDetails(food)}
-                            className="view-btn"
-                            size="small"
-                          >
-                            View
-                          </Button>
-                          <Button 
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={() => deleteItem(food._id)}
-                            className="delete-btn"
-                            type="text"
-                            size="small"
-                          />
-                        </div>
                       </div>
-                    </div>
+                    </Col>
                   );
                 })}
-              </div>
+              </Row>
             </section>
           ))
         )}
       </div>
 
+      {/* Floating Action Buttons */}
       <div className="fab-container">
-        <Badge count={cartCount} className="cart-fab-badge">
-          <div 
-            className={`fab-btn cart-fab ${pulseAnimation ? 'pulse' : ''}`}
-            onClick={() => setCartDrawerVisible(true)}
-          >
-            <ShoppingCartOutlined />
+        <Tooltip title="Add New Item">
+          <button className="fab-btn add-fab" onClick={() => navigate("/add-item")}>
+            <PlusOutlined />
+          </button>
+        </Tooltip>
+        
+        <Tooltip title="View Cart">
+          <div className="cart-fab-wrapper">
+            <button className="fab-btn cart-fab" onClick={() => setCartDrawerVisible(true)}>
+              <ShoppingCartOutlined />
+            </button>
+            {cartCount > 0 && (
+              <span className="cart-count-badge">{cartCount}</span>
+            )}
           </div>
-        </Badge>
-
-        <div 
-          className="fab-btn add-fab"
-          onClick={() => navigate("/add-item")}
-        >
-          <PlusOutlined />
-        </div>
-
+        </Tooltip>
+        
         {showScrollTop && (
-          <div className="fab-btn scroll-fab" onClick={scrollToTop}>
-            <UpOutlined />
-          </div>
+          <Tooltip title="Scroll to Top">
+            <button className="fab-btn scroll-fab" onClick={scrollToTop}>
+              <UpOutlined />
+            </button>
+          </Tooltip>
         )}
       </div>
 
+      {/* Cart Drawer */}
       <Drawer
         title="My Order"
         placement="right"
@@ -535,6 +630,7 @@ function Menu() {
         open={cartDrawerVisible}
         className="cart-drawer"
         closeIcon={<CloseOutlined />}
+        width={380}
       >
         {cartItems.length === 0 ? (
           <Empty description="Your cart is empty" />
@@ -545,30 +641,23 @@ function Menu() {
                 const discountedPrice = getDiscountedPrice(item.price, item.discount);
                 return (
                   <div key={item._id} className="cart-item">
-                    <div className="cart-item-image">
-                      <img 
-                        src={item.image?.startsWith("http") ? item.image : `${API_BASE_URL}/uploads/${item.image}`} 
-                        alt={item.name}
-                        onError={(e) => {
-                          e.target.src = "https://images.unsplash.com/photo-1550547660-d9450f859349?w=60&h=60&fit=crop";
-                        }}
-                      />
-                    </div>
+                    <img 
+                      src={item.image?.startsWith("http") ? item.image : `${API_BASE_URL}/uploads/${item.image}`} 
+                      alt={item.name}
+                      className="cart-item-image"
+                    />
                     <div className="cart-item-info">
                       <div className="cart-item-name">{item.name}</div>
-                      <div className="cart-item-price">
-                        ${discountedPrice}
-                        {item.discount > 0 && (
-                          <span className="original-price">${item.price}</span>
-                        )}
-                      </div>
+                      <div className="cart-item-price">${discountedPrice}</div>
                       <div className="quantity-control">
-                        <Button size="small" icon={<MinusOutlined />} onClick={() => updateQuantity(item._id, (item.quantity || 1) - 1)} />
+                        <button onClick={() => updateQuantity(item._id, (item.quantity || 1) - 1)}>-</button>
                         <span>{item.quantity || 1}</span>
-                        <Button size="small" icon={<PlusCircleOutlined />} onClick={() => updateQuantity(item._id, (item.quantity || 1) + 1)} />
+                        <button onClick={() => updateQuantity(item._id, (item.quantity || 1) + 1)}>+</button>
                       </div>
                     </div>
-                    <Button type="text" danger icon={<DeleteOutlined />} onClick={() => removeFromCart(item._id)} />
+                    <button className="cart-item-delete" onClick={() => removeFromCart(item._id)}>
+                      <DeleteOutlined />
+                    </button>
                   </div>
                 );
               })}
@@ -577,21 +666,24 @@ function Menu() {
             <div className="cart-summary">
               <div className="cart-total-row">
                 <span>Total</span>
-                <span className="cart-total-amount">${Math.round(cartTotal)}</span>
+                <span className="cart-total-amount">${Math.round(cartTotal + 2.99)}</span>
               </div>
-              <Button type="primary" block className="checkout-btn" onClick={proceedToCheckout}>
+              <button className="checkout-btn" onClick={proceedToCheckout}>
                 Proceed to Checkout
-              </Button>
+              </button>
             </div>
           </>
         )}
       </Drawer>
 
+      {/* Food Detail Modal */}
       <Modal
         open={modalVisible}
         footer={null}
         onCancel={() => setModalVisible(false)}
         className="food-detail-modal"
+        width={500}
+        centered
       >
         {selectedFood && (
           <div className="food-detail-content">
@@ -599,29 +691,26 @@ function Menu() {
               src={selectedFood.image?.startsWith("http") ? selectedFood.image : `${API_BASE_URL}/uploads/${selectedFood.image}`} 
               alt={selectedFood.name} 
               className="food-detail-image"
-              onError={(e) => {
-                e.target.src = "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=300&fit=crop";
-              }}
             />
-            <h2>{selectedFood.name}</h2>
-            <p>{selectedFood.desc || "Delicious dish prepared with fresh ingredients"}</p>
-            <div className="food-detail-meta">
-              {selectedFood.kcal > 0 && <span><FireOutlined /> {selectedFood.kcal} kcal</span>}
-              {selectedFood.time > 0 && <span><ClockCircleOutlined /> {selectedFood.time} min</span>}
-            </div>
-            <div className="food-detail-price">
-              ${getDiscountedPrice(selectedFood.price, selectedFood.discount)}
-              {selectedFood.discount > 0 && (
-                <span className="original-price">${selectedFood.price}</span>
-              )}
-            </div>
-            <div className="food-detail-actions">
-              <Button type="primary" block onClick={() => { addToCart(selectedFood); setModalVisible(false); }}>
-                Add to Cart
-              </Button>
-              <Button onClick={() => navigate(`/edit-item/${selectedFood._id}`)}>
-                <EditOutlined /> Edit
-              </Button>
+            <div className="food-detail-info">
+              <h2>{selectedFood.name}</h2>
+              <p>{selectedFood.desc || "Delicious dish prepared with fresh ingredients"}</p>
+              <div className="food-detail-meta">
+                {selectedFood.kcal > 0 && <span><FireOutlined /> {selectedFood.kcal} kcal</span>}
+                {selectedFood.time > 0 && <span><ClockCircleOutlined /> {selectedFood.time} min</span>}
+              </div>
+              <div className="food-detail-price">
+                <span className="price">${getDiscountedPrice(selectedFood.price, selectedFood.discount)}</span>
+                {selectedFood.discount > 0 && <span className="original">${selectedFood.price}</span>}
+              </div>
+              <div className="food-detail-actions">
+                <button className="detail-add-btn" onClick={() => { addToCart(selectedFood); setModalVisible(false); }}>
+                  <ShoppingCartOutlined /> Add to Cart
+                </button>
+                <button className="detail-edit-btn" onClick={() => navigate(`/edit-item/${selectedFood._id}`)}>
+                  <EditOutlined /> Edit Item
+                </button>
+              </div>
             </div>
           </div>
         )}

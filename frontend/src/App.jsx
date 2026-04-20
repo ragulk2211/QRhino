@@ -23,6 +23,7 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
+        <Route path="/menu" element={<Menu />} />
         <Route path="/menu/main" element={<Menu />} />
         <Route path="/menu/:restaurantId" element={<Menu />} />
         <Route path="/cart" element={<Cart />} />

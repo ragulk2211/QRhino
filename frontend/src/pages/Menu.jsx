@@ -7,12 +7,10 @@ import {
   Empty,
   Modal,
   message,
-  Badge,
   Divider,
   Drawer,
   Input,
   Dropdown,
-  Space,
   Tooltip,
   Popconfirm,
   Row,
@@ -28,13 +26,9 @@ import {
   FireOutlined,
   MenuOutlined,
   CloseOutlined,
-  CheckCircleOutlined,
-  MinusOutlined,
-  PlusCircleOutlined,
   UpOutlined,
   SearchOutlined,
   ArrowLeftOutlined,
-  StarOutlined,
   FilterOutlined,
   DownOutlined
 } from "@ant-design/icons";
@@ -61,30 +55,35 @@ function Menu() {
   const [cartItems, setCartItems] = useState([]);
   const [cartDrawerVisible, setCartDrawerVisible] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [pulseAnimation, setPulseAnimation] = useState(false);
-  const [favorites, setFavorites] = useState([]);
   const [imageErrors, setImageErrors] = useState({});
   const [isManualScroll, setIsManualScroll] = useState(false);
   const categoryRefs = useRef({});
-  const categoryTabsRef = useRef(null);
-  const headerRef = useRef(null);
   const scrollTimer = useRef(null);
 
   const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop";
 
+  // Load cart from localStorage
   useEffect(() => {
-    loadCartFromStorage();
-    loadFavoritesFromStorage();
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    const savedCart = localStorage.getItem("cart");
+    if (savedCart) {
+      try {
+        setCartItems(JSON.parse(savedCart));
+      } catch (e) {
+        console.error("Error loading cart:", e);
+      }
+    }
   }, []);
 
-  // Handle scroll for active category highlighting
+  // Save cart to localStorage
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cartItems));
+  }, [cartItems]);
+
+  // Handle scroll for active category
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 400);
       
-      // Update active category based on scroll position
       if (!isManualScroll && Object.keys(menuData).length > 0) {
         const categories = Object.keys(menuData);
         for (let i = categories.length - 1; i >= 0; i--) {
@@ -92,7 +91,7 @@ function Menu() {
           const element = categoryRefs.current[category];
           if (element) {
             const rect = element.getBoundingClientRect();
-            const offset = 80;
+            const offset = 100;
             if (rect.top <= offset) {
               if (activeCategory !== category) {
                 setActiveCategory(category);
@@ -105,44 +104,8 @@ function Menu() {
     };
     
     window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (scrollTimer.current) clearTimeout(scrollTimer.current);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [menuData, isManualScroll, activeCategory]);
-
-  const loadCartFromStorage = () => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      try {
-        setCartItems(JSON.parse(savedCart));
-      } catch (e) {
-        console.error("Error loading cart:", e);
-      }
-    }
-  };
-
-  const loadFavoritesFromStorage = () => {
-    const savedFavorites = localStorage.getItem("favorites");
-    if (savedFavorites) {
-      try {
-        setFavorites(JSON.parse(savedFavorites));
-      } catch (e) {
-        console.error("Error loading favorites:", e);
-      }
-    }
-  };
-
-  const handleStorageChange = (e) => {
-    if (e.key === "cart") loadCartFromStorage();
-    if (e.key === "favorites") loadFavoritesFromStorage();
-  };
-
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cartItems));
-    localStorage.setItem("favorites", JSON.stringify(favorites));
-    window.dispatchEvent(new Event('storage'));
-  }, [cartItems, favorites]);
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
   const cartTotal = cartItems.reduce((sum, item) => {
@@ -151,21 +114,6 @@ function Menu() {
       : item.price;
     return sum + price * (item.quantity || 1);
   }, 0);
-
-  const toggleFavorite = (item) => {
-    setFavorites(prev => {
-      const exists = prev.find(fav => fav._id === item._id);
-      if (exists) {
-        message.info(`${item.name} removed from favorites`);
-        return prev.filter(fav => fav._id !== item._id);
-      } else {
-        message.success(`${item.name} added to favorites`);
-        return [...prev, item];
-      }
-    });
-  };
-
-  const isFavorite = (itemId) => favorites.some(fav => fav._id === itemId);
 
   const handleImageError = (itemId) => {
     setImageErrors(prev => ({ ...prev, [itemId]: true }));
@@ -192,8 +140,6 @@ function Menu() {
       }
       return [...prevItems, { ...item, quantity: 1 }];
     });
-    setPulseAnimation(true);
-    setTimeout(() => setPulseAnimation(false), 600);
     message.success(`${item.name} added to cart!`);
   };
 
@@ -232,10 +178,12 @@ function Menu() {
     navigate("/cart");
   };
 
+  // Fetch menu data
   useEffect(() => {
     fetchMenu();
   }, [restaurantId, categoryParam]);
 
+  // Filter menu data
   useEffect(() => {
     let filtered = { ...originalData };
     
@@ -370,9 +318,7 @@ function Menu() {
       setIsManualScroll(true);
       setActiveCategory(category);
       
-      // Offset for fixed header (category tabs are fixed at top)
-      const fixedOffset = 60;
-      
+      const fixedOffset = 80;
       const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
       
       window.scrollTo({
@@ -380,8 +326,7 @@ function Menu() {
         behavior: "smooth"
       });
       
-      if (scrollTimer.current) clearTimeout(scrollTimer.current);
-      scrollTimer.current = setTimeout(() => {
+      setTimeout(() => {
         setIsManualScroll(false);
       }, 800);
     }
@@ -421,12 +366,14 @@ function Menu() {
 
   return (
     <div className="menu-page">
-      {/* Header with Search and Filter */}
-      <div className="menu-header" ref={headerRef}>
+      {/* Header */}
+      <div className="menu-header">
         <div className="header-row">
-          <button onClick={() => navigate("/")} className="back-btn">
-            <ArrowLeftOutlined />
-          </button>
+          <Tooltip title="Go Back" placement="bottom">
+            <button onClick={() => navigate("/")} className="back-btn-icon">
+              <ArrowLeftOutlined />
+            </button>
+          </Tooltip>
           
           <div className="search-wrapper">
             <Input
@@ -436,6 +383,7 @@ function Menu() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
               prefix={<SearchOutlined />}
+              size="middle"
             />
           </div>
           
@@ -455,9 +403,9 @@ function Menu() {
         </div>
       </div>
 
-      {/* Category Tabs - FIXED ON TOP when scrolling */}
+      {/* Category Tabs */}
       {Object.keys(menuData).length > 0 && (
-        <div className="category-tabs-wrapper" ref={categoryTabsRef}>
+        <div className="category-tabs-wrapper">
           <div className="category-tabs">
             {Object.keys(menuData).map(category => (
               <button
@@ -497,11 +445,11 @@ function Menu() {
                 <div className="category-title-underline"></div>
               </div>
               
-              <Row gutter={[16, 16]} className="menu-grid-row">
+              <Row gutter={[16, 16]}>
                 {menuData[category]?.map(food => {
                   const discountedPrice = getDiscountedPrice(food.price, food.discount);
                   const foodTypeDisplay = getFoodTypeDisplay(food.foodType);
-                  const hasValidDiscount = food.discount > 0 && food.discount < 100 && discountedPrice !== food.price;
+                  const hasValidDiscount = food.discount > 0 && food.discount < 100;
                   
                   return (
                     <Col xs={24} sm={12} md={8} lg={8} xl={6} key={food._id}>
@@ -513,14 +461,19 @@ function Menu() {
                             onError={() => handleImageError(food._id)}
                           />
                           {hasValidDiscount && (
-                            <span className="discount-badge">-{food.discount}%</span>
+                            <div className="discount-badge-corner">
+                              <span className="percent">{food.discount}%</span>
+                              <span className="off-text">OFF</span>
+                            </div>
                           )}
                         </div>
                         
                         <div className="menu-card-content">
                           <h3 className="menu-card-title">{food.name}</h3>
                           
-                          <p className="menu-card-description">{food.desc || "Delicious dish prepared with fresh ingredients"}</p>
+                          <p className="menu-card-description">
+                            {food.desc || "Delicious dish prepared with fresh ingredients"}
+                          </p>
                           
                           <div className="menu-card-meta">
                             {food.kcal > 0 && (
@@ -630,7 +583,7 @@ function Menu() {
         open={cartDrawerVisible}
         className="cart-drawer"
         closeIcon={<CloseOutlined />}
-        width={380}
+        styles={{ wrapper: { width: 380 } }}
       >
         {cartItems.length === 0 ? (
           <Empty description="Your cart is empty" />
@@ -645,6 +598,9 @@ function Menu() {
                       src={item.image?.startsWith("http") ? item.image : `${API_BASE_URL}/uploads/${item.image}`} 
                       alt={item.name}
                       className="cart-item-image"
+                      onError={(e) => {
+                        e.target.src = PLACEHOLDER_IMAGE;
+                      }}
                     />
                     <div className="cart-item-info">
                       <div className="cart-item-name">{item.name}</div>
@@ -691,6 +647,9 @@ function Menu() {
               src={selectedFood.image?.startsWith("http") ? selectedFood.image : `${API_BASE_URL}/uploads/${selectedFood.image}`} 
               alt={selectedFood.name} 
               className="food-detail-image"
+              onError={(e) => {
+                e.target.src = PLACEHOLDER_IMAGE;
+              }}
             />
             <div className="food-detail-info">
               <h2>{selectedFood.name}</h2>

@@ -12,10 +12,10 @@ import {
   Tag,
   Skeleton,
   Alert,
-  Empty,
   Avatar,
-  Badge,
-  Progress
+  Divider,
+  Tooltip,
+  Modal
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -25,19 +25,30 @@ import {
   QrcodeOutlined,
   GiftOutlined,
   PlusOutlined,
-  EyeOutlined,
   BulbOutlined,
   RocketOutlined,
   ThunderboltOutlined,
-  StarOutlined,
-  TrophyOutlined,
   CalendarOutlined,
-  DashboardOutlined
+  DashboardOutlined,
+  CameraOutlined,
+  TagsOutlined,
+  BarChartOutlined,
+  AimOutlined,
+  SmileOutlined,
+  CrownOutlined,
+  HeartOutlined,
+  RiseOutlined,
+  UserOutlined,
+  SafetyOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  InfoCircleOutlined,
+  StarOutlined
 } from "@ant-design/icons";
 import API_BASE_URL from "../config";
 import "../styles/AdminDashboard.css";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -47,23 +58,35 @@ function AdminDashboard() {
     menuItems: 0,
     qrCodes: 0
   });
-  const [recentActivities, setRecentActivities] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [greeting, setGreeting] = useState("");
   const [currentTime, setCurrentTime] = useState("");
+  const [currentDate, setCurrentDate] = useState("");
+  const [tipModalVisible, setTipModalVisible] = useState(false);
+  const [selectedTip, setSelectedTip] = useState(null);
 
   useEffect(() => {
     setGreeting(getGreeting());
-    setCurrentTime(new Date().toLocaleTimeString());
+    updateDateTime();
     fetchDashboardStats();
-    fetchRecentActivities();
     
     const interval = setInterval(() => {
-      setCurrentTime(new Date().toLocaleTimeString());
+      updateDateTime();
     }, 1000);
     
     return () => clearInterval(interval);
   }, []);
+
+  const updateDateTime = () => {
+    const now = new Date();
+    setCurrentTime(now.toLocaleTimeString());
+    setCurrentDate(now.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    }));
+  };
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -96,19 +119,15 @@ function AdminDashboard() {
     }
   };
 
-  const fetchRecentActivities = async () => {
-    try {
-      const activities = [
-        { id: 1, action: "New restaurant added", time: "2 minutes ago", type: "success", icon: <ShopOutlined /> },
-        { id: 2, action: "Menu item updated", time: "15 minutes ago", type: "info", icon: <MenuOutlined /> },
-        { id: 3, action: "QR code generated", time: "1 hour ago", type: "warning", icon: <QrcodeOutlined /> },
-        { id: 4, action: "Category created", time: "3 hours ago", type: "success", icon: <FolderOutlined /> },
-        { id: 5, action: "Coupon created: SAVE20", time: "5 hours ago", type: "info", icon: <GiftOutlined /> }
-      ];
-      setRecentActivities(activities);
-    } catch (error) {
-      console.error("Error fetching activities:", error);
-    }
+  // Navigation handlers with state
+  const handleNavigate = (path, fromPage) => {
+    navigate(path, { state: { from: fromPage } });
+  };
+
+  // Show tip details
+  const showTipDetails = (tip) => {
+    setSelectedTip(tip);
+    setTipModalVisible(true);
   };
 
   const actions = [
@@ -117,62 +136,88 @@ function AdminDashboard() {
       path: "/admin/create-restaurant", 
       desc: "Add a new restaurant to the system",
       icon: <ShopOutlined />,
-      color: "#ff9f4a"
+      color: "#ff9f4a",
+      bgColor: "#fff7ed",
+      fromPage: "/admin"
     },
     { 
       label: "Create Category",   
       path: "/admin/create-category",   
       desc: "Add a new menu category",
       icon: <FolderOutlined />,
-      color: "#ffb347"
+      color: "#ffb347",
+      bgColor: "#fff7ed",
+      fromPage: "/admin"
     },
     { 
       label: "Add Food Menu",     
       path: "/add-item",                 
       desc: "Add a new food item with image",
       icon: <MenuOutlined />,
-      color: "#ffc08a"
+      color: "#ffc08a",
+      bgColor: "#fff7ed",
+      fromPage: "/admin"
     },
     { 
       label: "Generate QR Code",  
       path: "/admin/qr-generator",       
       desc: "Generate QR code for a menu page",
       icon: <QrcodeOutlined />,
-      color: "#ff9f4a"
+      color: "#ff9f4a",
+      bgColor: "#fff7ed",
+      fromPage: "/admin"
     },
     { 
       label: "Manage Coupons",    
       path: "/admin/coupons",           
       desc: "Create and manage discount coupons",
       icon: <GiftOutlined />,
-      color: "#ffb347"
+      color: "#ffb347",
+      bgColor: "#fff7ed",
+      fromPage: "/admin"
     },
   ];
 
   const tips = [
-    { icon: "📸", text: "Add high-quality images to your menu items for better engagement" },
-    { icon: "🏷️", text: "Organize items with proper categories for easy navigation" },
-    { icon: "📊", text: "Generate QR codes for each restaurant to track performance" },
-    { icon: "🎯", text: "Regularly update menu items to keep customers engaged" }
+    { 
+      icon: <CameraOutlined />, 
+      text: "Add high-quality images to your menu items for better engagement", 
+      color: "#ff9f4a",
+      detailedDesc: "High-quality images can increase customer engagement by up to 80%. Use professional photos with good lighting and composition to make your dishes look appetizing."
+    },
+    { 
+      icon: <TagsOutlined />, 
+      text: "Organize items with proper categories for easy navigation", 
+      color: "#ffb347",
+      detailedDesc: "Proper categorization helps customers find what they're looking for quickly. Group similar items together and use clear, descriptive category names."
+    },
+    { 
+      icon: <BarChartOutlined />, 
+      text: "Generate QR codes for each restaurant to track performance", 
+      color: "#ffc08a",
+      detailedDesc: "QR codes allow you to track restaurant performance, monitor scan statistics, and understand customer behavior patterns."
+    },
+    { 
+      icon: <AimOutlined />, 
+      text: "Regularly update menu items to keep customers engaged", 
+      color: "#ff9f4a",
+      detailedDesc: "Regular menu updates keep your offerings fresh and encourage repeat visits. Consider seasonal specials and limited-time offers."
+    }
   ];
-
-  const getProgressPercentage = () => {
-    const total = stats.restaurants + stats.categories + stats.menuItems;
-    const max = 100;
-    return Math.min(Math.round((total / max) * 100), 100);
-  };
 
   const StatCard = ({ title, value, icon, trend, loading }) => (
     <Card className="admin-dash-stat-card" hoverable>
-      <div className="admin-dash-stat-icon">{icon}</div>
+      <div className="admin-dash-stat-icon-wrapper">
+        <div className="admin-dash-stat-icon">{icon}</div>
+      </div>
       <Statistic
         title={title}
         value={loading ? "..." : value}
-        styles={{ content: { color: '#ff9f4a', fontWeight: 700 } }}
         className="admin-dash-statistic"
       />
       {trend && !loading && (
         <div className="admin-dash-stat-trend">
+          <RiseOutlined className="trend-icon" />
           <Tag color="orange" className="admin-dash-trend-tag">{trend}</Tag>
         </div>
       )}
@@ -180,11 +225,10 @@ function AdminDashboard() {
     </Card>
   );
 
-  // Modern Breadcrumb items API
   const breadcrumbItems = [
     {
       title: (
-        <span>
+        <span className="breadcrumb-home">
           <DashboardOutlined /> Dashboard
         </span>
       ),
@@ -194,62 +238,60 @@ function AdminDashboard() {
     },
   ];
 
-  // Modern Timeline items - Using CORRECT API with 'content' not 'children'
-  const timelineItems = tips.map((tip, index) => ({
-    key: index,
-    icon: (
-      <div className="admin-dash-timeline-dot">
-        {tip.icon}
-      </div>
-    ),
-    color: "orange",
-    content: (  // ✅ Using 'content' instead of 'children'
-      <Text className="admin-dash-tip-text">
-        {tip.text}
-      </Text>
-    )
-  }));
-
   return (
     <div className="admin-dash-container">
+      <div className="admin-dash-bg-pattern"></div>
       <div className="admin-dash-content">
         <Breadcrumb className="admin-dash-breadcrumb" items={breadcrumbItems} />
 
         {/* Header Section */}
         <div className="admin-dash-header">
           <div className="admin-dash-header-left">
-            <Avatar size={64} icon={<RocketOutlined />} className="admin-dash-header-avatar" />
+            <div className="admin-dash-avatar-wrapper">
+              <Avatar size={72} icon={<RocketOutlined />} className="admin-dash-header-avatar" />
+              <div className="avatar-glow"></div>
+            </div>
             <div className="admin-dash-header-info">
+              <div className="greeting-badge">
+                <SmileOutlined className="greeting-icon" />
+                <span className="greeting-text">{greeting}</span>
+              </div>
               <Title level={2} className="admin-dash-title">
-                {greeting}, Admin! 👋
+                Admin! <UserOutlined className="title-icon" />
               </Title>
-              <Space>
-                <Text type="secondary" className="admin-dash-subtitle">
-                  Welcome to your QRhino Admin Dashboard
-                </Text>
-                <Tag icon={<CalendarOutlined />} color="orange" className="admin-dash-time-tag">
-                  {currentTime}
-                </Tag>
-              </Space>
+              <div className="header-stats">
+                <Space size="middle" wrap>
+                  <div className="header-stat-item">
+                    <StarOutlined className="header-stat-icon" />
+                    <Text className="header-stat-text">Welcome back to your command center</Text>
+                  </div>
+                  <Divider type="vertical" className="header-divider" />
+                  <div className="header-stat-item">
+                    <CalendarOutlined className="header-stat-icon" />
+                    <Text className="header-stat-text">{currentDate}</Text>
+                  </div>
+                  <Divider type="vertical" className="header-divider" />
+                  <div className="header-stat-item">
+                    <ClockCircleOutlined className="header-stat-icon" />
+                    <Text className="header-stat-text">{currentTime}</Text>
+                  </div>
+                </Space>
+              </div>
             </div>
           </div>
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => navigate("/")}
-            className="admin-dash-back-btn"
-          >
-            Back to Home
-          </Button>
+          <Tooltip title="Return to Home Page">
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate("/")}
+              className="admin-dash-back-btn"
+            >
+              Back to Home
+            </Button>
+          </Tooltip>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats Grid - No auto-hover animation */}
         <div className="admin-dash-stats-section">
-          <div className="admin-dash-section-header">
-            <Title level={3} className="admin-dash-section-title">
-              <StarOutlined /> Overview Dashboard
-            </Title>
-            <Text type="secondary">Real-time statistics of your platform</Text>
-          </div>
           <Row gutter={[24, 24]}>
             <Col xs={24} sm={12} lg={6}>
               <StatCard
@@ -293,10 +335,15 @@ function AdminDashboard() {
         {/* Quick Actions Section */}
         <div className="admin-dash-actions-section">
           <div className="admin-dash-section-header">
-            <Title level={3} className="admin-dash-section-title">
-              <ThunderboltOutlined /> Quick Actions
-            </Title>
-            <Text type="secondary">Manage your restaurant content</Text>
+            <div className="section-header-left">
+              <ThunderboltOutlined className="section-icon" />
+              <Title level={3} className="admin-dash-section-title">
+                Quick Actions
+              </Title>
+            </div>
+            <Text type="secondary" className="section-subtitle">
+              Manage your restaurant content efficiently
+            </Text>
           </div>
           <Row gutter={[24, 24]}>
             {actions.map((action, index) => (
@@ -304,21 +351,23 @@ function AdminDashboard() {
                 <Card
                   className="admin-dash-action-card"
                   hoverable
-                  onClick={() => navigate(action.path)}
+                  onClick={() => handleNavigate(action.path, action.fromPage)}
                 >
-                  <div className="admin-dash-action-icon" style={{ color: action.color }}>
-                    {action.icon}
+                  <div className="action-card-icon" style={{ backgroundColor: action.bgColor }}>
+                    <div className="action-icon-wrapper" style={{ color: action.color }}>
+                      {action.icon}
+                    </div>
                   </div>
-                  <div className="admin-dash-action-content">
-                    <Title level={4} className="admin-dash-action-title">
+                  <div className="action-card-content">
+                    <Title level={4} className="action-card-title">
                       {action.label}
                     </Title>
-                    <Text type="secondary" className="admin-dash-action-desc">
+                    <Text type="secondary" className="action-card-desc">
                       {action.desc}
                     </Text>
-                    <div className="admin-dash-action-link">
+                    <div className="action-card-link">
                       <span>Get started</span>
-                      <PlusOutlined />
+                      <PlusOutlined className="link-icon" />
                     </div>
                   </div>
                 </Card>
@@ -327,173 +376,113 @@ function AdminDashboard() {
           </Row>
         </div>
 
-        <Row gutter={[24, 24]}>
-          {/* Recent Activity Section */}
-          <Col xs={24} lg={14}>
-            <Card
-              title={
-                <Space>
-                  <EyeOutlined />
-                  <span>Recent Activity</span>
-                  <Badge count={recentActivities.length} className="admin-dash-badge" />
-                </Space>
-              }
-              className="admin-dash-activity-card"
-              extra={
-                <Button type="link" onClick={() => navigate("/admin/activities")}>
-                  View All
-                </Button>
-              }
-            >
-              {recentActivities.length === 0 ? (
-                <Empty description="No recent activities" />
-              ) : (
-                <div className="admin-dash-activity-list">
-                  {recentActivities.map((item) => (
-                    <div key={item.id} className="admin-dash-activity-item">
-                      <div className="admin-dash-activity-item-content">
-                        <Avatar
-                          icon={item.icon}
-                          className={`admin-dash-activity-avatar ${item.type}`}
-                        />
-                        <div className="admin-dash-activity-details">
-                          <Space>
-                            <Text strong className="admin-dash-activity-action">
-                              {item.action}
-                            </Text>
-                            <Tag color="orange" className="admin-dash-activity-tag">
-                              {item.type}
-                            </Tag>
-                          </Space>
-                          <Text type="secondary" className="admin-dash-activity-time">
-                            {item.time}
-                          </Text>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-          </Col>
-
-          {/* Quick Tips Section - Using custom timeline to avoid deprecated warnings */}
-          <Col xs={24} lg={10}>
-            <Card
-              title={
-                <Space>
-                  <BulbOutlined />
-                  <span>Quick Tips</span>
-                </Space>
-              }
-              className="admin-dash-tips-card"
-            >
-              <div className="admin-dash-custom-timeline">
-                {tips.map((tip, index) => (
-                  <div key={index} className="admin-dash-custom-timeline-item">
-                    <div className="admin-dash-custom-timeline-dot">
-                      {tip.icon}
-                    </div>
-                    <div className="admin-dash-custom-timeline-content">
-                      <Text className="admin-dash-tip-text">
-                        {tip.text}
-                      </Text>
-                    </div>
+        {/* Quick Tips Section */}
+        <div className="admin-dash-tips-section">
+          <div className="admin-dash-section-header">
+            <div className="section-header-left">
+              <BulbOutlined className="section-icon" />
+              <Title level={3} className="admin-dash-section-title">
+                Quick Tips
+              </Title>
+            </div>
+            <Text type="secondary" className="section-subtitle">
+              Click on any tip to learn more
+            </Text>
+          </div>
+          <Row gutter={[24, 24]}>
+            {tips.map((tip, index) => (
+              <Col xs={24} sm={12} lg={6} key={index}>
+                <Card 
+                  className="admin-dash-tip-card" 
+                  hoverable
+                  onClick={() => showTipDetails(tip)}
+                >
+                  <div className="tip-card-icon" style={{ color: tip.color }}>
+                    {tip.icon}
                   </div>
-                ))}
-              </div>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Progress Section */}
-        <div className="admin-dash-progress-section">
-          <Card className="admin-dash-progress-card">
-            <Row gutter={[24, 24]} align="middle">
-              <Col xs={24} md={8}>
-                <div className="admin-dash-progress-left">
-                  <div className="admin-dash-progress-icon">
-                    <TrophyOutlined />
+                  <Text className="tip-card-text">{tip.text}</Text>
+                  <div className="tip-card-footer">
+                    <SafetyOutlined className="tip-footer-icon" />
+                    <span className="tip-footer-text">Click for details</span>
                   </div>
-                  <Title level={4} className="admin-dash-progress-title">
-                    Platform Progress
-                  </Title>
-                  <Text type="secondary">Track your achievements</Text>
-                </div>
+                </Card>
               </Col>
-              <Col xs={24} md={16}>
-                <div className="admin-dash-progress-stats">
-                  <div className="admin-dash-progress-item">
-                    <div className="admin-dash-progress-label">Completion Rate</div>
-                    <Progress
-                      percent={getProgressPercentage()}
-                      strokeColor="#ff9f4a"
-                      railColor="#ffe0c4"
-                      className="admin-dash-progress-bar"
-                    />
-                  </div>
-                  <Row gutter={[16, 16]}>
-                    <Col xs={12} sm={6}>
-                      <div className="admin-dash-milestone">
-                        <div className="admin-dash-milestone-value">
-                          {stats.restaurants}
-                        </div>
-                        <div className="admin-dash-milestone-label">Restaurants</div>
-                      </div>
-                    </Col>
-                    <Col xs={12} sm={6}>
-                      <div className="admin-dash-milestone">
-                        <div className="admin-dash-milestone-value">
-                          {stats.categories}
-                        </div>
-                        <div className="admin-dash-milestone-label">Categories</div>
-                      </div>
-                    </Col>
-                    <Col xs={12} sm={6}>
-                      <div className="admin-dash-milestone">
-                        <div className="admin-dash-milestone-value">
-                          {stats.menuItems}
-                        </div>
-                        <div className="admin-dash-milestone-label">Menu Items</div>
-                      </div>
-                    </Col>
-                    <Col xs={12} sm={6}>
-                      <div className="admin-dash-milestone">
-                        <div className="admin-dash-milestone-value">
-                          {Math.round(stats.restaurants * 10)}
-                        </div>
-                        <div className="admin-dash-milestone-label">QR Scans</div>
-                      </div>
-                    </Col>
-                  </Row>
-                </div>
-              </Col>
-            </Row>
-          </Card>
+            ))}
+          </Row>
         </div>
 
-        {/* Loading Alert */}
-        {isLoading && (
-          <Alert
-            title="Loading Dashboard Data"
-            description="Please wait while we fetch the latest information"
-            type="info"
-            showIcon
-            className="admin-dash-loading-alert"
-          />
-        )}
-
-        {/* Welcome Alert */}
-        {!isLoading && (
-          <Alert
-            title="🎉 Welcome to Your Admin Dashboard"
-            description="Manage restaurants, menu items, QR codes, and coupons all from one place. Get started by creating your first restaurant!"
-            type="success"
-            showIcon
-            className="admin-dash-welcome-alert"
-          />
-        )}
+        {/* Welcome Section */}
+        <div className="admin-dash-welcome-section">
+          <Card className="admin-dash-welcome-card">
+            <div className="welcome-card-content">
+              <div className="welcome-icon-wrapper">
+                <CrownOutlined className="welcome-icon" />
+              </div>
+              <div className="welcome-text">
+                <Title level={4} className="welcome-title">Welcome to Your Admin Dashboard</Title>
+                <Paragraph className="welcome-description">
+                  Manage restaurants, menu items, QR codes, and coupons all from one place. 
+                  Get started by creating your first restaurant!
+                </Paragraph>
+                <div className="welcome-features">
+                  <div className="feature-item">
+                    <CheckCircleOutlined className="feature-icon" />
+                    <span>Easy restaurant management</span>
+                  </div>
+                  <div className="feature-item">
+                    <CheckCircleOutlined className="feature-icon" />
+                    <span>QR code generation</span>
+                  </div>
+                  <div className="feature-item">
+                    <CheckCircleOutlined className="feature-icon" />
+                    <span>Coupon management system</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
+
+      {/* Tip Details Modal */}
+      <Modal
+        title={
+          <div className="tip-modal-title">
+            <BulbOutlined style={{ color: '#ea580c', marginRight: '8px' }} />
+            Pro Tip Details
+          </div>
+        }
+        open={tipModalVisible}
+        onCancel={() => setTipModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setTipModalVisible(false)} className="tip-modal-close-btn">
+            Got it
+          </Button>
+        ]}
+        className="tip-detail-modal"
+        width={500}
+        centered
+      >
+        {selectedTip && (
+          <div className="tip-modal-content">
+            <div className="tip-modal-icon" style={{ color: selectedTip.color }}>
+              {selectedTip.icon}
+            </div>
+            <div className="tip-modal-text">
+              <Text strong className="tip-modal-quote">"{selectedTip.text}"</Text>
+              <Paragraph className="tip-modal-description">
+                {selectedTip.detailedDesc}
+              </Paragraph>
+              <div className="tip-modal-footer">
+                <InfoCircleOutlined className="tip-modal-info-icon" />
+                <Text type="secondary" className="tip-modal-hint">
+                  Implement this tip to improve your restaurant management
+                </Text>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

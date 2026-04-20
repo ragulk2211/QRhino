@@ -22,7 +22,8 @@ import {
   Image,
   Tooltip,
   Spin,
-  App as AntApp
+  App as AntApp,
+  Tag
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -38,7 +39,15 @@ import {
   DollarOutlined,
   InfoCircleOutlined,
   CheckCircleOutlined,
-  WarningOutlined
+  StarOutlined,
+  FireOutlined,
+  RocketOutlined,
+  SafetyOutlined,
+  EnterOutlined,
+  PictureOutlined,
+  PlusOutlined,
+  SwapOutlined,
+  LoadingOutlined
 } from "@ant-design/icons";
 import API_BASE_URL from "../config";
 import "../styles/createRestaurant.css";
@@ -54,8 +63,8 @@ function CreateRestaurant() {
   const [imagePreview, setImagePreview] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [uploading, setUploading] = useState(false);
 
-  // Use message from App context to avoid static method warning
   const [messageApi, contextHolder] = message.useMessage();
 
   const handleImageUpload = (file) => {
@@ -71,13 +80,34 @@ function CreateRestaurant() {
       return false;
     }
 
+    setUploading(true);
     setImageFile(file);
     const reader = new FileReader();
-    reader.onload = (e) => setImagePreview(e.target.result);
+    reader.onload = (e) => {
+      setImagePreview(e.target.result);
+      setUploading(false);
+      messageApi.success("Image uploaded successfully!");
+    };
+    reader.onerror = () => {
+      messageApi.error("Failed to read image file");
+      setUploading(false);
+    };
     reader.readAsDataURL(file);
-    messageApi.success("Image uploaded successfully!");
     
     return false;
+  };
+
+  const handleChangeImage = () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        handleImageUpload(file);
+      }
+    };
+    fileInput.click();
   };
 
   const handleRemoveImage = () => {
@@ -86,10 +116,44 @@ function CreateRestaurant() {
     messageApi.info("Image removed");
   };
 
+  // Validate current step before proceeding
+  const validateCurrentStep = async () => {
+    try {
+      let fieldsToValidate = [];
+      
+      if (currentStep === 0) {
+        fieldsToValidate = ['name', 'cuisine', 'description'];
+      } else if (currentStep === 1) {
+        fieldsToValidate = [
+          'location.address', 
+          'location.city', 
+          'location.state', 
+          'location.pincode', 
+          'phone', 
+          'email'
+        ];
+      }
+      
+      await form.validateFields(fieldsToValidate);
+      return true;
+    } catch (error) {
+      messageApi.error("Please fill all required fields before proceeding");
+      return false;
+    }
+  };
+
+  const handleNext = async () => {
+    const isValid = await validateCurrentStep();
+    if (isValid) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    setCurrentStep(currentStep - 1);
+  };
+
   const onFinish = async (values) => {
-    console.log("Form values:", values); // Debug log
-    
-    // Image validation
     if (!imageFile && !imagePreview) {
       messageApi.error("Please upload a restaurant image");
       return;
@@ -100,15 +164,21 @@ function CreateRestaurant() {
     try {
       const formData = new FormData();
       formData.append("name", values.name?.trim() || "");
-      formData.append("location", JSON.stringify(values.location || {}));
+      formData.append("location", JSON.stringify({
+        address: values.location?.address || "",
+        city: values.location?.city || "",
+        state: values.location?.state || "",
+        pincode: values.location?.pincode || "",
+        landmark: values.location?.landmark || ""
+      }));
       formData.append("phone", values.phone || "");
       formData.append("email", values.email || "");
       formData.append("description", values.description?.trim() || "");
-      formData.append("cuisine", values.cuisine?.join(",") || "");
+      formData.append("cuisine", Array.isArray(values.cuisine) ? values.cuisine.join(",") : "");
       formData.append("priceRange", values.priceRange || 0);
       formData.append("deliveryTime", values.deliveryTime || 0);
       formData.append("isOpen", values.isOpen ?? true);
-      formData.append("rating", values.rating || 0);
+      formData.append("rating", values.rating || 4.5);
       formData.append("timings", values.timings || "");
       
       if (imageFile) {
@@ -152,19 +222,15 @@ function CreateRestaurant() {
   const steps = [
     {
       title: "Basic Info",
-      icon: <ShopOutlined />
     },
     {
       title: "Location Details",
-      icon: <EnvironmentOutlined />
     },
     {
       title: "Additional Info",
-      icon: <ClockCircleOutlined />
     }
   ];
 
-  // Modern Breadcrumb items API
   const breadcrumbItems = [
     {
       title: (
@@ -178,6 +244,13 @@ function CreateRestaurant() {
     },
   ];
 
+  const uploadButton = (
+    <div className="upload-button-content">
+      {uploading ? <LoadingOutlined className="upload-icon" /> : <PlusOutlined className="upload-icon" />}
+      <div className="upload-text">Upload</div>
+    </div>
+  );
+
   return (
     <AntApp>
       {contextHolder}
@@ -185,29 +258,29 @@ function CreateRestaurant() {
         <div className="restaurant-form-content">
           <Breadcrumb className="restaurant-form-breadcrumb" items={breadcrumbItems} />
 
-          <Card className="restaurant-form-card">
-            <div className="restaurant-form-header">
-              <Button 
-                icon={<ArrowLeftOutlined />} 
-                onClick={() => navigate("/admin")}
-                className="restaurant-form-back-btn"
-              >
-                Back to Dashboard
-              </Button>
-              <Title level={2} className="restaurant-form-title">
-                Create New Restaurant
-              </Title>
-              <Paragraph className="restaurant-form-subtitle">
-                Add a new restaurant to your platform
-              </Paragraph>
-            </div>
-
-            <Divider />
-
+          <Card 
+            className="restaurant-form-card" 
+            variant="outlined"
+            title={
+              <div className="restaurant-form-card-header">
+                <Button 
+                  icon={<ArrowLeftOutlined />} 
+                  onClick={() => navigate("/admin")}
+                  className="restaurant-form-back-btn-top"
+                  type="default"
+                >
+                  Back
+                </Button>
+                <div className="restaurant-form-card-title-wrapper">
+                  <RocketOutlined style={{ color: '#ea580c', fontSize: 20 }} />
+                  <span className="restaurant-form-card-title">Create New Restaurant</span>
+                </div>
+              </div>
+            }
+          >
             <Steps 
               current={currentStep} 
               items={steps}
-              onChange={setCurrentStep}
               className="restaurant-form-steps"
             />
 
@@ -232,23 +305,27 @@ function CreateRestaurant() {
               }}
             >
               {currentStep === 0 && (
-                <>
-                  <Row gutter={24}>
+                <div className="restaurant-form-step-content">
+                  <Row gutter={[24, 16]}>
                     <Col xs={24} lg={12}>
                       <Form.Item
                         name="name"
-                        label="Restaurant Name"
+                        label={
+                          <span>
+                            <ShopOutlined /> Restaurant Name
+                          </span>
+                        }
                         rules={[
                           { required: true, message: "Please enter restaurant name" },
                           { min: 2, message: "Restaurant name must be at least 2 characters" },
                           { max: 50, message: "Restaurant name must be less than 50 characters" }
                         ]}
                         className="restaurant-form-item"
+                        required
                       >
                         <Input 
                           placeholder="e.g., Pizza Palace" 
                           size="large"
-                          prefix={<ShopOutlined />}
                           maxLength={50}
                           showCount
                         />
@@ -258,18 +335,15 @@ function CreateRestaurant() {
                       <Form.Item
                         name="cuisine"
                         label={
-                          <Space>
-                            Cuisine Type
-                            <Tooltip title="Select one or more cuisine types">
-                              <InfoCircleOutlined style={{ color: '#ff8c42' }} />
-                            </Tooltip>
-                          </Space>
+                          <span>
+                            <FireOutlined /> Cuisine Type
+                          </span>
                         }
                         rules={[
-                          { required: true, message: "Please select at least one cuisine type" },
-                          { type: 'array', min: 1, message: "Please select at least one cuisine type" }
+                          { required: true, message: "Please select at least one cuisine type" }
                         ]}
                         className="restaurant-form-item"
+                        required
                       >
                         <Select
                           mode="multiple"
@@ -277,6 +351,7 @@ function CreateRestaurant() {
                           placeholder="Select cuisine types"
                           allowClear
                           showSearch
+                          maxTagCount="responsive"
                         >
                           <Option value="indian">Indian</Option>
                           <Option value="chinese">Chinese</Option>
@@ -293,16 +368,21 @@ function CreateRestaurant() {
 
                   <Form.Item
                     name="description"
-                    label="Description"
+                    label={
+                      <span>
+                        <InfoCircleOutlined /> Description
+                      </span>
+                    }
                     rules={[
                       { required: true, message: "Please enter description" },
                       { min: 10, message: "Description must be at least 10 characters" },
                       { max: 500, message: "Description must be less than 500 characters" }
                     ]}
                     className="restaurant-form-item"
+                    required
                   >
                     <TextArea 
-                      placeholder="Describe your restaurant..." 
+                      placeholder="Describe your restaurant, its ambiance, specialities, and what makes it unique..." 
                       rows={4}
                       showCount
                       maxLength={500}
@@ -310,71 +390,100 @@ function CreateRestaurant() {
                   </Form.Item>
 
                   <Form.Item
-                    label="Restaurant Image"
+                    label={
+                      <span>
+                        <PictureOutlined /> Restaurant Image
+                      </span>
+                    }
                     required
-                    tooltip="Upload a high-quality image of the restaurant"
                     className="restaurant-form-item"
                   >
-                    <div className="restaurant-form-upload-area">
-                      {!imagePreview ? (
-                        <Upload.Dragger
-                          beforeUpload={handleImageUpload}
-                          showUploadList={false}
-                          accept="image/jpeg,image/jpg,image/png,image/webp"
-                        >
-                          <p className="ant-upload-drag-icon">
-                            <UploadOutlined />
-                          </p>
-                          <p className="ant-upload-text">Click or drag file to upload</p>
-                          <p className="ant-upload-hint">
-                            Support for JPG, PNG, WEBP. Max size 5MB. Recommended size: 1200x800px
-                          </p>
-                        </Upload.Dragger>
-                      ) : (
-                        <div className="restaurant-form-image-preview">
-                          <Image
-                            src={imagePreview}
-                            alt="Preview"
-                            width={300}
-                            height={200}
-                            style={{ objectFit: "cover", borderRadius: 12 }}
-                            preview={{ mask: 'Click to preview' }}
-                          />
-                          <Button
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={handleRemoveImage}
-                            style={{ marginTop: 12 }}
-                          >
-                            Remove Image
-                          </Button>
-                        </div>
-                      )}
+                    <div className="restaurant-form-upload-wrapper">
+                      <Upload
+                        listType="picture-card"
+                        showUploadList={false}
+                        beforeUpload={handleImageUpload}
+                        accept="image/*"
+                        maxCount={1}
+                        className="restaurant-form-upload"
+                      >
+                        {imagePreview ? (
+                          <div className="restaurant-form-image-preview">
+                            <Image
+                              src={imagePreview}
+                              alt="Preview"
+                              width={100}
+                              height={100}
+                              style={{ objectFit: 'cover', borderRadius: 6 }}
+                              preview={{
+                                mask: 'Preview'
+                              }}
+                            />
+                            <div className="restaurant-form-image-overlay">
+                              <Tooltip title="Change Image">
+                                <Button
+                                  icon={<SwapOutlined />}
+                                  size="small"
+                                  className="restaurant-form-change-image-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleChangeImage();
+                                  }}
+                                />
+                              </Tooltip>
+                              <Tooltip title="Remove Image">
+                                <Button
+                                  icon={<DeleteOutlined />}
+                                  size="small"
+                                  danger
+                                  className="restaurant-form-image-remove"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveImage();
+                                  }}
+                                />
+                              </Tooltip>
+                            </div>
+                          </div>
+                        ) : (
+                          uploadButton
+                        )}
+                      </Upload>
+                      <Text type="secondary" className="upload-hint">
+                        <PictureOutlined /> Click to upload or drag & drop (JPG, PNG, WEBP, max 5MB)
+                      </Text>
                     </div>
                   </Form.Item>
-                </>
+                </div>
               )}
 
               {currentStep === 1 && (
-                <>
-                  <Row gutter={24}>
-                    <Col xs={24} sm={12}>
+                <div className="restaurant-form-step-content">
+                  <Row gutter={[24, 16]}>
+                    <Col xs={24}>
                       <Form.Item
                         name={["location", "address"]}
-                        label="Street Address"
+                        label={
+                          <span>
+                            <EnvironmentOutlined /> Street Address
+                          </span>
+                        }
                         rules={[
                           { required: true, message: "Please enter street address" },
                           { min: 5, message: "Address must be at least 5 characters" }
                         ]}
                         className="restaurant-form-item"
+                        required
                       >
                         <Input 
                           placeholder="Street address" 
                           size="large"
-                          prefix={<EnvironmentOutlined />}
                         />
                       </Form.Item>
                     </Col>
+                  </Row>
+
+                  <Row gutter={[24, 16]}>
                     <Col xs={24} sm={12}>
                       <Form.Item
                         name={["location", "city"]}
@@ -384,17 +493,12 @@ function CreateRestaurant() {
                           { min: 2, message: "City name must be at least 2 characters" }
                         ]}
                         className="restaurant-form-item"
+                        required
                       >
-                        <Input 
-                          placeholder="City" 
-                          size="large"
-                        />
+                        <Input placeholder="City" size="large" />
                       </Form.Item>
                     </Col>
-                  </Row>
-
-                  <Row gutter={24}>
-                    <Col xs={24} sm={8}>
+                    <Col xs={24} sm={12}>
                       <Form.Item
                         name={["location", "state"]}
                         label="State"
@@ -403,11 +507,15 @@ function CreateRestaurant() {
                           { min: 2, message: "State name must be at least 2 characters" }
                         ]}
                         className="restaurant-form-item"
+                        required
                       >
                         <Input placeholder="State" size="large" />
                       </Form.Item>
                     </Col>
-                    <Col xs={24} sm={8}>
+                  </Row>
+
+                  <Row gutter={[24, 16]}>
+                    <Col xs={24} sm={12}>
                       <Form.Item
                         name={["location", "pincode"]}
                         label="Pincode"
@@ -416,6 +524,7 @@ function CreateRestaurant() {
                           { pattern: /^\d{6}$/, message: "Pincode must be exactly 6 digits" }
                         ]}
                         className="restaurant-form-item"
+                        required
                       >
                         <Input 
                           placeholder="Pincode" 
@@ -430,32 +539,36 @@ function CreateRestaurant() {
                         />
                       </Form.Item>
                     </Col>
-                    <Col xs={24} sm={8}>
+                    <Col xs={24} sm={12}>
                       <Form.Item
                         name={["location", "landmark"]}
-                        label="Landmark (Optional)"
+                        label="Landmark"
                         className="restaurant-form-item"
                       >
-                        <Input placeholder="Nearby landmark" size="large" />
+                        <Input placeholder="Nearby landmark (Optional)" size="large" />
                       </Form.Item>
                     </Col>
                   </Row>
 
-                  <Row gutter={24}>
+                  <Row gutter={[24, 16]}>
                     <Col xs={24} sm={12}>
                       <Form.Item
                         name="phone"
-                        label="Phone Number"
+                        label={
+                          <span>
+                            <PhoneOutlined /> Phone Number
+                          </span>
+                        }
                         rules={[
                           { required: true, message: "Please enter phone number" },
                           { pattern: /^\d{10}$/, message: "Phone number must be exactly 10 digits" }
                         ]}
                         className="restaurant-form-item"
+                        required
                       >
                         <Input 
                           placeholder="9876543210" 
                           size="large"
-                          prefix={<PhoneOutlined />}
                           maxLength={10}
                           onKeyDown={(e) => {
                             const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
@@ -469,52 +582,53 @@ function CreateRestaurant() {
                     <Col xs={24} sm={12}>
                       <Form.Item
                         name="email"
-                        label="Email Address"
+                        label={
+                          <span>
+                            <MailOutlined /> Email Address
+                          </span>
+                        }
                         rules={[
                           { required: true, message: "Please enter email address" },
                           { type: "email", message: "Please enter a valid email address" }
                         ]}
                         className="restaurant-form-item"
+                        required
                       >
                         <Input 
                           placeholder="restaurant@example.com" 
                           size="large"
-                          prefix={<MailOutlined />}
                         />
                       </Form.Item>
                     </Col>
                   </Row>
-                </>
+                </div>
               )}
 
               {currentStep === 2 && (
-                <>
-                  <Row gutter={24}>
+                <div className="restaurant-form-step-content">
+                  <Row gutter={[24, 16]}>
                     <Col xs={24} sm={12}>
                       <Form.Item
                         name="priceRange"
                         label={
-                          <Space>
-                            Price for Two (₹)
-                            <Tooltip title="Average price for two people">
-                              <InfoCircleOutlined style={{ color: '#ff8c42' }} />
-                            </Tooltip>
-                          </Space>
+                          <span>
+                            <DollarOutlined /> Price for Two (₹)
+                          </span>
                         }
                         rules={[
-                          { required: true, message: "Please enter price range" },
-                          { type: 'number', min: 1, message: "Price must be at least ₹1" }
+                          { required: true, message: "Please enter price range" }
                         ]}
                         className="restaurant-form-item"
+                        required
                       >
                         <InputNumber
                           placeholder="500"
                           size="large"
                           style={{ width: "100%" }}
-                          prefix={<DollarOutlined />}
+                          prefix="₹"
                           min={1}
-                          formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                          parser={value => value.replace(/₹\s?|(,*)/g, '')}
+                          formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                          parser={value => value.replace(/,/g, '')}
                         />
                       </Form.Item>
                     </Col>
@@ -522,24 +636,20 @@ function CreateRestaurant() {
                       <Form.Item
                         name="deliveryTime"
                         label={
-                          <Space>
-                            Delivery Time (mins)
-                            <Tooltip title="Average delivery time">
-                              <InfoCircleOutlined style={{ color: '#ff8c42' }} />
-                            </Tooltip>
-                          </Space>
+                          <span>
+                            <ClockCircleOutlined /> Delivery Time (mins)
+                          </span>
                         }
                         rules={[
-                          { required: true, message: "Please enter delivery time" },
-                          { type: 'number', min: 1, message: "Delivery time must be at least 1 minute" }
+                          { required: true, message: "Please enter delivery time" }
                         ]}
                         className="restaurant-form-item"
+                        required
                       >
                         <InputNumber
                           placeholder="30"
                           size="large"
                           style={{ width: "100%" }}
-                          prefix={<ClockCircleOutlined />}
                           min={1}
                           suffix="mins"
                         />
@@ -547,17 +657,22 @@ function CreateRestaurant() {
                     </Col>
                   </Row>
 
-                  <Row gutter={24}>
+                  <Row gutter={[24, 16]}>
                     <Col xs={24} sm={12}>
                       <Form.Item
                         name="rating"
-                        label="Rating"
+                        label={
+                          <span>
+                            <StarOutlined /> Rating
+                          </span>
+                        }
                         rules={[
                           { required: true, message: "Please select rating" }
                         ]}
                         className="restaurant-form-item"
+                        required
                       >
-                        <Rate allowHalf />
+                        <Rate allowHalf defaultValue={4.5} />
                       </Form.Item>
                     </Col>
                     <Col xs={24} sm={12}>
@@ -577,29 +692,39 @@ function CreateRestaurant() {
 
                   <Form.Item
                     name="timings"
-                    label="Operating Hours (Optional)"
+                    label="Operating Hours"
                     className="restaurant-form-item"
+                    extra="e.g., 10:00 AM - 10:00 PM"
                   >
                     <Input 
-                      placeholder="e.g., 10:00 AM - 10:00 PM" 
+                      placeholder="10:00 AM - 10:00 PM" 
                       size="large"
                     />
                   </Form.Item>
-                </>
+                </div>
               )}
 
-              <Divider />
+              <Divider className="restaurant-form-divider" />
 
               <Form.Item>
-                <Space>
+                <div className="restaurant-form-buttons">
+                  {currentStep > 0 && (
+                    <Button
+                      onClick={handlePrevious}
+                      size="large"
+                      className="restaurant-form-prev-btn"
+                    >
+                      Previous
+                    </Button>
+                  )}
                   {currentStep < 2 && (
                     <Button
                       type="primary"
-                      onClick={() => setCurrentStep(currentStep + 1)}
+                      onClick={handleNext}
                       size="large"
                       className="restaurant-form-next-btn"
                     >
-                      Next
+                      Next Step
                     </Button>
                   )}
                   {currentStep === 2 && (
@@ -614,25 +739,33 @@ function CreateRestaurant() {
                       Create Restaurant
                     </Button>
                   )}
-                  {currentStep > 0 && (
-                    <Button
-                      onClick={() => setCurrentStep(currentStep - 1)}
-                      size="large"
-                      className="restaurant-form-prev-btn"
-                    >
-                      Previous
-                    </Button>
-                  )}
                   <Button
                     size="large"
                     icon={<ClearOutlined />}
                     onClick={onReset}
                     className="restaurant-form-reset-btn"
                   >
-                    Reset
+                    Reset Form
                   </Button>
-                </Space>
+                </div>
               </Form.Item>
+
+              <Alert
+                message="Quick Tips"
+                description={
+                  <ul style={{ margin: 0, paddingLeft: 20 }}>
+                    <li><CheckCircleOutlined style={{ color: '#22c55e' }} /> All fields marked with * are required</li>
+                    <li><PictureOutlined /> Upload a clear image of the restaurant (max 5MB)</li>
+                    <li><PhoneOutlined /> Provide accurate contact information for customers</li>
+                    <li><DollarOutlined /> Set appropriate price range and delivery time</li>
+                    <li><EnterOutlined /> Press Enter to move to next field</li>
+                  </ul>
+                }
+                type="info"
+                showIcon
+                icon={<InfoCircleOutlined />}
+                className="restaurant-form-tips-alert"
+              />
             </Form>
           </Card>
         </div>

@@ -46,6 +46,7 @@ function Menu() {
   const [activeCategory, setActiveCategory] = useState("");
   const [menuData, setMenuData] = useState({});
   const [originalData, setOriginalData] = useState({});
+  const [selectedTabCategory, setSelectedTabCategory] = useState("all");
   const [foodTypeFilter, setFoodTypeFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [categoryMap, setCategoryMap] = useState({});
@@ -57,8 +58,8 @@ function Menu() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [imageErrors, setImageErrors] = useState({});
   const [isManualScroll, setIsManualScroll] = useState(false);
+  const [isArrowAnimating, setIsArrowAnimating] = useState(false);
   const categoryRefs = useRef({});
-  const scrollTimer = useRef(null);
 
   const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop";
 
@@ -78,34 +79,6 @@ function Menu() {
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cartItems));
   }, [cartItems]);
-
-  // Handle scroll for active category
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 400);
-      
-      if (!isManualScroll && Object.keys(menuData).length > 0) {
-        const categories = Object.keys(menuData);
-        for (let i = categories.length - 1; i >= 0; i--) {
-          const category = categories[i];
-          const element = categoryRefs.current[category];
-          if (element) {
-            const rect = element.getBoundingClientRect();
-            const offset = 100;
-            if (rect.top <= offset) {
-              if (activeCategory !== category) {
-                setActiveCategory(category);
-              }
-              break;
-            }
-          }
-        }
-      }
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [menuData, isManualScroll, activeCategory]);
 
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
   const cartTotal = cartItems.reduce((sum, item) => {
@@ -178,19 +151,37 @@ function Menu() {
     navigate("/cart");
   };
 
+  // Handle back button with backward/left animation
+  const handleGoBack = () => {
+    setIsArrowAnimating(true);
+    setTimeout(() => {
+      navigate("/");
+    }, 200);
+  };
+
   // Fetch menu data
   useEffect(() => {
     fetchMenu();
   }, [restaurantId, categoryParam]);
 
-  // Filter menu data
+  // Filter menu data based on selected tab, food type, and search
   useEffect(() => {
+    if (Object.keys(originalData).length === 0) return;
+    
     let filtered = { ...originalData };
+    
+    if (selectedTabCategory !== "all") {
+      const tabFiltered = {};
+      if (filtered[selectedTabCategory]) {
+        tabFiltered[selectedTabCategory] = filtered[selectedTabCategory];
+      }
+      filtered = tabFiltered;
+    }
     
     if (foodTypeFilter !== "all") {
       const typeFiltered = {};
-      Object.keys(originalData).forEach(category => {
-        const matchedItems = originalData[category].filter(item => {
+      Object.keys(filtered).forEach(category => {
+        const matchedItems = filtered[category].filter(item => {
           const foodType = item.foodType?.toLowerCase() || '';
           if (foodTypeFilter === "veg") {
             return foodType === 'veg' || foodType === 'vegetarian' || foodType === 'vegan';
@@ -218,11 +209,7 @@ function Menu() {
     }
     
     setMenuData(filtered);
-    
-    if (filtered[activeCategory]?.length === 0 && Object.keys(filtered).length > 0) {
-      setActiveCategory(Object.keys(filtered)[0]);
-    }
-  }, [foodTypeFilter, searchTerm, originalData, activeCategory]);
+  }, [selectedTabCategory, foodTypeFilter, searchTerm, originalData]);
 
   const fetchMenu = async () => {
     setIsLoading(true);
@@ -262,9 +249,7 @@ function Menu() {
 
       setMenuData(sortedGrouped);
       setOriginalData(sortedGrouped);
-
-      const firstCategory = Object.keys(sortedGrouped)[0];
-      if (firstCategory) setActiveCategory(firstCategory);
+      setActiveCategory(Object.keys(sortedGrouped)[0] || "");
     } catch (error) {
       console.error("Menu load error:", error);
       message.error("Failed to load menu");
@@ -312,25 +297,10 @@ function Menu() {
     return price;
   };
 
-  const scrollToCategory = useCallback((category) => {
-    const element = categoryRefs.current[category];
-    if (element) {
-      setIsManualScroll(true);
-      setActiveCategory(category);
-      
-      const fixedOffset = 80;
-      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
-      
-      window.scrollTo({
-        top: elementPosition - fixedOffset,
-        behavior: "smooth"
-      });
-      
-      setTimeout(() => {
-        setIsManualScroll(false);
-      }, 800);
-    }
-  }, []);
+  const handleCategoryClick = (category) => {
+    setSelectedTabCategory(category);
+    setActiveCategory(category);
+  };
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -338,6 +308,14 @@ function Menu() {
       behavior: 'smooth'
     });
   };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const filterMenuItems = [
     { key: 'all', label: 'All Items' },
@@ -351,6 +329,16 @@ function Menu() {
       case 'nonveg': return 'Non-Veg';
       default: return 'All';
     }
+  };
+
+  const getAllCategories = () => {
+    const categories = Object.keys(originalData);
+    return ["all", ...categories];
+  };
+
+  const getCategoryDisplayName = (category) => {
+    if (category === "all") return "All Items";
+    return category === "arabic-food" ? "Arabic Food" : category.charAt(0).toUpperCase() + category.slice(1);
   };
 
   if (isLoading) {
@@ -370,20 +358,23 @@ function Menu() {
       <div className="menu-header">
         <div className="header-row">
           <Tooltip title="Go Back" placement="bottom">
-            <button onClick={() => navigate("/")} className="back-btn-icon">
+            <button 
+              onClick={handleGoBack} 
+              className={`back-btn-icon ${isArrowAnimating ? 'arrow-animate-backward' : ''}`}
+              onAnimationEnd={() => setIsArrowAnimating(false)}
+            >
               <ArrowLeftOutlined />
             </button>
           </Tooltip>
           
           <div className="search-wrapper">
             <Input
-              placeholder="Search menu items..."
+              placeholder="Search dishes..."
               allowClear
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
               prefix={<SearchOutlined />}
-              size="middle"
             />
           </div>
           
@@ -397,23 +388,25 @@ function Menu() {
             placement="bottomRight"
           >
             <button className="filter-btn">
-              <FilterOutlined /> {getFilterLabel()} <DownOutlined />
+              <FilterOutlined />
+              <span className="filter-text">{getFilterLabel()}</span>
+              <DownOutlined />
             </button>
           </Dropdown>
         </div>
       </div>
 
       {/* Category Tabs */}
-      {Object.keys(menuData).length > 0 && (
+      {Object.keys(originalData).length > 0 && (
         <div className="category-tabs-wrapper">
           <div className="category-tabs">
-            {Object.keys(menuData).map(category => (
+            {getAllCategories().map(category => (
               <button
                 key={category}
-                onClick={() => scrollToCategory(category)}
-                className={`category-tab ${activeCategory === category ? "active" : ""}`}
+                onClick={() => handleCategoryClick(category)}
+                className={`category-tab ${selectedTabCategory === category ? "active" : ""}`}
               >
-                {category === "arabic-food" ? "Arabic Food" : category.charAt(0).toUpperCase() + category.slice(1)}
+                {getCategoryDisplayName(category)}
               </button>
             ))}
           </div>
@@ -427,7 +420,7 @@ function Menu() {
             <MenuOutlined className="empty-icon" />
             <Title level={3}>No menu items found</Title>
             <p>Try adjusting your filters or search term</p>
-            <Button type="primary" onClick={() => { setFoodTypeFilter("all"); setSearchTerm(""); }}>
+            <Button type="primary" onClick={() => { setSelectedTabCategory("all"); setFoodTypeFilter("all"); setSearchTerm(""); }}>
               Reset Filters
             </Button>
           </div>

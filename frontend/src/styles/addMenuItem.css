@@ -79,53 +79,48 @@
   padding: 40px;
 }
 
-/* Card Header with Back Button on Top Left */
-.add-menu-item-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
+/* =========================================
+   CARD HEADER - Back Button Left, Title Centered
+========================================= */
 
-/* Back Button on Top Left */
+/* Back Button - Left Side */
 .add-menu-item-back-btn-top {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  border-radius: 6px;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 8px;
   background: #ffffff;
-  border: 1px solid #f0e6d8;
+  border: 1px solid #e5d5c5;
   color: #ea580c;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   height: 36px;
   padding: 0 16px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .add-menu-item-back-btn-top:hover {
-  background: #ea580c;
+  background: #fff7ed;
   border-color: #ea580c;
-  color: white;
-  transform: translateX(-2px);
-  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.2);
+  color: #ea580c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.12);
 }
 
 .add-menu-item-back-btn-top:active {
-  transform: translateX(0);
+  transform: translateY(0);
 }
 
-.add-menu-item-back-btn-top .anticon {
-  font-size: 14px;
-}
-
-/* Card Title Wrapper */
+/* Card Title Wrapper - Centered */
 .add-menu-item-card-title-wrapper {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 1;
   justify-content: center;
 }
 
@@ -133,6 +128,7 @@
   font-size: 18px;
   font-weight: 600;
   color: #431407;
+  white-space: nowrap;
 }
 
 .add-menu-item-card-title-wrapper .anticon {
@@ -175,8 +171,8 @@
 .add-menu-item-card .ant-input-number-input,
 .add-menu-item-card .ant-select-selector,
 .add-menu-item-card .ant-picker {
-  border-radius: 6px;
-  border: 1px solid #f0e6d8;
+  border-radius: 8px;
+  border: 1px solid #e5d5c5;
   background: #ffffff;
   transition: all 0.3s ease;
   font-size: 14px;
@@ -234,8 +230,8 @@
 }
 
 .add-menu-item-card .ant-input-number-handler-wrap {
-  border-radius: 0 6px 6px 0;
-  border-left: 1px solid #f0e6d8;
+  border-radius: 0 8px 8px 0;
+  border-left: 1px solid #e5d5c5;
 }
 
 .add-menu-item-card .ant-input-number-handler:hover {
@@ -315,7 +311,7 @@
   height: 120px !important;
   border-radius: 8px;
   background: #fff7ed;
-  border: 2px dashed #f0e6d8;
+  border: 2px dashed #e5d5c5;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
@@ -420,10 +416,10 @@
 .add-menu-item-submit-btn {
   background: #ea580c;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   height: 48px;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 15px;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
   padding: 0 32px;
@@ -447,8 +443,8 @@
 }
 
 .add-menu-item-reset-btn {
-  border-radius: 6px;
-  border: 1px solid #f0e6d8;
+  border-radius: 8px;
+  border: 1px solid #e5d5c5;
   background: white;
   color: #431407;
   transition: all 0.3s ease;
@@ -646,10 +642,6 @@
     font-size: 12px;
   }
   
-  .add-menu-item-back-btn-top .anticon {
-    font-size: 12px;
-  }
-  
   .add-menu-item-card-title {
     font-size: 16px;
   }
@@ -692,32 +684,20 @@
     padding: 12px 12px;
   }
   
-  /* Card Header Stack on Mobile */
-  .add-menu-item-card-header {
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  
+  /* Back button stays on left on mobile */
   .add-menu-item-back-btn-top {
-    order: 1;
-    width: auto;
     height: 34px;
     padding: 0 14px;
     font-size: 13px;
   }
   
-  .add-menu-item-card-title-wrapper {
-    order: 2;
-    justify-content: flex-start;
-    flex: 0 0 100%;
-  }
-  
   .add-menu-item-card-title {
     font-size: 15px;
+    white-space: nowrap;
   }
   
   .add-menu-item-card-title-wrapper .anticon {
-    font-size: 18px;
+    font-size: 16px;
   }
   
   /* Form Layout Stack on Mobile */
@@ -807,16 +787,16 @@
   
   .add-menu-item-back-btn-top {
     height: 32px;
-    padding: 0 12px;
-    font-size: 12px;
+    padding: 0 10px;
+    font-size: 11px;
   }
   
   .add-menu-item-card-title {
-    font-size: 14px;
+    font-size: 13px;
   }
   
   .add-menu-item-card-title-wrapper .anticon {
-    font-size: 16px;
+    font-size: 14px;
   }
   
   .add-menu-item-submit-btn,

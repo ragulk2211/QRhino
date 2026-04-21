@@ -20,7 +20,6 @@ import {
   Tooltip,
   ConfigProvider,
   Modal,
-  App as AntApp,
   Flex
 } from "antd";
 import {
@@ -285,7 +284,6 @@ function AddMenuItem() {
     if (!validateForm(values)) {
       messageApi.error({
         content: "Please fix the errors in the form",
-        icon: <WarningOutlined />,
         duration: 3
       });
       const firstError = document.querySelector('.ant-form-item-has-error');
@@ -326,7 +324,6 @@ function AddMenuItem() {
       if (res.ok) {
         messageApi.success({
           content: "Menu item added successfully!",
-          icon: <CheckCircleOutlined />,
           duration: 3
         });
         form.resetFields();
@@ -434,7 +431,7 @@ function AddMenuItem() {
   );
 
   return (
-    <AntApp>
+    <>
       {contextHolder}
       <ConfigProvider
         theme={{
@@ -454,7 +451,7 @@ function AddMenuItem() {
               className="add-menu-item-card" 
               variant="outlined"
               title={
-                <div className="add-menu-item-card-header">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                   <Button 
                     icon={<ArrowLeftOutlined />} 
                     onClick={handleGoBack}
@@ -467,6 +464,7 @@ function AddMenuItem() {
                     <RocketOutlined style={{ color: '#ea580c', fontSize: 20 }} />
                     <span className="add-menu-item-card-title">Create New Menu Item</span>
                   </div>
+                  <div style={{ width: 70 }}></div>
                 </div>
               }
             >
@@ -843,7 +841,7 @@ function AddMenuItem() {
                   </div>
                 </Form.Item>
 
-                <Divider className="add-menu-item-divider" />
+                <Divider className="add-menu-item-divider" orientation="horizontal" />
 
                 <Form.Item>
                   <Flex gap="middle" wrap="wrap">
@@ -869,7 +867,7 @@ function AddMenuItem() {
                 </Form.Item>
 
                 <Alert
-                  message="Quick Tips"
+                  title="Quick Tips"
                   description={
                     <ul style={{ margin: 0, paddingLeft: 20 }}>
                       <li><CheckCircleOutlined style={{ color: '#22c55e' }} /> All fields marked with * are required</li>
@@ -891,7 +889,7 @@ function AddMenuItem() {
           </div>
         </div>
       </ConfigProvider>
-    </AntApp>
+    </>
   );
 }
 

@@ -52,7 +52,6 @@ import API_BASE_URL from "../config";
 import "../styles/createCategory.css";
 
 const { Title, Text, Paragraph } = Typography;
-const { confirm } = Modal;
 
 function CreateCategory() {
   const navigate = useNavigate();
@@ -63,9 +62,8 @@ function CreateCategory() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [formErrors, setFormErrors] = useState({});
 
-  useEffect(() => {
-    fetchExistingCategories();
-  }, []);
+  // Use message API from App context
+  const [messageApi, contextHolder] = message.useMessage();
 
   const fetchExistingCategories = async () => {
     setIsLoading(true);
@@ -76,12 +74,16 @@ function CreateCategory() {
       setExistingCategories(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching categories:", error);
-      message.error("Failed to fetch categories");
+      messageApi.error("Failed to fetch categories");
       setExistingCategories([]);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchExistingCategories();
+  }, []);
 
   const validateForm = (values) => {
     const errors = {};
@@ -102,9 +104,8 @@ function CreateCategory() {
 
   const onFinish = async (values) => {
     if (!validateForm(values)) {
-      message.error({
+      messageApi.error({
         content: "Please fix the errors in the form",
-        icon: <InfoCircleOutlined />,
         duration: 3
       });
       return;
@@ -131,11 +132,10 @@ function CreateCategory() {
       
       if (response.ok) {
         const data = await response.json();
-        message.success({
+        messageApi.success({
           content: editingCategory 
             ? `Category "${values.categoryName}" updated successfully!`
             : `Category "${values.categoryName}" created successfully!`,
-          icon: <CheckCircleOutlined />,
           duration: 3
         });
         form.resetFields();
@@ -144,18 +144,18 @@ function CreateCategory() {
         fetchExistingCategories();
       } else {
         const error = await response.json();
-        message.error(error.message || error.error || "Failed to save category");
+        messageApi.error(error.message || error.error || "Failed to save category");
       }
     } catch (error) {
       console.error("Error saving category:", error);
-      message.error("Network error. Please check your connection.");
+      messageApi.error("Network error. Please check your connection.");
     } finally {
       setCreating(false);
     }
   };
 
   const handleDeleteCategory = (category) => {
-    confirm({
+    Modal.confirm({
       title: 'Delete Category',
       icon: <ExclamationCircleOutlined />,
       content: `Are you sure you want to delete "${category.displayName || category.name}"?`,
@@ -169,15 +169,15 @@ function CreateCategory() {
           });
           
           if (response.ok) {
-            message.success(`Category "${category.displayName || category.name}" deleted successfully`);
+            messageApi.success(`Category "${category.displayName || category.name}" deleted successfully`);
             fetchExistingCategories();
           } else {
             const error = await response.json();
-            message.error(error.message || error.error || "Failed to delete category");
+            messageApi.error(error.message || error.error || "Failed to delete category");
           }
         } catch (error) {
           console.error("Error deleting category:", error);
-          message.error("Network error. Please try again.");
+          messageApi.error("Network error. Please try again.");
         }
       }
     });
@@ -186,7 +186,7 @@ function CreateCategory() {
   const handleEditCategory = (category) => {
     setEditingCategory(category);
     form.setFieldsValue({ categoryName: category.name });
-    message.info(`Editing category: ${category.displayName || category.name}`);
+    messageApi.info(`Editing category: ${category.displayName || category.name}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -194,7 +194,7 @@ function CreateCategory() {
     setEditingCategory(null);
     form.resetFields();
     setFormErrors({});
-    message.info("Edit cancelled");
+    messageApi.info("Edit cancelled");
   };
 
   const handleGoBack = () => {
@@ -234,283 +234,286 @@ function CreateCategory() {
   ];
 
   return (
-    <div className="category-form-container">
-      <div className="category-form-content">
-        <Breadcrumb items={breadcrumbItems} className="category-form-breadcrumb" />
+    <>
+      {contextHolder}
+      <div className="category-form-container">
+        <div className="category-form-content">
+          <Breadcrumb items={breadcrumbItems} className="category-form-breadcrumb" />
 
-        <Card 
-          className="category-form-main-card"
-          variant="outlined"
-          title={
-            <div className="category-form-card-header">
-              <Button 
-                icon={<ArrowLeftOutlined />} 
-                onClick={handleGoBack}
-                className="category-form-back-btn-top"
-                type="default"
-              >
-                Back
-              </Button>
-              <div className="category-form-card-title-wrapper">
-                <RocketOutlined style={{ color: '#ea580c', fontSize: 20 }} />
-                <span className="category-form-card-title">Manage Categories</span>
-              </div>
-              <div className="category-form-card-extra-desktop">
-                <Tag icon={<SafetyOutlined />} color="orange">
-                  Required fields marked with *
-                </Tag>
-              </div>
-            </div>
-          }
-        >
-          <div className="category-form-card-extra-mobile">
-            <Tag icon={<SafetyOutlined />} color="orange">
-              Required fields marked with *
-            </Tag>
-          </div>
-
-          <Row gutter={[24, 24]}>
-            <Col xs={24} lg={12}>
-              <Card 
-                className="category-form-card" 
-                bordered={false}
-                title={
-                  <Space>
-                    {editingCategory ? <EditOutlined /> : <PlusOutlined />}
-                    <span>{editingCategory ? "Edit Category" : "Create New Category"}</span>
-                  </Space>
-                }
-              >
-                <Form
-                  form={form}
-                  layout="vertical"
-                  onFinish={onFinish}
-                  onValuesChange={() => setFormErrors({})}
+          <Card 
+            className="category-form-main-card"
+            variant="outlined"
+            title={
+              <div className="category-form-card-header">
+                <Button 
+                  icon={<ArrowLeftOutlined />} 
+                  onClick={handleGoBack}
+                  className="category-form-back-btn-top"
+                  type="default"
                 >
-                  <Form.Item
-                    name="categoryName"
-                    label={
-                      <Space>
-                        <TagOutlined /> Category Name
-                        <Tooltip title="Use lowercase, singular form for better organization">
-                          <InfoCircleOutlined style={{ color: '#ea580c' }} />
-                        </Tooltip>
-                      </Space>
-                    }
-                    validateStatus={formErrors.categoryName ? "error" : ""}
-                    help={formErrors.categoryName}
-                    rules={[
-                      { required: true, message: "Please enter category name" },
-                      { min: 2, message: "Category name must be at least 2 characters" },
-                      { max: 30, message: "Category name must be less than 30 characters" },
-                      { pattern: /^[a-z]+$/, message: "Use lowercase letters only" }
-                    ]}
-                    className="category-form-item"
-                    required
-                  >
-                    <Input
-                      placeholder="e.g., burgers, starters, desserts"
-                      size="large"
-                      prefix={<FolderOutlined />}
-                      maxLength={30}
-                      showCount
-                    />
-                  </Form.Item>
-
-                  <Form.Item>
-                    <Flex gap="middle" wrap="wrap">
-                      <Button
-                        type="primary"
-                        htmlType="submit"
-                        size="large"
-                        loading={creating}
-                        icon={editingCategory ? <EditOutlined /> : <PlusOutlined />}
-                        className="category-form-submit-btn"
-                      >
-                        {creating 
-                          ? (editingCategory ? "Updating..." : "Creating...") 
-                          : (editingCategory ? "Update Category" : "Create Category")}
-                      </Button>
-                      
-                      {editingCategory && (
-                        <Button
-                          size="large"
-                          onClick={handleCancelEdit}
-                          className="category-form-cancel-btn"
-                        >
-                          Cancel Edit
-                        </Button>
-                      )}
-                    </Flex>
-                  </Form.Item>
-
-                  <Divider className="category-form-divider" />
-
-                  <Alert
-                    message={<><FolderOpenOutlined /> Tips for good category names:</>}
-                    description={
-                      <div className="category-form-tips-content">
-                        <ul>
-                          <li><CheckCircleOutlined style={{ color: '#22c55e' }} /> Use singular form (e.g., "burger" not "burgers")</li>
-                          <li><InfoCircleOutlined /> Keep it short and descriptive (2-30 characters)</li>
-                          <li><SafetyOutlined /> Avoid special characters and spaces</li>
-                          <li><EnterOutlined /> Use lowercase letters only</li>
-                          <li><StarOutlined /> Examples: pizza, burger, pasta, salad</li>
-                        </ul>
-                      </div>
-                    }
-                    type="info"
-                    showIcon
-                    icon={<InfoCircleOutlined />}
-                    className="category-form-tips-alert"
-                  />
-                </Form>
-              </Card>
-            </Col>
-
-            <Col xs={24} lg={12}>
-              <Card 
-                className="category-form-list-card"
-                bordered={false}
-                title={
-                  <Space>
-                    <DatabaseOutlined />
-                    <span>Existing Categories</span>
-                    <Tag color="orange" className="category-form-count-tag">
-                      {existingCategories.length} total
-                    </Tag>
-                  </Space>
-                }
-              >
-                {isLoading ? (
-                  <div className="category-form-loading">
-                    <Spin size="large" />
-                    <Text type="secondary">Loading categories...</Text>
-                  </div>
-                ) : existingCategories.length > 0 ? (
-                  <div className="category-form-list">
-                    {existingCategories.map((category, index) => (
-                      <div 
-                        key={category._id || index}
-                        className="category-form-list-item"
-                      >
-                        <div className="category-form-list-item-content">
-                          <Avatar 
-                            className="category-form-avatar" 
-                            icon={getCategoryIcon(category.name)}
-                          />
-                          <div className="category-form-list-item-info">
-                            <div className="category-form-list-item-header">
-                              <span className="category-form-category-name">
-                                {category.displayName || category.name}
-                              </span>
-                              <Tag color="orange" className="category-form-index-tag">
-                                <NumberOutlined /> #{index + 1}
-                              </Tag>
-                            </div>
-                            <div className="category-form-category-desc">
-                              <span className="category-form-desc-item">
-                                <IdcardOutlined /> ID: {category._id?.slice(-8)}
-                              </span>
-                              <span className="category-form-desc-item">
-                                <CalendarOutlined /> Created: {category.createdAt ? new Date(category.createdAt).toLocaleDateString() : 'Recently'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="category-form-list-item-actions">
-                          <Tooltip title="Edit category">
-                            <Button
-                              type="text"
-                              icon={<EditOutlined />}
-                              size="small"
-                              className="category-form-edit-btn"
-                              onClick={() => handleEditCategory(category)}
-                            />
-                          </Tooltip>
-                          <Tooltip title="Delete category">
-                            <Button
-                              type="text"
-                              danger
-                              icon={<DeleteOutlined />}
-                              size="small"
-                              className="category-form-delete-btn"
-                              onClick={() => handleDeleteCategory(category)}
-                            />
-                          </Tooltip>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <Empty
-                    description="No categories yet"
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    className="category-form-empty"
-                  >
-                    <Button 
-                      type="primary" 
-                      onClick={() => form.focus()}
-                      className="category-form-empty-btn"
-                    >
-                      Create First Category
-                    </Button>
-                  </Empty>
-                )}
-              </Card>
-            </Col>
-          </Row>
-
-          {existingCategories.length > 0 && (
-            <Row gutter={[16, 16]} className="category-form-stats-row">
-              <Col xs={24} sm={8}>
-                <div className="category-form-stat-card">
-                  <div className="category-form-stat-icon"><DatabaseOutlined /></div>
-                  <div className="category-form-stat-value">{existingCategories.length}</div>
-                  <div className="category-form-stat-label">Total Categories</div>
+                  Back
+                </Button>
+                <div className="category-form-card-title-wrapper">
+                  <RocketOutlined style={{ color: '#ea580c', fontSize: 20 }} />
+                  <span className="category-form-card-title">Manage Categories</span>
                 </div>
-              </Col>
-              <Col xs={24} sm={8}>
-                <div className="category-form-stat-card">
-                  <div className="category-form-stat-icon"><StarOutlined /></div>
-                  <div className="category-form-stat-value">
-                    {existingCategories.length > 0 ? 
-                      (existingCategories[existingCategories.length - 1].displayName || 
-                       existingCategories[existingCategories.length - 1].name) : "N/A"}
-                  </div>
-                  <div className="category-form-stat-label">Latest Category</div>
+                <div className="category-form-card-extra-desktop">
+                  <Tag icon={<SafetyOutlined />} color="orange">
+                    Required fields marked with *
+                  </Tag>
                 </div>
-              </Col>
-              <Col xs={24} sm={8}>
-                <div className="category-form-stat-card">
-                  <div className="category-form-stat-icon"><ThunderboltOutlined /></div>
-                  <div className="category-form-stat-value">{existingCategories.length}</div>
-                  <div className="category-form-stat-label">Active Categories</div>
-                </div>
-              </Col>
-            </Row>
-          )}
-
-          <Alert
-            message="Quick Tips"
-            description={
-              <div className="category-form-quick-tips">
-                <ul>
-                  <li><CheckCircleOutlined style={{ color: '#22c55e' }} /> All fields marked with * are required</li>
-                  <li><InfoCircleOutlined /> Category names should be lowercase and singular</li>
-                  <li><EditOutlined /> You can edit or delete categories at any time</li>
-                  <li><EnterOutlined /> Press Enter to submit the form</li>
-                </ul>
               </div>
             }
-            type="info"
-            showIcon
-            icon={<InfoCircleOutlined />}
-            className="category-form-main-alert"
-          />
-        </Card>
+          >
+            <div className="category-form-card-extra-mobile">
+              <Tag icon={<SafetyOutlined />} color="orange">
+                Required fields marked with *
+              </Tag>
+            </div>
+
+            <Row gutter={[24, 24]}>
+              <Col xs={24} lg={12}>
+                <Card 
+                  className="category-form-card" 
+                  variant="borderless"
+                  title={
+                    <Space>
+                      {editingCategory ? <EditOutlined /> : <PlusOutlined />}
+                      <span>{editingCategory ? "Edit Category" : "Create New Category"}</span>
+                    </Space>
+                  }
+                >
+                  <Form
+                    form={form}
+                    layout="vertical"
+                    onFinish={onFinish}
+                    onValuesChange={() => setFormErrors({})}
+                  >
+                    <Form.Item
+                      name="categoryName"
+                      label={
+                        <Space>
+                          <TagOutlined /> Category Name
+                          <Tooltip title="Use lowercase, singular form for better organization">
+                            <InfoCircleOutlined style={{ color: '#ea580c' }} />
+                          </Tooltip>
+                        </Space>
+                      }
+                      validateStatus={formErrors.categoryName ? "error" : ""}
+                      help={formErrors.categoryName}
+                      rules={[
+                        { required: true, message: "Please enter category name" },
+                        { min: 2, message: "Category name must be at least 2 characters" },
+                        { max: 30, message: "Category name must be less than 30 characters" },
+                        { pattern: /^[a-z]+$/, message: "Use lowercase letters only" }
+                      ]}
+                      className="category-form-item"
+                      required
+                    >
+                      <Input
+                        placeholder="e.g., burgers, starters, desserts"
+                        size="large"
+                        prefix={<FolderOutlined />}
+                        maxLength={30}
+                        showCount
+                      />
+                    </Form.Item>
+
+                    <Form.Item>
+                      <Flex gap="middle" wrap="wrap">
+                        <Button
+                          type="primary"
+                          htmlType="submit"
+                          size="large"
+                          loading={creating}
+                          icon={editingCategory ? <EditOutlined /> : <PlusOutlined />}
+                          className="category-form-submit-btn"
+                        >
+                          {creating 
+                            ? (editingCategory ? "Updating..." : "Creating...") 
+                            : (editingCategory ? "Update Category" : "Create Category")}
+                        </Button>
+                        
+                        {editingCategory && (
+                          <Button
+                            size="large"
+                            onClick={handleCancelEdit}
+                            className="category-form-cancel-btn"
+                          >
+                            Cancel Edit
+                          </Button>
+                        )}
+                      </Flex>
+                    </Form.Item>
+
+                    <Divider className="category-form-divider" orientation="horizontal" />
+
+                    <Alert
+                      title={<><FolderOpenOutlined /> Tips for good category names:</>}
+                      description={
+                        <div className="category-form-tips-content">
+                          <ul>
+                            <li><CheckCircleOutlined style={{ color: '#22c55e' }} /> Use singular form (e.g., "burger" not "burgers")</li>
+                            <li><InfoCircleOutlined /> Keep it short and descriptive (2-30 characters)</li>
+                            <li><SafetyOutlined /> Avoid special characters and spaces</li>
+                            <li><EnterOutlined /> Use lowercase letters only</li>
+                            <li><StarOutlined /> Examples: pizza, burger, pasta, salad</li>
+                          </ul>
+                        </div>
+                      }
+                      type="info"
+                      showIcon
+                      icon={<InfoCircleOutlined />}
+                      className="category-form-tips-alert"
+                    />
+                  </Form>
+                </Card>
+              </Col>
+
+              <Col xs={24} lg={12}>
+                <Card 
+                  className="category-form-list-card"
+                  variant="borderless"
+                  title={
+                    <Space wrap>
+                      <DatabaseOutlined />
+                      <span>Existing Categories</span>
+                      <Tag color="orange" className="category-form-count-tag">
+                        {existingCategories.length} total
+                      </Tag>
+                    </Space>
+                  }
+                >
+                  {isLoading ? (
+                    <div className="category-form-loading">
+                      <Spin size="large" />
+                      <Text type="secondary">Loading categories...</Text>
+                    </div>
+                  ) : existingCategories.length > 0 ? (
+                    <div className="category-form-list">
+                      {existingCategories.map((category, index) => (
+                        <div 
+                          key={category._id || index}
+                          className="category-form-list-item"
+                        >
+                          <div className="category-form-list-item-content">
+                            <Avatar 
+                              className="category-form-avatar" 
+                              icon={getCategoryIcon(category.name)}
+                            />
+                            <div className="category-form-list-item-info">
+                              <div className="category-form-list-item-header">
+                                <span className="category-form-category-name">
+                                  {category.displayName || category.name}
+                                </span>
+                                <Tag color="orange" className="category-form-index-tag">
+                                  <NumberOutlined /> #{index + 1}
+                                </Tag>
+                              </div>
+                              <div className="category-form-category-desc">
+                                <span className="category-form-desc-item">
+                                  <IdcardOutlined /> ID: {category._id?.slice(-8)}
+                                </span>
+                                <span className="category-form-desc-item">
+                                  <CalendarOutlined /> Created: {category.createdAt ? new Date(category.createdAt).toLocaleDateString() : 'Recently'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="category-form-list-item-actions">
+                            <Tooltip title="Edit category">
+                              <Button
+                                type="text"
+                                icon={<EditOutlined />}
+                                size="small"
+                                className="category-form-edit-btn"
+                                onClick={() => handleEditCategory(category)}
+                              />
+                            </Tooltip>
+                            <Tooltip title="Delete category">
+                              <Button
+                                type="text"
+                                danger
+                                icon={<DeleteOutlined />}
+                                size="small"
+                                className="category-form-delete-btn"
+                                onClick={() => handleDeleteCategory(category)}
+                              />
+                            </Tooltip>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <Empty
+                      description="No categories yet"
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      className="category-form-empty"
+                    >
+                      <Button 
+                        type="primary" 
+                        onClick={() => form.focus()}
+                        className="category-form-empty-btn"
+                      >
+                        Create First Category
+                      </Button>
+                    </Empty>
+                  )}
+                </Card>
+              </Col>
+            </Row>
+
+            {existingCategories.length > 0 && (
+              <Row gutter={[16, 16]} className="category-form-stats-row">
+                <Col xs={24} sm={8}>
+                  <div className="category-form-stat-card">
+                    <div className="category-form-stat-icon"><DatabaseOutlined /></div>
+                    <div className="category-form-stat-value">{existingCategories.length}</div>
+                    <div className="category-form-stat-label">Total Categories</div>
+                  </div>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <div className="category-form-stat-card">
+                    <div className="category-form-stat-icon"><StarOutlined /></div>
+                    <div className="category-form-stat-value">
+                      {existingCategories.length > 0 ? 
+                        (existingCategories[existingCategories.length - 1].displayName || 
+                         existingCategories[existingCategories.length - 1].name) : "N/A"}
+                    </div>
+                    <div className="category-form-stat-label">Latest Category</div>
+                  </div>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <div className="category-form-stat-card">
+                    <div className="category-form-stat-icon"><ThunderboltOutlined /></div>
+                    <div className="category-form-stat-value">{existingCategories.length}</div>
+                    <div className="category-form-stat-label">Active Categories</div>
+                  </div>
+                </Col>
+              </Row>
+            )}
+
+            <Alert
+              title="Quick Tips"
+              description={
+                <div className="category-form-quick-tips">
+                  <ul>
+                    <li><CheckCircleOutlined style={{ color: '#22c55e' }} /> All fields marked with * are required</li>
+                    <li><InfoCircleOutlined /> Category names should be lowercase and singular</li>
+                    <li><EditOutlined /> You can edit or delete categories at any time</li>
+                    <li><EnterOutlined /> Press Enter to submit the form</li>
+                  </ul>
+                </div>
+              }
+              type="info"
+              showIcon
+              icon={<InfoCircleOutlined />}
+              className="category-form-main-alert"
+            />
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

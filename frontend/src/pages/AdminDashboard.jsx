@@ -119,12 +119,10 @@ function AdminDashboard() {
     }
   };
 
-  // Navigation handlers with state
   const handleNavigate = (path, fromPage) => {
     navigate(path, { state: { from: fromPage } });
   };
 
-  // Show tip details
   const showTipDetails = (tip) => {
     setSelectedTip(tip);
     setTipModalVisible(true);
@@ -290,9 +288,9 @@ function AdminDashboard() {
           </Tooltip>
         </div>
 
-        {/* Stats Grid - No auto-hover animation */}
+        {/* Stats Grid */}
         <div className="admin-dash-stats-section">
-          <Row gutter={[24, 24]}>
+          <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={6}>
               <StatCard
                 title="Total Restaurants"
@@ -345,7 +343,7 @@ function AdminDashboard() {
               Manage your restaurant content efficiently
             </Text>
           </div>
-          <Row gutter={[24, 24]}>
+          <Row gutter={[16, 16]}>
             {actions.map((action, index) => (
               <Col xs={24} sm={12} lg={8} key={index}>
                 <Card
@@ -389,7 +387,7 @@ function AdminDashboard() {
               Click on any tip to learn more
             </Text>
           </div>
-          <Row gutter={[24, 24]}>
+          <Row gutter={[16, 16]}>
             {tips.map((tip, index) => (
               <Col xs={24} sm={12} lg={6} key={index}>
                 <Card 

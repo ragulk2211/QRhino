@@ -11,7 +11,6 @@ import {
   Space,
   message,
   Typography,
-  Breadcrumb,
   Modal,
   Tag,
   Tooltip,
@@ -22,7 +21,13 @@ import {
   Alert,
   Spin,
   Empty,
-  App as AntApp
+  Statistic,
+  Grid,
+  Flex,
+  Badge,
+  Progress,
+  Avatar,
+  theme
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -37,15 +42,27 @@ import {
   DollarOutlined,
   PercentageOutlined,
   GiftOutlined,
-  WarningOutlined
+  WalletOutlined,
+  RocketOutlined,
+  BulbOutlined,
+  SafetyOutlined,
+  ControlOutlined,
+  LineChartOutlined,
+  CalendarOutlined,
+  StarOutlined,
+  TrophyOutlined,
+  FireOutlined,
+  CrownOutlined
 } from "@ant-design/icons";
 import API_BASE_URL from "../config";
 import "../styles/couponManagement.css";
 
 const { Title, Text, Paragraph } = Typography;
+const { useBreakpoint } = Grid;
 
 function CouponManagement() {
   const navigate = useNavigate();
+  const screens = useBreakpoint();
   const [form] = Form.useForm();
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +76,6 @@ function CouponManagement() {
     totalUsage: 0
   });
 
-  // Use message from App context to avoid static method warning
   const [messageApi, contextHolder] = message.useMessage();
 
   useEffect(() => {
@@ -74,7 +90,6 @@ function CouponManagement() {
       if (data.success) {
         setCoupons(data.coupons);
         calculateStats(data.coupons);
-        messageApi.success(`Loaded ${data.coupons.length} coupons`);
       }
     } catch (error) {
       console.error("Error fetching coupons:", error);
@@ -194,18 +209,58 @@ function CouponManagement() {
 
   const handleCopyCode = (code) => {
     navigator.clipboard.writeText(code);
-    messageApi.success(`Coupon code "${code}" copied to clipboard!`);
+    messageApi.success(`Coupon code "${code}" copied!`);
   };
+
+  const handleGoBack = () => {
+    navigate("/admin");
+  };
+
+  // Pro Tips Data
+  const proTips = [
+    {
+      icon: <StarOutlined />,
+      title: "Use Unique Codes",
+      description: "Create memorable coupon codes like 'SAVE20', 'WELCOME10'",
+      color: "#ff9f4a"
+    },
+    {
+      icon: <SafetyOutlined />,
+      title: "Set Minimum Order",
+      description: "Prevent discount abuse by setting minimum order requirements",
+      color: "#52c41a"
+    },
+    {
+      icon: <ControlOutlined />,
+      title: "Max Discount Control",
+      description: "Set maximum discount limits to control total discount",
+      color: "#faad14"
+    },
+    {
+      icon: <LineChartOutlined />,
+      title: "Track Performance",
+      description: "Monitor usage counts to measure coupon performance",
+      color: "#1890ff"
+    },
+    {
+      icon: <CalendarOutlined />,
+      title: "Manage Expired Coupons",
+      description: "Deactivate expired coupons instead of deleting them",
+      color: "#722ed1"
+    }
+  ];
 
   const columns = [
     {
       title: "Code",
       dataIndex: "code",
       key: "code",
+      fixed: screens.xs ? false : 'left',
+      width: 130,
       render: (text) => (
-        <Space>
+        <Space size={4} wrap>
           <Tag color="orange" className="coupon-code-tag">
-            <strong>{text}</strong>
+            <TagOutlined /> <strong>{text}</strong>
           </Tag>
           <Tooltip title="Copy code">
             <Button
@@ -223,12 +278,15 @@ function CouponManagement() {
       title: "Description",
       dataIndex: "description",
       key: "description",
+      width: 200,
+      ellipsis: true,
       render: (text) => <Text className="coupon-description">{text || "-"}</Text>,
     },
     {
       title: "Discount",
       dataIndex: "discountPercent",
       key: "discountPercent",
+      width: 100,
       render: (value) => (
         <Tag color="orange" className="coupon-discount-tag">
           <PercentageOutlined /> {value}% OFF
@@ -239,9 +297,10 @@ function CouponManagement() {
       title: "Min Order",
       dataIndex: "minOrderAmount",
       key: "minOrderAmount",
+      width: 110,
       render: (value) => (
         <Text className="coupon-min-order">
-          <DollarOutlined /> ₹{value || 0}
+          ₹{value || 0}
         </Text>
       ),
     },
@@ -249,6 +308,7 @@ function CouponManagement() {
       title: "Max Discount",
       dataIndex: "maxDiscountAmount",
       key: "maxDiscountAmount",
+      width: 120,
       render: (value) => (
         <Text className="coupon-max-discount">
           {value ? `₹${value}` : "No limit"}
@@ -258,9 +318,10 @@ function CouponManagement() {
     {
       title: "Usage",
       key: "usage",
+      width: 100,
       render: (_, record) => (
         <Text className="coupon-usage">
-          {record.usageCount || 0}{record.maxUsage ? `/${record.maxUsage}` : "/∞"}
+          <TrophyOutlined /> {record.usageCount || 0}{record.maxUsage ? `/${record.maxUsage}` : ""}
         </Text>
       ),
     },
@@ -268,6 +329,7 @@ function CouponManagement() {
       title: "Status",
       dataIndex: "isActive",
       key: "isActive",
+      width: 100,
       render: (isActive) => (
         <Tag
           icon={isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
@@ -281,8 +343,10 @@ function CouponManagement() {
     {
       title: "Actions",
       key: "actions",
+      fixed: screens.xs ? false : 'right',
+      width: 120,
       render: (_, record) => (
-        <Space size="small">
+        <Space size="small" wrap>
           <Tooltip title="Edit coupon">
             <Button
               type="primary"
@@ -294,7 +358,7 @@ function CouponManagement() {
           </Tooltip>
           <Popconfirm
             title="Delete Coupon"
-            description={`Are you sure you want to delete "${record.code}"?`}
+            description={`Delete "${record.code}"?`}
             onConfirm={() => handleDelete(record._id)}
             okText="Yes"
             cancelText="No"
@@ -314,70 +378,71 @@ function CouponManagement() {
     },
   ];
 
-  // Modern Breadcrumb items API
-  const breadcrumbItems = [
-    {
-      title: (
-        <a onClick={() => navigate("/admin")} style={{ cursor: 'pointer' }}>
-          Dashboard
-        </a>
-      ),
-    },
-    {
-      title: "Coupon Management",
-    },
-  ];
-
   return (
-    <AntApp>
+    <>
       {contextHolder}
       <div className="coupon-container">
         <div className="coupon-content">
-          <Breadcrumb className="coupon-breadcrumb" items={breadcrumbItems} />
+          {/* Header with Back Button and Title */}
+          <div className="coupon-header-wrapper">
+            <Button 
+              icon={<ArrowLeftOutlined />} 
+              onClick={handleGoBack}
+              className="coupon-back-btn"
+              type="primary"
+            >
+              Back
+            </Button>
+            <div className="coupon-title-wrapper">
+              <RocketOutlined className="coupon-title-icon" />
+              <span className="coupon-title">Coupon Management</span>
+            </div>
+          </div>
 
           {/* Statistics Cards */}
-          <Row gutter={[24, 24]} className="coupon-stats-row">
-            <Col xs={24} sm={12} lg={6}>
-              <div className="coupon-stat-card">
-                <div className="coupon-stat-icon">
-                  <GiftOutlined />
-                </div>
-                <div className="coupon-stat-value">{stats.total}</div>
-                <div className="coupon-stat-label">Total Coupons</div>
-              </div>
+          <Row gutter={[16, 16]} className="coupon-stats-row">
+            <Col xs={12} sm={12} md={6}>
+              <Card className="coupon-stat-card" variant="borderless">
+                <Statistic
+                  title={<span><GiftOutlined /> Total Coupons</span>}
+                  value={stats.total}
+                  styles={{ content: { color: '#ff9f4a', fontSize: screens.xs ? 20 : 28 } }}
+                />
+              </Card>
             </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <div className="coupon-stat-card">
-                <div className="coupon-stat-icon active">
-                  <CheckCircleOutlined />
-                </div>
-                <div className="coupon-stat-value">{stats.active}</div>
-                <div className="coupon-stat-label">Active Coupons</div>
-              </div>
+            <Col xs={12} sm={12} md={6}>
+              <Card className="coupon-stat-card" variant="borderless">
+                <Statistic
+                  title={<span><CheckCircleOutlined /> Active Coupons</span>}
+                  value={stats.active}
+                  styles={{ content: { color: '#52c41a', fontSize: screens.xs ? 20 : 28 } }}
+                />
+              </Card>
             </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <div className="coupon-stat-card">
-                <div className="coupon-stat-icon">
-                  <PercentageOutlined />
-                </div>
-                <div className="coupon-stat-value">{stats.totalDiscount}%</div>
-                <div className="coupon-stat-label">Total Discount</div>
-              </div>
+            <Col xs={12} sm={12} md={6}>
+              <Card className="coupon-stat-card" variant="borderless">
+                <Statistic
+                  title={<span><PercentageOutlined /> Total Discount</span>}
+                  value={stats.totalDiscount}
+                  suffix="%"
+                  styles={{ content: { color: '#ff9f4a', fontSize: screens.xs ? 20 : 28 } }}
+                />
+              </Card>
             </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <div className="coupon-stat-card">
-                <div className="coupon-stat-icon">
-                  <TagOutlined />
-                </div>
-                <div className="coupon-stat-value">{stats.totalUsage}</div>
-                <div className="coupon-stat-label">Total Usage</div>
-              </div>
+            <Col xs={12} sm={12} md={6}>
+              <Card className="coupon-stat-card" variant="borderless">
+                <Statistic
+                  title={<span><WalletOutlined /> Total Usage</span>}
+                  value={stats.totalUsage}
+                  styles={{ content: { color: '#ff9f4a', fontSize: screens.xs ? 20 : 28 } }}
+                />
+              </Card>
             </Col>
           </Row>
 
           {/* Action Buttons */}
           <div className="coupon-actions">
-            <Space size="middle" wrap>
+            <Flex gap="middle" wrap="wrap">
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
@@ -387,26 +452,28 @@ function CouponManagement() {
                   setShowForm(!showForm);
                 }}
                 className="coupon-create-btn"
+                size={screens.xs ? "middle" : "large"}
               >
-                {showForm ? "Cancel" : "Create New Coupon"}
+                {showForm ? "Cancel" : "Create Coupon"}
               </Button>
               <Button
                 icon={<DatabaseOutlined />}
                 onClick={handleSeed}
                 className="coupon-seed-btn"
+                size={screens.xs ? "middle" : "large"}
               >
-                Seed Default Coupons
+                Seed Coupons
               </Button>
-            </Space>
+            </Flex>
           </div>
 
-          {/* Create/Edit Form Modal - Fixed destroyOnClose to destroyOnHidden */}
+          {/* Create/Edit Form Modal */}
           <Modal
             title={
-              <Space>
+              <Flex align="center" gap="small">
                 {editingCoupon ? <EditOutlined /> : <PlusOutlined />}
                 <span>{editingCoupon ? "Edit Coupon" : "Create New Coupon"}</span>
-              </Space>
+              </Flex>
             }
             open={showForm}
             onCancel={() => {
@@ -415,7 +482,7 @@ function CouponManagement() {
               form.resetFields();
             }}
             footer={null}
-            width={600}
+            width={550}
             className="coupon-form-modal"
             destroyOnHidden
           >
@@ -431,15 +498,14 @@ function CouponManagement() {
             >
               <Form.Item
                 name="code"
-                label="Coupon Code"
+                label={<span><TagOutlined /> Coupon Code</span>}
                 rules={[
                   { required: true, message: "Please enter coupon code" },
                   { min: 3, message: "Code must be at least 3 characters" },
                   { max: 20, message: "Code must be less than 20 characters" },
                   { pattern: /^[A-Z0-9]+$/, message: "Use uppercase letters and numbers only" }
                 ]}
-                tooltip="Use uppercase letters and numbers only"
-                className="coupon-form-item"
+                tooltip={{ title: "Use uppercase letters and numbers only", icon: <TagOutlined /> }}
               >
                 <Input
                   placeholder="e.g., SAVE20"
@@ -456,8 +522,7 @@ function CouponManagement() {
 
               <Form.Item
                 name="description"
-                label="Description"
-                className="coupon-form-item"
+                label={<span><EditOutlined /> Description</span>}
               >
                 <Input.TextArea
                   placeholder="Describe what this coupon offers"
@@ -467,16 +532,15 @@ function CouponManagement() {
                 />
               </Form.Item>
 
-              <Row gutter={24}>
+              <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="discountPercent"
-                    label="Discount (%)"
+                    label={<span><PercentageOutlined /> Discount (%)</span>}
                     rules={[
                       { required: true, message: "Please enter discount percentage" },
                       { type: 'number', min: 1, max: 100, message: "Discount must be between 1 and 100" }
                     ]}
-                    className="coupon-form-item"
                   >
                     <InputNumber
                       placeholder="10"
@@ -485,53 +549,55 @@ function CouponManagement() {
                       size="large"
                       style={{ width: "100%" }}
                       prefix={<PercentageOutlined />}
-                      suffix="%"
+                      formatter={(value) => `${value}%`}
+                      parser={(value) => value?.replace('%', '')}
                     />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="minOrderAmount"
-                    label="Minimum Order Amount (₹)"
+                    label={<span>Minimum Order (₹)</span>}
                     rules={[
                       { type: 'number', min: 0, message: "Amount must be 0 or greater" }
                     ]}
-                    className="coupon-form-item"
                   >
                     <InputNumber
                       placeholder="0"
                       min={0}
                       size="large"
                       style={{ width: "100%" }}
-                      prefix={<DollarOutlined />}
+                      prefix="₹"
+                      formatter={(value) => `₹${value}`}
+                      parser={(value) => value?.replace('₹', '')}
                     />
                   </Form.Item>
                 </Col>
               </Row>
 
-              <Row gutter={24}>
+              <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="maxDiscountAmount"
-                    label="Maximum Discount Amount (₹)"
+                    label={<span><ControlOutlined /> Max Discount (₹)</span>}
                     tooltip="Leave empty for no limit"
-                    className="coupon-form-item"
                   >
                     <InputNumber
                       placeholder="No limit"
                       min={0}
                       size="large"
                       style={{ width: "100%" }}
-                      prefix={<DollarOutlined />}
+                      prefix="₹"
+                      formatter={(value) => value ? `₹${value}` : ''}
+                      parser={(value) => value?.replace('₹', '')}
                     />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="maxUsage"
-                    label="Maximum Usage"
+                    label={<span><TrophyOutlined /> Max Usage</span>}
                     tooltip="Leave empty for unlimited"
-                    className="coupon-form-item"
                   >
                     <InputNumber
                       placeholder="Unlimited"
@@ -546,9 +612,8 @@ function CouponManagement() {
 
               <Form.Item
                 name="isActive"
-                label="Status"
+                label={<span><CheckCircleOutlined /> Status</span>}
                 valuePropName="checked"
-                className="coupon-form-item"
               >
                 <Switch
                   checkedChildren="Active"
@@ -558,7 +623,7 @@ function CouponManagement() {
               </Form.Item>
 
               <Form.Item>
-                <Space size="middle">
+                <Flex gap="middle" wrap="wrap">
                   <Button
                     type="primary"
                     htmlType="submit"
@@ -579,16 +644,25 @@ function CouponManagement() {
                   >
                     Cancel
                   </Button>
-                </Space>
+                </Flex>
               </Form.Item>
             </Form>
           </Modal>
 
           {/* Coupons Table */}
-          <Card className="coupon-table-card" title="Coupons List">
+          <Card 
+            className="coupon-table-card" 
+            title={
+              <Flex align="center" gap="small">
+                <GiftOutlined style={{ color: '#ff9f4a' }} />
+                <span>All Coupons</span>
+              </Flex>
+            }
+            variant="borderless"
+          >
             {loading ? (
               <div className="coupon-loading">
-                <Spin size="large" />
+                <Spin size="large" description="Loading coupons..." />
               </div>
             ) : coupons.length === 0 ? (
               <Empty
@@ -614,35 +688,49 @@ function CouponManagement() {
                 dataSource={coupons}
                 rowKey="_id"
                 pagination={{
-                  pageSize: 10,
+                  pageSize: screens.xs ? 5 : 10,
                   showTotal: (total) => `Total ${total} coupons`,
-                  showSizeChanger: true,
-                  showQuickJumper: true
+                  showSizeChanger: !screens.xs,
+                  showQuickJumper: !screens.xs,
+                  responsive: true
                 }}
                 className="coupon-table"
+                scroll={{ x: 700 }}
+                size={screens.xs ? "small" : "middle"}
               />
             )}
           </Card>
 
-          {/* Tips Section - Fixed Alert with title prop */}
-          <Alert
-            title="💡 Pro Tips"
-            description={
-              <ul style={{ margin: 0, paddingLeft: 20 }}>
-                <li>Use unique, memorable coupon codes like "SAVE20", "WELCOME10", etc.</li>
-                <li>Set minimum order amounts to prevent abuse of discounts</li>
-                <li>Maximum discount helps control the total discount amount per order</li>
-                <li>Track usage counts to measure coupon performance</li>
-                <li>Deactivate expired coupons instead of deleting them</li>
-              </ul>
-            }
-            type="info"
-            showIcon
-            className="coupon-tips-alert"
-          />
+          {/* Tips Section */}
+          <Card className="coupon-tips-card" variant="borderless">
+            <div className="coupon-tips-header">
+              <BulbOutlined className="coupon-tips-icon" />
+              <span className="coupon-tips-title">Pro Tips for Coupon Management</span>
+            </div>
+            <Divider className="coupon-tips-divider" />
+            <Row gutter={[16, 16]}>
+              {proTips.map((tip, index) => (
+                <Col xs={24} sm={12} md={8} lg={24/5} key={index}>
+                  <div className="coupon-tip-item">
+                    <div className="coupon-tip-icon" style={{ color: tip.color }}>
+                      {tip.icon}
+                    </div>
+                    <div className="coupon-tip-content">
+                      <div className="coupon-tip-title" style={{ color: tip.color }}>
+                        {tip.title}
+                      </div>
+                      <div className="coupon-tip-description">
+                        {tip.description}
+                      </div>
+                    </div>
+                  </div>
+                </Col>
+              ))}
+            </Row>
+          </Card>
         </div>
       </div>
-    </AntApp>
+    </>
   );
 }
 

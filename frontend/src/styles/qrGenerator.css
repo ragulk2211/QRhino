@@ -1,7 +1,7 @@
 /* =========================================
    QR GENERATOR STYLES
-   Light Orange & Cream Theme - No Dark Colors
-   Prefix: qr-gen-
+   Light Orange & Cream Theme - LESS BORDER RADIUS
+   WITH MOBILE HORIZONTAL SCROLL TABS
 ========================================= */
 
 /* Light Color Variables */
@@ -26,14 +26,15 @@
   --shadow-orange: 0 4px 12px rgba(255, 159, 74, 0.15);
   --shadow-orange-lg: 0 8px 24px rgba(255, 159, 74, 0.2);
   
-  /* Border Radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-  --radius-full: 9999px;
+  /* Border Radius - LESS ROUNDED */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-full: 12px;
   
   /* Spacing */
+  --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
@@ -73,65 +74,155 @@
 
 /* Custom Scrollbar */
 .qr-gen-container::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 .qr-gen-container::-webkit-scrollbar-track {
   background: #fff9f0;
-  border-radius: 10px;
+  border-radius: 3px;
 }
 
 .qr-gen-container::-webkit-scrollbar-thumb {
   background: var(--light-orange-primary);
-  border-radius: 10px;
+  border-radius: 3px;
 }
 
 .qr-gen-container::-webkit-scrollbar-thumb:hover {
   background: var(--light-orange);
 }
 
-/* Breadcrumb */
-.qr-gen-breadcrumb {
+/* ========== HEADER WITH BACK BUTTON AND TITLE ========== */
+.qr-gen-header-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.qr-gen-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #ea580c !important;
+  border: none !important;
+  color: white !important;
+  font-size: 14px;
+  font-weight: 500;
+  height: 38px;
+  padding: 0 20px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.qr-gen-back-btn:hover {
+  background: #c2410c !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+}
+
+.qr-gen-back-btn:active {
+  transform: translateY(0);
+}
+
+.qr-gen-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex: 1;
+}
+
+.qr-gen-title-icon {
+  font-size: 28px;
+  color: var(--light-orange-primary);
+}
+
+.qr-gen-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--brown-light);
+  letter-spacing: -0.5px;
+}
+
+/* Main Card */
+.qr-gen-main-card {
+  background: var(--cream-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--light-orange-pale);
+  overflow: hidden;
+  transition: var(--transition);
   margin-bottom: var(--space-lg);
 }
 
-.qr-gen-breadcrumb .ant-breadcrumb a {
-  color: var(--light-orange-primary);
-  transition: var(--transition);
+/* ========== TABS WITH HORIZONTAL SCROLL FOR MOBILE ========== */
+.qr-gen-tabs-container {
+  width: 100%;
 }
 
-.qr-gen-breadcrumb .ant-breadcrumb a:hover {
-  color: var(--light-orange);
+.qr-gen-tabs-scroll {
+  display: flex;
+  gap: 8px;
+  padding: var(--space-md) var(--space-md) 0;
+  border-bottom: 1px solid var(--light-orange-pale);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 
-.qr-gen-breadcrumb .ant-breadcrumb li:last-child {
-  color: var(--brown-light);
-  font-weight: 500;
+.qr-gen-tabs-scroll::-webkit-scrollbar {
+  height: 3px;
 }
 
-/* Tabs */
-.qr-gen-tabs .ant-tabs-tab {
-  font-size: 16px;
-  padding: 12px 24px;
-  transition: var(--transition);
+.qr-gen-tabs-scroll::-webkit-scrollbar-track {
+  background: var(--light-orange-pale);
+  border-radius: 3px;
 }
 
-.qr-gen-tabs .ant-tabs-tab:hover {
-  color: var(--light-orange-primary);
-}
-
-.qr-gen-tabs .ant-tabs-tab-active {
-  color: var(--light-orange-primary);
-}
-
-.qr-gen-tabs .ant-tabs-ink-bar {
+.qr-gen-tabs-scroll::-webkit-scrollbar-thumb {
   background: var(--light-orange-primary);
+  border-radius: 3px;
 }
 
-.qr-gen-tab-icon {
-  margin-right: var(--space-sm);
+.qr-gen-tab-scroll-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--brown-soft);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.qr-gen-tab-scroll-btn:hover {
   color: var(--light-orange-primary);
+  background: var(--cream-warm);
+}
+
+.qr-gen-tab-scroll-btn.active {
+  color: var(--light-orange-primary);
+  background: var(--cream-warm);
+  border-bottom: 2px solid var(--light-orange-primary);
+}
+
+.qr-gen-tab-content {
+  padding: var(--space-md);
+}
+
+/* Single QR Container */
+.qr-gen-single-container {
+  width: 100%;
 }
 
 /* Cards */
@@ -141,18 +232,19 @@
 .qr-gen-bulk-card,
 .qr-gen-share-card {
   background: var(--cream-light);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   border: 1px solid var(--light-orange-pale);
   overflow: hidden;
   transition: var(--transition);
+  height: 100%;
 }
 
 .qr-gen-form-card:hover,
 .qr-gen-result-card:hover,
 .qr-gen-bulk-card:hover,
 .qr-gen-share-card:hover {
-  box-shadow: var(--shadow-orange-lg);
+  box-shadow: var(--shadow-orange);
   transform: translateY(-2px);
   border-color: var(--light-orange-soft);
 }
@@ -163,6 +255,8 @@
 .qr-gen-share-card .ant-card-head {
   border-bottom: 1px solid var(--light-orange-pale);
   background: var(--cream-warm);
+  padding: 14px 20px;
+  min-height: auto;
 }
 
 .qr-gen-form-card .ant-card-head-title,
@@ -171,7 +265,7 @@
 .qr-gen-share-card .ant-card-head-title {
   font-weight: 600;
   color: var(--brown-light);
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .qr-gen-form-card .ant-card-body,
@@ -179,14 +273,18 @@
 .qr-gen-empty-card .ant-card-body,
 .qr-gen-bulk-card .ant-card-body,
 .qr-gen-share-card .ant-card-body {
-  padding: var(--space-xl);
+  padding: var(--space-lg);
 }
 
 /* Card Icons */
 .qr-gen-card-icon,
 .qr-gen-success-icon {
   color: var(--light-orange-primary);
-  font-size: 1.1rem;
+  font-size: 1rem;
+}
+
+.qr-gen-card-title-space {
+  gap: 8px;
 }
 
 /* Form Item */
@@ -200,11 +298,19 @@
   font-size: 0.875rem;
 }
 
+.qr-gen-form-label {
+  gap: 6px;
+}
+
 /* Select */
+.qr-gen-select {
+  width: 100%;
+}
+
 .qr-gen-select .ant-select-selector {
   border-radius: var(--radius-md);
   border: 1px solid var(--light-orange-pale);
-  height: 48px;
+  height: 44px;
   display: flex;
   align-items: center;
 }
@@ -213,25 +319,38 @@
   border-color: var(--light-orange-primary);
 }
 
+.qr-gen-option-space {
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.qr-gen-option-name {
+  flex: 1;
+}
+
 .qr-gen-location-tag {
   background: var(--cream-warm);
   border-color: var(--light-orange-pale);
   color: var(--light-orange-primary);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  padding: 2px 8px;
 }
 
-/* Button */
+/* Buttons */
 .qr-gen-generate-btn,
 .qr-gen-bulk-generate-btn {
   background: var(--light-orange-primary);
   border: none;
-  border-radius: var(--radius-full);
-  height: 48px;
+  border-radius: var(--radius-md);
+  height: 44px;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.95rem;
   transition: var(--transition);
   box-shadow: var(--shadow-orange);
   color: white;
+  width: 100%;
 }
 
 .qr-gen-generate-btn:hover,
@@ -243,18 +362,31 @@
 
 .qr-gen-action-btn,
 .qr-gen-bulk-download-btn {
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-md);
   border: 1px solid var(--light-orange-pale);
   background: white;
   color: var(--brown-light);
   transition: var(--transition);
-  height: 40px;
+  height: 38px;
 }
 
 .qr-gen-action-btn:hover,
 .qr-gen-bulk-download-btn:hover {
   border-color: var(--light-orange-primary);
   color: var(--light-orange-primary);
+  transform: translateY(-2px);
+}
+
+.qr-gen-empty-btn {
+  background: var(--light-orange-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  height: 40px;
+  font-weight: 500;
+}
+
+.qr-gen-empty-btn:hover {
+  background: var(--light-orange);
   transform: translateY(-2px);
 }
 
@@ -271,6 +403,7 @@
 
 .qr-gen-info-label {
   color: var(--brown-light);
+  font-size: 0.85rem;
 }
 
 .qr-gen-restaurant-name {
@@ -281,6 +414,7 @@
 
 .qr-gen-restaurant-location {
   color: var(--brown-soft);
+  font-size: 0.85rem;
 }
 
 .qr-gen-cuisine-tags {
@@ -291,8 +425,10 @@
   background: var(--cream-warm);
   border-color: var(--light-orange-pale);
   color: var(--light-orange-primary);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   margin-right: var(--space-sm);
+  font-size: 12px;
+  padding: 2px 10px;
 }
 
 /* QR Display */
@@ -311,14 +447,12 @@
 
 .qr-gen-code {
   border-radius: var(--radius-md);
+  width: 100%;
+  height: auto;
 }
 
 .qr-gen-actions {
   margin: var(--space-lg) 0;
-  display: flex;
-  justify-content: center;
-  gap: var(--space-md);
-  flex-wrap: wrap;
 }
 
 /* Info Alert */
@@ -326,6 +460,7 @@
   border-radius: var(--radius-md);
   border: 1px solid var(--light-orange-pale);
   background: rgba(255, 159, 74, 0.05);
+  text-align: left;
 }
 
 .qr-gen-info-alert .ant-alert-message {
@@ -336,21 +471,14 @@
 /* Empty State */
 .qr-gen-empty-card {
   text-align: center;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .qr-gen-empty {
   padding: var(--space-2xl) var(--space-lg);
-}
-
-.qr-gen-empty-btn {
-  background: var(--light-orange-primary);
-  border: none;
-  border-radius: var(--radius-full);
-  margin-top: var(--space-md);
-}
-
-.qr-gen-empty-btn:hover {
-  background: var(--light-orange);
 }
 
 /* Bulk QR Styles */
@@ -397,6 +525,11 @@
 
 .qr-gen-progress .ant-progress-bg {
   background: var(--light-orange-primary);
+  border-radius: var(--radius-sm);
+}
+
+.qr-gen-progress .ant-progress-text {
+  color: var(--brown-light);
 }
 
 /* Bulk Grid */
@@ -409,6 +542,7 @@
   overflow: hidden;
   transition: var(--transition);
   border: 1px solid var(--light-orange-pale);
+  height: 100%;
 }
 
 .qr-gen-bulk-item:hover {
@@ -426,11 +560,14 @@
 
 .qr-gen-bulk-code {
   border-radius: var(--radius-md);
+  width: 100%;
+  height: auto;
 }
 
 .qr-gen-bulk-title {
   font-weight: 600;
   color: var(--brown-light);
+  font-size: 0.95rem;
 }
 
 .qr-gen-bulk-location {
@@ -442,14 +579,16 @@
   background: var(--cream-warm);
   border-color: var(--light-orange-pale);
   color: var(--light-orange-primary);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   margin-top: var(--space-sm);
   font-size: 0.7rem;
+  padding: 2px 8px;
 }
 
 .qr-gen-bulk-action {
   color: var(--brown-soft);
   transition: var(--transition);
+  font-size: 16px;
 }
 
 .qr-gen-bulk-action:hover {
@@ -464,6 +603,7 @@
 .qr-gen-share-title {
   color: var(--brown-light);
   text-align: center;
+  margin-bottom: var(--space-sm);
 }
 
 .qr-gen-share-subtitle {
@@ -481,6 +621,8 @@
   border: 1px solid var(--light-orange-pale);
   border-radius: var(--radius-lg);
   transition: var(--transition);
+  height: 100%;
+  cursor: pointer;
 }
 
 .qr-gen-share-method-card:hover {
@@ -490,8 +632,9 @@
 }
 
 .qr-gen-share-method-icon {
-  font-size: 2rem;
   margin-bottom: var(--space-md);
+  display: flex;
+  justify-content: center;
 }
 
 .qr-gen-share-method-icon.whatsapp { color: #25D366; }
@@ -500,9 +643,10 @@
 .qr-gen-share-method-icon.twitter { color: #1DA1F2; }
 
 .qr-gen-share-btn {
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-md);
   border: 1px solid var(--light-orange-pale);
   transition: var(--transition);
+  height: 40px;
 }
 
 .qr-gen-share-btn.whatsapp-btn {
@@ -514,6 +658,7 @@
 .qr-gen-share-btn.whatsapp-btn:hover {
   background: #20b859;
   transform: translateY(-2px);
+  color: white;
 }
 
 .qr-gen-share-btn:hover:not(.whatsapp-btn) {
@@ -531,13 +676,14 @@
 
 /* Preview Modal */
 .qr-gen-preview-modal .ant-modal-content {
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
 .qr-gen-preview-modal .ant-modal-header {
   background: var(--cream-warm);
   border-bottom: 1px solid var(--light-orange-pale);
+  padding: 16px 20px;
 }
 
 .qr-gen-preview-modal .ant-modal-title {
@@ -564,9 +710,10 @@
 }
 
 .qr-gen-preview-btn {
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-md);
   border: 1px solid var(--light-orange-pale);
   transition: var(--transition);
+  height: 38px;
 }
 
 .qr-gen-preview-btn:hover {
@@ -581,32 +728,87 @@
   color: var(--brown-soft);
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
+/* =========================================
+   RESPONSIVE DESIGN
+========================================= */
+
+/* Tablet */
+@media (max-width: 992px) {
   .qr-gen-container {
     padding: var(--space-md);
+  }
+  
+  .qr-gen-single-container {
+    padding: 0;
   }
   
   .qr-gen-form-card .ant-card-body,
   .qr-gen-result-card .ant-card-body,
   .qr-gen-bulk-card .ant-card-body {
-    padding: var(--space-lg);
+    padding: var(--space-md);
+  }
+  
+  .qr-gen-title {
+    font-size: 22px;
+  }
+  
+  .qr-gen-title-icon {
+    font-size: 26px;
   }
 }
 
+/* Mobile Landscape */
 @media (max-width: 768px) {
   .qr-gen-container {
     padding: var(--space-sm);
   }
   
-  .qr-gen-tabs .ant-tabs-tab {
+  .qr-gen-header-wrapper {
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+  }
+  
+  .qr-gen-back-btn {
+    height: 36px;
+    padding: 0 16px;
+    font-size: 13px;
+  }
+  
+  .qr-gen-title {
+    font-size: 20px;
+  }
+  
+  .qr-gen-title-icon {
+    font-size: 24px;
+  }
+  
+  .qr-gen-tabs-scroll {
+    padding: var(--space-sm) var(--space-sm) 0;
+  }
+  
+  .qr-gen-tab-scroll-btn {
     padding: 8px 16px;
+    font-size: 13px;
+  }
+  
+  .qr-gen-tab-text {
+    display: inline;
+  }
+  
+  .qr-gen-tab-icon {
     font-size: 14px;
   }
   
+  .qr-gen-form-card .ant-card-body,
+  .qr-gen-result-card .ant-card-body,
+  .qr-gen-empty-card .ant-card-body,
+  .qr-gen-bulk-card .ant-card-body,
+  .qr-gen-share-card .ant-card-body {
+    padding: var(--space-md);
+  }
+  
   .qr-gen-generate-btn,
-  .qr-gen-bulk-generate-btn,
-  .qr-gen-bulk-download-btn {
+  .qr-gen-bulk-generate-btn {
     height: 40px;
     font-size: 0.875rem;
   }
@@ -614,33 +816,86 @@
   .qr-gen-action-btn {
     height: 36px;
     font-size: 0.75rem;
+    padding: 0 12px;
   }
   
   .qr-gen-image-wrapper {
     padding: var(--space-md);
   }
   
-  .qr-gen-bulk-cover {
-    padding: var(--space-md);
+  .qr-gen-image-wrapper .ant-qrcode {
+    width: 200px !important;
+    height: 200px !important;
   }
   
   .qr-gen-stat-value-small {
     font-size: 1.25rem;
   }
-}
-
-@media (max-width: 480px) {
-  .qr-gen-actions {
-    flex-direction: column;
-    width: 100%;
+  
+  .qr-gen-stat-icon-small {
+    font-size: 1.25rem;
   }
   
-  .qr-gen-action-btn {
+  .qr-gen-bulk-cover {
+    padding: var(--space-md);
+  }
+  
+  .qr-gen-bulk-cover .ant-qrcode {
+    width: 140px !important;
+    height: 140px !important;
+  }
+}
+
+/* Mobile Portrait */
+@media (max-width: 576px) {
+  .qr-gen-container {
+    padding: 10px;
+  }
+  
+  .qr-gen-back-btn {
+    height: 34px;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+  
+  .qr-gen-title {
+    font-size: 18px;
+  }
+  
+  .qr-gen-title-icon {
+    font-size: 22px;
+  }
+  
+  .qr-gen-tab-scroll-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+  
+  .qr-gen-tab-icon {
+    font-size: 13px;
+  }
+  
+  .qr-gen-actions .ant-btn {
     width: 100%;
+    margin-bottom: 8px;
+  }
+  
+  .qr-gen-actions .ant-flex {
+    flex-direction: column;
+  }
+  
+  .qr-gen-image-wrapper .ant-qrcode {
+    width: 180px !important;
+    height: 180px !important;
   }
   
   .qr-gen-bulk-cover {
     padding: var(--space-sm);
+  }
+  
+  .qr-gen-bulk-cover .ant-qrcode {
+    width: 120px !important;
+    height: 120px !important;
   }
   
   .qr-gen-stat-card-small {
@@ -649,6 +904,88 @@
   
   .qr-gen-stat-value-small {
     font-size: 1rem;
+  }
+  
+  .qr-gen-stat-icon-small {
+    font-size: 1rem;
+  }
+  
+  .qr-gen-stat-label-small {
+    font-size: 0.65rem;
+  }
+  
+  .qr-gen-bulk-title {
+    font-size: 0.85rem;
+  }
+  
+  .qr-gen-share-title {
+    font-size: 1.1rem;
+  }
+  
+  .qr-gen-share-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .qr-gen-form-card,
+  .qr-gen-result-card,
+  .qr-gen-empty-card,
+  .qr-gen-bulk-card,
+  .qr-gen-share-card {
+    margin-bottom: var(--space-md);
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 375px) {
+  .qr-gen-container {
+    padding: 8px;
+  }
+  
+  .qr-gen-back-btn {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 11px;
+  }
+  
+  .qr-gen-title {
+    font-size: 16px;
+  }
+  
+  .qr-gen-title-icon {
+    font-size: 20px;
+  }
+  
+  .qr-gen-tab-scroll-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+  
+  .qr-gen-tab-icon {
+    font-size: 12px;
+  }
+  
+  .qr-gen-generate-btn,
+  .qr-gen-bulk-generate-btn {
+    height: 38px;
+    font-size: 0.8rem;
+  }
+  
+  .qr-gen-image-wrapper .ant-qrcode {
+    width: 150px !important;
+    height: 150px !important;
+  }
+  
+  .qr-gen-bulk-cover .ant-qrcode {
+    width: 100px !important;
+    height: 100px !important;
+  }
+  
+  .qr-gen-bulk-item .ant-card-actions {
+    padding: 6px 0;
+  }
+  
+  .qr-gen-bulk-action {
+    font-size: 14px;
   }
 }
 
@@ -664,14 +1001,53 @@
   .qr-gen-action-btn,
   .qr-gen-bulk-generate-btn,
   .qr-gen-bulk-download-btn,
-  .qr-gen-share-btn {
+  .qr-gen-share-btn,
+  .qr-gen-tabs-scroll {
     display: none;
   }
   
+  .qr-gen-main-card,
   .qr-gen-form-card,
   .qr-gen-result-card,
   .qr-gen-bulk-card {
     box-shadow: none;
     border: 1px solid #ddd;
+  }
+  
+  .qr-gen-image-wrapper {
+    background: white;
+    box-shadow: none;
+  }
+}
+
+/* Accessibility - Focus States */
+.qr-gen-back-btn:focus-visible,
+.qr-gen-generate-btn:focus-visible,
+.qr-gen-bulk-generate-btn:focus-visible,
+.qr-gen-action-btn:focus-visible,
+.qr-gen-select .ant-select-selector:focus-visible {
+  outline: 2px solid var(--light-orange-primary);
+  outline-offset: 2px;
+}
+
+/* Reduce Motion Preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Touch-Friendly Targets */
+@media (hover: none) and (pointer: coarse) {
+  .qr-gen-back-btn,
+  .qr-gen-generate-btn,
+  .qr-gen-action-btn,
+  .qr-gen-bulk-generate-btn {
+    min-height: 44px;
   }
 }

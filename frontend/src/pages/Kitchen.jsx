@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import {
-  Typography
+  Button,
+  InputNumber,
+  message,
+  Spin,
+  Empty,
+  Tooltip
 } from "antd";
 import {
   ReloadOutlined,
@@ -10,54 +15,56 @@ import {
   TableOutlined,
   OrderedListOutlined,
   DollarOutlined,
-  SmileOutlined,
   CoffeeOutlined,
-  TrophyOutlined
+  TrophyOutlined,
+  HourglassOutlined,
+  SyncOutlined,
+  TagOutlined,
+  FieldTimeOutlined
 } from "@ant-design/icons";
-import API_BASE_URL from "../config";
 import "../styles/kitchen.css";
 
-const { Title, Text } = Typography;
+// API Base URL - Change this to your backend URL
+const API_BASE_URL = 'http://localhost:5000';
 
 function Kitchen() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [preparingTimes, setPreparingTimes] = useState({});
-  const [activeFilter, setActiveFilter] = useState("all"); // 'all', 'pending', 'preparing', 'ready', 'completed'
+  const [activeTab, setActiveTab] = useState("all");
+  const [messageApi, contextHolder] = message.useMessage();
 
-  const fetchOrders = () => {
+  // Helper function to format price to 2 decimal places
+  const formatPrice = (price) => {
+    if (!price && price !== 0) return '0.00';
+    return Number(price).toFixed(2);
+  };
+
+  const fetchOrders = async () => {
     setLoading(true);
-    fetch(`${API_BASE_URL}/api/orders/all`)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(data => {
-        setOrders(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Error fetching orders:", err);
-        setLoading(false);
-      });
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/orders/all`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      const sortedOrders = data.sort((a, b) => (a.tokenNumber || 0) - (b.tokenNumber || 0));
+      setOrders(sortedOrders);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      messageApi.error("Failed to fetch orders");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchOrders();
-    const interval = setInterval(fetchOrders, 10000);
-    return () => clearInterval(interval);
   }, []);
 
   const updateStatus = async (orderId, newStatus, preparingTime) => {
-    setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: newStatus,
           preparingTime: preparingTime || 15
@@ -65,302 +72,342 @@ function Kitchen() {
       });
 
       if (response.ok) {
+        messageApi.success(`Order marked as ${newStatus}`);
         fetchOrders();
+      } else {
+        messageApi.error("Failed to update order status");
       }
     } catch (error) {
       console.error("Error updating status:", error);
-    } finally {
-      setLoading(false);
+      messageApi.error("Network error");
     }
   };
 
   const getStatusConfig = (status) => {
     switch (status) {
       case "Pending":
-        return { color: "orange", icon: <ClockCircleOutlined />, text: "Pending", class: "pending" };
+        return { color: "#f59e0b", icon: <HourglassOutlined />, text: "Pending", class: "pending" };
       case "Preparing":
-        return { color: "processing", icon: <FireOutlined />, text: "Preparing", class: "preparing" };
+        return { color: "#3b82f6", icon: <SyncOutlined spin />, text: "Preparing", class: "preparing" };
       case "Ready":
-        return { color: "success", icon: <CheckCircleOutlined />, text: "Ready", class: "ready" };
+        return { color: "#22c55e", icon: <CheckCircleOutlined />, text: "Ready", class: "ready" };
       case "Completed":
-        return { color: "default", icon: <TrophyOutlined />, text: "Completed", class: "completed" };
+        return { color: "#6b7280", icon: <TrophyOutlined />, text: "Completed", class: "completed" };
       default:
-        return { color: "default", icon: <ClockCircleOutlined />, text: status, class: "pending" };
+        return { color: "#f59e0b", icon: <HourglassOutlined />, text: "Pending", class: "pending" };
     }
   };
 
-  // Filter orders based on activeFilter
   const getFilteredOrders = () => {
-    if (activeFilter === "all") {
-      return orders;
-    }
-    if (activeFilter === "pending") {
-      return orders.filter(o => o.status === "Pending");
-    }
-    if (activeFilter === "preparing") {
-      return orders.filter(o => o.status === "Preparing");
-    }
-    if (activeFilter === "ready") {
-      return orders.filter(o => o.status === "Ready");
-    }
-    if (activeFilter === "completed") {
-      return orders.filter(o => o.status === "Completed");
-    }
-    return orders;
+    if (activeTab === "all") return orders;
+    return orders.filter(o => o.status === activeTab);
   };
 
-  const totalOrders = orders.length;
-  const pendingOrders = orders.filter(o => o.status === "Pending").length;
-  const preparingOrders = orders.filter(o => o.status === "Preparing").length;
-  const readyOrders = orders.filter(o => o.status === "Ready").length;
-  const completedOrders = orders.filter(o => o.status === "Completed").length;
+  const stats = {
+    total: orders.length,
+    pending: orders.filter(o => o.status === "Pending").length,
+    preparing: orders.filter(o => o.status === "Preparing").length,
+    ready: orders.filter(o => o.status === "Ready").length,
+    completed: orders.filter(o => o.status === "Completed").length
+  };
 
   const filteredOrders = getFilteredOrders();
 
-  // Get title for the filtered view
-  const getFilterTitle = () => {
-    switch (activeFilter) {
-      case "all": return "All Orders";
-      case "pending": return "Pending Orders";
-      case "preparing": return "Preparing Orders";
-      case "ready": return "Ready Orders";
-      case "completed": return "Completed Orders";
-      default: return "Orders";
-    }
-  };
-
-  // Handle stat card click
-  const handleStatClick = (filterType) => {
-    setActiveFilter(filterType);
-    // Scroll to orders section
-    const ordersSection = document.querySelector('.orders-section');
-    if (ordersSection) {
-      ordersSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+  const handleStatClick = (tab) => {
+    setActiveTab(tab);
   };
 
   return (
     <div className="kitchen-container">
-      {/* Header Section */}
+      {contextHolder}
+      
+      {/* Header */}
       <div className="kitchen-header">
-        <div>
-          <h1 className="kitchen-title">
-            <CoffeeOutlined /> Kitchen Dashboard
-          </h1>
-          <p className="kitchen-subtitle">Manage and track all incoming orders</p>
+        <div className="kitchen-header-left">
+          <div className="kitchen-logo">
+            <CoffeeOutlined />
+          </div>
+          <div className="kitchen-header-text">
+            <h1 className="kitchen-title">Kitchen Dashboard</h1>
+            <p className="kitchen-subtitle">Manage and track all incoming orders in real-time</p>
+          </div>
         </div>
-        <button className="refresh-btn" onClick={fetchOrders}>
-          <ReloadOutlined /> Refresh Orders
-        </button>
+        <Button 
+          type="primary"
+          icon={<ReloadOutlined />} 
+          onClick={fetchOrders}
+          loading={loading}
+          className="refresh-btn"
+        >
+          Refresh Orders
+        </Button>
       </div>
 
-      {/* Statistics Section - Clickable Cards */}
-      <div className="kitchen-stats">
-        <div 
-          className={`stat-card ${activeFilter === "all" ? "active" : ""}`}
-          onClick={() => handleStatClick("all")}
-        >
+      {/* Stats Cards */}
+      <div className="kitchen-stats-grid">
+        <div className={`stat-card ${activeTab === "all" ? "active" : ""}`} onClick={() => handleStatClick("all")}>
           <div className="stat-icon total">
             <OrderedListOutlined />
           </div>
           <div className="stat-info">
-            <h3>{totalOrders}</h3>
-            <p>Total Orders</p>
+            <div className="stat-value">{stats.total}</div>
+            <div className="stat-label">Total Orders</div>
           </div>
         </div>
-        <div 
-          className={`stat-card ${activeFilter === "pending" ? "active" : ""}`}
-          onClick={() => handleStatClick("pending")}
-        >
+        <div className={`stat-card ${activeTab === "Pending" ? "active" : ""}`} onClick={() => handleStatClick("Pending")}>
           <div className="stat-icon pending">
-            <ClockCircleOutlined />
+            <HourglassOutlined />
           </div>
           <div className="stat-info">
-            <h3>{pendingOrders}</h3>
-            <p>Pending</p>
+            <div className="stat-value">{stats.pending}</div>
+            <div className="stat-label">Pending</div>
           </div>
         </div>
-        <div 
-          className={`stat-card ${activeFilter === "preparing" ? "active" : ""}`}
-          onClick={() => handleStatClick("preparing")}
-        >
+        <div className={`stat-card ${activeTab === "Preparing" ? "active" : ""}`} onClick={() => handleStatClick("Preparing")}>
           <div className="stat-icon preparing">
-            <FireOutlined />
+            <SyncOutlined />
           </div>
           <div className="stat-info">
-            <h3>{preparingOrders}</h3>
-            <p>Preparing</p>
+            <div className="stat-value">{stats.preparing}</div>
+            <div className="stat-label">Preparing</div>
           </div>
         </div>
-        <div 
-          className={`stat-card ${activeFilter === "ready" ? "active" : ""}`}
-          onClick={() => handleStatClick("ready")}
-        >
+        <div className={`stat-card ${activeTab === "Ready" ? "active" : ""}`} onClick={() => handleStatClick("Ready")}>
           <div className="stat-icon ready">
             <CheckCircleOutlined />
           </div>
           <div className="stat-info">
-            <h3>{readyOrders}</h3>
-            <p>Ready</p>
+            <div className="stat-value">{stats.ready}</div>
+            <div className="stat-label">Ready</div>
           </div>
         </div>
-        <div 
-          className={`stat-card ${activeFilter === "completed" ? "active" : ""}`}
-          onClick={() => handleStatClick("completed")}
-        >
+        <div className={`stat-card ${activeTab === "Completed" ? "active" : ""}`} onClick={() => handleStatClick("Completed")}>
           <div className="stat-icon completed">
             <TrophyOutlined />
           </div>
           <div className="stat-info">
-            <h3>{completedOrders}</h3>
-            <p>Completed</p>
+            <div className="stat-value">{stats.completed}</div>
+            <div className="stat-label">Completed</div>
           </div>
         </div>
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {orders.length === 0 && !loading && (
-        <div className="empty-state">
-          <CoffeeOutlined style={{ fontSize: 64 }} />
-          <h3>No Orders Yet</h3>
-          <p>New orders will appear here automatically</p>
-        </div>
-      )}
-
       {/* Orders Section */}
-      {orders.length > 0 && (
-        <div className="orders-section">
-          <div className="orders-header">
+      <div className="orders-section">
+        <div className="orders-header">
+          <div className="orders-title-wrapper">
+            <FireOutlined className="orders-icon" />
             <h2 className="orders-title">
-              {getFilterTitle()}
+              {activeTab === "all" ? "All Orders" : `${activeTab} Orders`}
               <span className="orders-count">({filteredOrders.length})</span>
             </h2>
-            {activeFilter !== "all" && (
-              <button 
-                className="clear-filter-btn"
+          </div>
+          {activeTab !== "all" && (
+            <Button 
+              type="link" 
+              onClick={() => handleStatClick("all")}
+              className="clear-filter-btn"
+            >
+              Show All Orders
+            </Button>
+          )}
+        </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="kitchen-loading">
+            <Spin size="large" tip="Loading orders..." />
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && orders.length === 0 && (
+          <div className="kitchen-empty">
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <div className="empty-description-wrapper">
+                  <span className="empty-title">No Orders Yet</span>
+                  <span className="empty-subtitle">Click refresh to check for new orders</span>
+                </div>
+              }
+            >
+              <Button 
+                type="primary" 
+                icon={<ReloadOutlined />} 
+                onClick={fetchOrders}
+              >
+                Refresh Now
+              </Button>
+            </Empty>
+          </div>
+        )}
+
+        {/* No Filtered Orders State */}
+        {!loading && orders.length > 0 && filteredOrders.length === 0 && (
+          <div className="kitchen-empty-filter">
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <div className="empty-description-wrapper">
+                  <span className="empty-title">No {activeTab} Orders</span>
+                  <span className="empty-subtitle">There are no orders with {activeTab.toLowerCase()} status</span>
+                </div>
+              }
+            >
+              <Button 
+                type="primary" 
                 onClick={() => handleStatClick("all")}
               >
-                Show All Orders
-              </button>
-            )}
+                View All Orders
+              </Button>
+            </Empty>
           </div>
-          
-          {filteredOrders.length === 0 && !loading && (
-            <div className="empty-filter-state">
-              <p>No {activeFilter} orders found</p>
-            </div>
-          )}
+        )}
 
+        {/* Orders Grid */}
+        {!loading && filteredOrders.length > 0 && (
           <div className="orders-grid">
             {filteredOrders.map((order) => {
               const statusConfig = getStatusConfig(order.status);
+              const itemCount = order.items?.length || 0;
+              const hasMoreThan3Items = itemCount > 3;
+              
               return (
                 <div key={order._id} className={`order-card ${statusConfig.class}`}>
                   {/* Order Header */}
-                  <div className="order-header">
-                    <div className="order-token">
-                      <span>Token</span>
-                      <strong>#{order.tokenNumber}</strong>
+                  <div className="order-card-header">
+                    <div className="order-token-section">
+                      <div className="token-badge">
+                        <span className="token-label">TOKEN</span>
+                        <span className="token-number">{order.tokenNumber}</span>
+                      </div>
                     </div>
-                    <div className="order-table">
-                      <TableOutlined /> Table {order.tableNumber || "N/A"}
+                    <div className="order-table-section">
+                      <TableOutlined />
+                      <span>Table {order.tableNumber || "N/A"}</span>
                     </div>
                   </div>
 
                   {/* Status Badge */}
-                  <span className={`status-badge ${statusConfig.class}`}>
-                    {statusConfig.icon} {statusConfig.text}
-                  </span>
-
-                  {/* Order Items */}
-                  <div className="order-items">
-                    {order.items && order.items.map((item, idx) => (
-                      <div key={idx} className="order-item">
-                        <span className="item-name">
-                          {item.name}
-                          {item.specialInstructions && (
-                            <span className="item-note"> ({item.specialInstructions})</span>
-                          )}
-                        </span>
-                        <span className="item-quantity">x{item.quantity || 1}</span>
-                        <span className="item-price">₹{item.price}</span>
-                      </div>
-                    ))}
+                  <div className={`status-badge ${statusConfig.class}`}>
+                    {statusConfig.icon}
+                    <span>{statusConfig.text}</span>
                   </div>
 
-                  {/* Prep Time Input - Only show for non-completed orders */}
+                  {/* Items Section with proper spacing */}
+                  <div className="order-items-container">
+                    <div className="items-header">
+                      <span>ITEM</span>
+                      <span>QTY</span>
+                      <span>PRICE</span>
+                    </div>
+                    <div className={`order-items-list ${hasMoreThan3Items ? 'scrollable' : ''}`}>
+                      {order.items && order.items.map((item, idx) => (
+                        <div key={idx} className="order-item">
+                          <div className="item-name-wrapper">
+                            <Tooltip title={item.name} placement="topLeft">
+                              <span className="item-name">{item.name}</span>
+                            </Tooltip>
+                            {item.specialInstructions && (
+                              <Tooltip title={item.specialInstructions} placement="bottom">
+                                <FieldTimeOutlined className="item-note-icon" />
+                              </Tooltip>
+                            )}
+                          </div>
+                          <span className="item-quantity">x{item.quantity || 1}</span>
+                          <span className="item-price">₹{formatPrice(item.price)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Items count badge for orders with more than 3 items */}
+                  {hasMoreThan3Items && (
+                    <div className="items-count-badge">
+                      <span>{itemCount} total items</span>
+                    </div>
+                  )}
+
+                  {/* Prep Time Input */}
                   {order.status !== "Completed" && (
-                    <div className="preparing-time">
+                    <div className="prep-time-wrapper">
                       <label><ClockCircleOutlined /> Prep Time:</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="240"
-                        value={preparingTimes[order._id] || order.preparingTime || 15}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value);
-                          if (!isNaN(val) && val > 0) {
-                            setPreparingTimes({ ...preparingTimes, [order._id]: val });
-                          }
-                        }}
-                      />
-                      <span>min</span>
+                      <div className="prep-time-input-group">
+                        <InputNumber
+                          min={1}
+                          max={240}
+                          value={preparingTimes[order._id] || order.preparingTime || 15}
+                          onChange={(val) => {
+                            if (val && val > 0) {
+                              setPreparingTimes({ ...preparingTimes, [order._id]: val });
+                            }
+                          }}
+                          size="small"
+                          className="prep-time-input"
+                        />
+                        <span>minutes</span>
+                      </div>
                     </div>
                   )}
 
                   {/* Order Footer */}
-                  <div className="order-footer">
-                    <span className="order-total">
-                      <DollarOutlined /> Total: ₹{order.total}
-                    </span>
-                    <span className="order-time">
-                      <ClockCircleOutlined /> {new Date(order.createdAt).toLocaleTimeString()}
-                    </span>
+                  <div className="order-card-footer">
+                    <div className="order-total">
+                      <DollarOutlined />
+                      <span>Total: ₹{formatPrice(order.total)}</span>
+                    </div>
+                    <div className="order-time">
+                      <ClockCircleOutlined />
+                      <span>{new Date(order.createdAt).toLocaleTimeString()}</span>
+                    </div>
                   </div>
 
                   {/* Action Buttons */}
                   <div className="order-actions">
                     {order.status === "Pending" && (
-                      <button
-                        className="btn-status btn-preparing"
+                      <Button
+                        type="primary"
+                        className="action-btn btn-preparing"
+                        icon={<SyncOutlined />}
                         onClick={() => updateStatus(order._id, "Preparing", preparingTimes[order._id] || order.preparingTime || 15)}
                         disabled={loading}
+                        block
                       >
-                        <FireOutlined /> Preparing
-                      </button>
+                        Start Preparing
+                      </Button>
                     )}
                     {order.status === "Preparing" && (
-                      <button
-                        className="btn-status btn-ready"
+                      <Button
+                        type="primary"
+                        className="action-btn btn-ready"
+                        icon={<CheckCircleOutlined />}
                         onClick={() => updateStatus(order._id, "Ready", preparingTimes[order._id] || order.preparingTime || 15)}
                         disabled={loading}
+                        block
                       >
-                        <CheckCircleOutlined /> Ready
-                      </button>
+                        Mark as Ready
+                      </Button>
                     )}
                     {order.status === "Ready" && (
-                      <button
-                        className="btn-status btn-complete"
+                      <Button
+                        type="primary"
+                        className="action-btn btn-complete"
+                        icon={<TrophyOutlined />}
                         onClick={() => updateStatus(order._id, "Completed", preparingTimes[order._id] || order.preparingTime || 15)}
                         disabled={loading}
+                        block
                       >
-                        <TrophyOutlined /> Complete
-                      </button>
+                        Complete Order
+                      </Button>
                     )}
                   </div>
                 </div>
               );
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

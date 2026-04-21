@@ -22,7 +22,6 @@ import {
   Image,
   Tooltip,
   Spin,
-  App as AntApp,
   Tag
 } from "antd";
 import {
@@ -193,7 +192,6 @@ function CreateRestaurant() {
       if (res.ok) {
         messageApi.success({
           content: "Restaurant created successfully!",
-          icon: <CheckCircleOutlined />,
           duration: 3
         });
         form.resetFields();
@@ -252,7 +250,7 @@ function CreateRestaurant() {
   );
 
   return (
-    <AntApp>
+    <>
       {contextHolder}
       <div className="restaurant-form-container">
         <div className="restaurant-form-content">
@@ -704,7 +702,7 @@ function CreateRestaurant() {
                 </div>
               )}
 
-              <Divider className="restaurant-form-divider" />
+              <Divider className="restaurant-form-divider" orientation="horizontal" />
 
               <Form.Item>
                 <div className="restaurant-form-buttons">
@@ -751,7 +749,7 @@ function CreateRestaurant() {
               </Form.Item>
 
               <Alert
-                message="Quick Tips"
+                title="Quick Tips"
                 description={
                   <ul style={{ margin: 0, paddingLeft: 20 }}>
                     <li><CheckCircleOutlined style={{ color: '#22c55e' }} /> All fields marked with * are required</li>
@@ -770,7 +768,7 @@ function CreateRestaurant() {
           </Card>
         </div>
       </div>
-    </AntApp>
+    </>
   );
 }
 

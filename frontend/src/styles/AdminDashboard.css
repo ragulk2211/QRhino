@@ -1,7 +1,7 @@
 /* =========================================
    ADMIN DASHBOARD STYLES
    Professional Orange & Cream Theme
-   Fully Responsive - No Auto-Hover Animations
+   Fully Responsive - Fixed Hover Issues
 ========================================= */
 
 /* CSS Variables */
@@ -63,12 +63,6 @@
   --transition-fast: all 0.2s ease;
   --transition-base: all 0.3s ease;
   --transition-slow: all 0.5s ease;
-  
-  /* Z-Index */
-  --z-base: 1;
-  --z-dropdown: 10;
-  --z-modal: 100;
-  --z-tooltip: 1000;
 }
 
 /* Container */
@@ -99,7 +93,7 @@
   margin: 0 auto;
   padding: var(--space-xl);
   position: relative;
-  z-index: var(--z-base);
+  z-index: 1;
   animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -128,7 +122,6 @@
 .admin-dash-container::-webkit-scrollbar-thumb {
   background: var(--primary-orange);
   border-radius: var(--radius-full);
-  transition: var(--transition-fast);
 }
 
 .admin-dash-container::-webkit-scrollbar-thumb:hover {
@@ -331,7 +324,7 @@
   margin-bottom: var(--space-2xl);
 }
 
-/* Stat Card - No Auto-Hover Animation */
+/* Stat Card - Fixed Hover (Only triggers on card hover) */
 .admin-dash-stat-card {
   background: var(--secondary-cream-light);
   border-radius: var(--radius-lg);
@@ -342,9 +335,17 @@
   padding: var(--space-xl);
   position: relative;
   overflow: hidden;
-  animation: none;
+  cursor: pointer;
 }
 
+/* Only apply hover effects when card is actually hovered */
+.admin-dash-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-orange-lg);
+  border-color: var(--primary-orange-soft);
+}
+
+/* Bottom border animation only on hover */
 .admin-dash-stat-card::after {
   content: '';
   position: absolute;
@@ -357,14 +358,13 @@
   transition: transform 0.3s ease;
 }
 
-.admin-dash-stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-orange-lg);
-  border-color: var(--primary-orange-soft);
-}
-
 .admin-dash-stat-card:hover::after {
   transform: scaleX(1);
+}
+
+/* Icon scale only on card hover */
+.admin-dash-stat-card:hover .admin-dash-stat-icon {
+  transform: scale(1.05);
 }
 
 .admin-dash-stat-icon-wrapper {
@@ -376,11 +376,6 @@
   color: var(--primary-orange);
   display: inline-block;
   transition: transform 0.3s ease;
-  animation: none;
-}
-
-.admin-dash-stat-card:hover .admin-dash-stat-icon {
-  transform: scale(1.05);
 }
 
 .admin-dash-statistic .ant-statistic-title {
@@ -416,10 +411,6 @@
   border-radius: var(--radius-full);
   font-size: 12px;
   padding: 2px 12px;
-}
-
-.admin-dash-stat-skeleton {
-  margin-top: var(--space-md);
 }
 
 /* Section Header */
@@ -459,7 +450,7 @@
   margin-bottom: var(--space-2xl);
 }
 
-/* Action Card - No Auto-Hover Animation */
+/* Action Card - Fixed Hover */
 .admin-dash-action-card {
   background: var(--secondary-cream-light);
   border-radius: var(--radius-lg);
@@ -470,9 +461,16 @@
   padding: var(--space-xl);
   position: relative;
   overflow: hidden;
-  animation: none;
 }
 
+/* Only apply hover effects when card is actually hovered */
+.admin-dash-action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-orange-lg);
+  border-color: var(--primary-orange);
+}
+
+/* Background gradient only on hover */
 .admin-dash-action-card::before {
   content: '';
   position: absolute;
@@ -483,16 +481,25 @@
   background: linear-gradient(135deg, var(--primary-orange-soft), transparent);
   transition: height 0.3s ease;
   z-index: 0;
-}
-
-.admin-dash-action-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-orange-lg);
-  border-color: var(--primary-orange);
+  pointer-events: none;
 }
 
 .admin-dash-action-card:hover::before {
   height: 100%;
+}
+
+/* Icon transform only on card hover */
+.admin-dash-action-card:hover .action-icon-wrapper {
+  transform: scale(1.05) rotate(3deg);
+}
+
+/* Link gap animation only on card hover */
+.admin-dash-action-card:hover .action-card-link {
+  gap: var(--space-md);
+}
+
+.admin-dash-action-card:hover .link-icon {
+  transform: translateX(4px);
 }
 
 .action-card-icon {
@@ -511,10 +518,6 @@
   background: var(--primary-orange-soft);
   border-radius: var(--radius-xl);
   transition: transform 0.3s ease;
-}
-
-.admin-dash-action-card:hover .action-icon-wrapper {
-  transform: scale(1.05) rotate(3deg);
 }
 
 .action-card-content {
@@ -545,16 +548,8 @@
   transition: gap 0.3s ease;
 }
 
-.admin-dash-action-card:hover .action-card-link {
-  gap: var(--space-md);
-}
-
 .link-icon {
   transition: transform 0.2s ease;
-}
-
-.admin-dash-action-card:hover .link-icon {
-  transform: translateX(4px);
 }
 
 /* Quick Tips Section */
@@ -562,7 +557,7 @@
   margin-bottom: var(--space-2xl);
 }
 
-/* Tip Card - No Auto-Hover Animation */
+/* Tip Card - Fixed Hover */
 .admin-dash-tip-card {
   background: var(--secondary-cream-light);
   border-radius: var(--radius-lg);
@@ -573,24 +568,29 @@
   padding: var(--space-xl);
   position: relative;
   cursor: pointer;
-  animation: none;
 }
 
+/* Only apply hover effects when card is actually hovered */
 .admin-dash-tip-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-orange);
   border-color: var(--primary-orange);
 }
 
+/* Icon scale only on card hover */
+.admin-dash-tip-card:hover .tip-card-icon {
+  transform: scale(1.05);
+}
+
+/* Footer color change only on card hover */
+.admin-dash-tip-card:hover .tip-card-footer {
+  color: var(--primary-orange);
+}
+
 .tip-card-icon {
   font-size: 48px;
   margin-bottom: var(--space-lg);
   transition: transform 0.3s ease;
-  animation: none;
-}
-
-.admin-dash-tip-card:hover .tip-card-icon {
-  transform: scale(1.05);
 }
 
 .tip-card-text {
@@ -610,10 +610,6 @@
   padding-top: var(--space-md);
   border-top: 1px solid var(--border-light);
   transition: color 0.3s ease;
-}
-
-.admin-dash-tip-card:hover .tip-card-footer {
-  color: var(--primary-orange);
 }
 
 .tip-footer-icon {
@@ -646,6 +642,10 @@
   box-shadow: var(--shadow-orange);
 }
 
+.admin-dash-welcome-card:hover .welcome-icon {
+  transform: translateY(-3px);
+}
+
 .welcome-card-content {
   padding: var(--space-xl);
 }
@@ -659,11 +659,6 @@
   font-size: 56px;
   color: var(--accent-yellow);
   transition: transform 0.3s ease;
-  animation: none;
-}
-
-.admin-dash-welcome-card:hover .welcome-icon {
-  transform: translateY(-3px);
 }
 
 .welcome-text {
@@ -733,7 +728,6 @@
 .tip-modal-icon {
   font-size: 64px;
   margin-bottom: var(--space-lg);
-  animation: none;
 }
 
 .tip-modal-quote {
@@ -787,22 +781,14 @@
   transform: translateY(-2px);
 }
 
-/* Loading States */
-.admin-dash-stat-skeleton .ant-skeleton-input {
-  background: var(--border-light);
-  border-radius: var(--radius-sm);
-}
+/* =========================================
+   RESPONSIVE DESIGN - COMPLETE FIX
+========================================= */
 
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .admin-dash-content {
-    padding: var(--space-lg);
-  }
-}
-
+/* Tablet (768px - 1024px) */
 @media (max-width: 1024px) {
   .admin-dash-content {
-    padding: var(--space-md);
+    padding: var(--space-lg);
   }
   
   .admin-dash-header {
@@ -816,13 +802,23 @@
   .title-icon {
     font-size: 24px;
   }
+  
+  .admin-dash-stat-icon {
+    font-size: 40px;
+  }
+  
+  .admin-dash-statistic .ant-statistic-content {
+    font-size: 28px;
+  }
 }
 
+/* Mobile Landscape (576px - 768px) */
 @media (max-width: 768px) {
   .admin-dash-content {
     padding: var(--space-md);
   }
   
+  /* Header - Stack vertically */
   .admin-dash-header {
     flex-direction: column;
     text-align: center;
@@ -832,6 +828,7 @@
   .admin-dash-header-left {
     flex-direction: column;
     text-align: center;
+    width: 100%;
   }
   
   .admin-dash-title {
@@ -842,9 +839,15 @@
     font-size: 22px;
   }
   
+  /* Header stats - Stack vertically */
   .header-stats {
+    width: 100%;
+  }
+  
+  .header-stats .ant-space {
     flex-direction: column;
     align-items: center;
+    gap: var(--space-sm) !important;
   }
   
   .header-stat-item {
@@ -856,6 +859,13 @@
     display: none;
   }
   
+  /* Back button full width */
+  .admin-dash-back-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Section headers - Stack vertically */
   .admin-dash-section-header {
     flex-direction: column;
     text-align: center;
@@ -865,18 +875,20 @@
     justify-content: center;
   }
   
+  /* Stat cards - Adjust padding */
   .admin-dash-stat-card {
     padding: var(--space-lg);
   }
   
   .admin-dash-stat-icon {
-    font-size: 40px;
+    font-size: 36px;
   }
   
   .admin-dash-statistic .ant-statistic-content {
-    font-size: 28px;
+    font-size: 24px;
   }
   
+  /* Action cards */
   .admin-dash-action-card {
     padding: var(--space-lg);
   }
@@ -891,11 +903,33 @@
     font-size: 18px;
   }
   
+  .action-card-desc {
+    font-size: 13px;
+  }
+  
+  /* Tip cards */
   .tip-card-icon {
     font-size: 40px;
   }
   
   .tip-card-text {
+    font-size: 13px;
+  }
+  
+  /* Welcome section */
+  .welcome-card-content {
+    padding: var(--space-lg);
+  }
+  
+  .welcome-icon {
+    font-size: 48px;
+  }
+  
+  .welcome-title {
+    font-size: 20px;
+  }
+  
+  .welcome-description {
     font-size: 13px;
   }
   
@@ -906,15 +940,22 @@
   .feature-item {
     justify-content: center;
   }
+  
+  .feature-item span {
+    font-size: 13px;
+  }
 }
 
+/* Mobile Portrait (320px - 576px) */
 @media (max-width: 576px) {
   .admin-dash-content {
     padding: var(--space-sm);
   }
   
+  /* Header */
   .admin-dash-header {
     padding: var(--space-md);
+    border-radius: var(--radius-lg);
   }
   
   .admin-dash-header-avatar {
@@ -925,74 +966,211 @@
   
   .admin-dash-title {
     font-size: 20px;
+    margin-bottom: var(--space-xs);
   }
   
   .title-icon {
     font-size: 18px;
   }
   
+  .greeting-badge {
+    padding: var(--space-xs) var(--space-sm);
+  }
+  
   .greeting-text {
     font-size: 12px;
   }
   
+  .header-stat-text {
+    font-size: 11px;
+  }
+  
+  /* Breadcrumb */
+  .admin-dash-breadcrumb {
+    margin-bottom: var(--space-md);
+  }
+  
+  /* Stats section */
+  .admin-dash-stats-section {
+    margin-bottom: var(--space-lg);
+  }
+  
+  /* Row gutter adjustment for mobile */
+  .admin-dash-stats-section .ant-row,
+  .admin-dash-actions-section .ant-row,
+  .admin-dash-tips-section .ant-row {
+    margin-left: -8px !important;
+    margin-right: -8px !important;
+  }
+  
+  .admin-dash-stats-section .ant-col,
+  .admin-dash-actions-section .ant-col,
+  .admin-dash-tips-section .ant-col {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+  
+  /* Stat cards - Compact */
+  .admin-dash-stat-card {
+    padding: var(--space-md);
+  }
+  
   .admin-dash-stat-icon {
-    font-size: 32px;
+    font-size: 28px;
+  }
+  
+  .admin-dash-stat-icon-wrapper {
+    margin-bottom: var(--space-sm);
+  }
+  
+  .admin-dash-statistic .ant-statistic-title {
+    font-size: 12px;
+    margin-bottom: var(--space-xs);
   }
   
   .admin-dash-statistic .ant-statistic-content {
-    font-size: 24px;
+    font-size: 20px;
+  }
+  
+  .admin-dash-stat-trend {
+    margin-top: var(--space-sm);
+  }
+  
+  .trend-icon {
+    font-size: 10px;
+  }
+  
+  .admin-dash-trend-tag {
+    font-size: 10px;
+    padding: 1px 8px;
+  }
+  
+  /* Section headers */
+  .admin-dash-section-header {
+    margin-bottom: var(--space-lg);
+  }
+  
+  .section-icon {
+    font-size: 22px;
+  }
+  
+  .admin-dash-section-title {
+    font-size: 18px;
+  }
+  
+  .section-subtitle {
+    font-size: 12px;
+  }
+  
+  /* Action cards - Compact */
+  .admin-dash-action-card {
+    padding: var(--space-md);
+  }
+  
+  .action-card-icon {
+    margin-bottom: var(--space-md);
   }
   
   .action-icon-wrapper {
     width: 55px;
     height: 55px;
     font-size: 28px;
+    border-radius: var(--radius-lg);
   }
   
   .action-card-title {
     font-size: 16px;
+    margin-bottom: var(--space-xs);
   }
   
   .action-card-desc {
+    font-size: 11px;
+    margin-bottom: var(--space-sm);
+  }
+  
+  .action-card-link {
     font-size: 12px;
+  }
+  
+  /* Tip cards - Compact */
+  .admin-dash-tip-card {
+    padding: var(--space-md);
   }
   
   .tip-card-icon {
     font-size: 32px;
+    margin-bottom: var(--space-md);
   }
   
   .tip-card-text {
-    font-size: 12px;
+    font-size: 11px;
+    margin-bottom: var(--space-sm);
   }
   
-  .admin-dash-back-btn {
-    width: 100%;
-    justify-content: center;
+  .tip-card-footer {
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+  }
+  
+  .tip-footer-icon {
+    font-size: 10px;
+  }
+  
+  .tip-footer-text {
+    font-size: 10px;
+  }
+  
+  /* Welcome section */
+  .admin-dash-welcome-section {
+    margin-top: var(--space-lg);
+  }
+  
+  .welcome-card-content {
+    padding: var(--space-md);
+  }
+  
+  .welcome-icon-wrapper {
+    margin-bottom: var(--space-md);
+  }
+  
+  .welcome-icon {
+    font-size: 40px;
   }
   
   .welcome-title {
     font-size: 18px;
+    margin-bottom: var(--space-sm);
   }
   
   .welcome-description {
-    font-size: 13px;
+    font-size: 12px;
+    margin-bottom: var(--space-md);
+  }
+  
+  .welcome-features {
+    gap: var(--space-sm);
   }
   
   .feature-item {
     font-size: 12px;
   }
   
-  .welcome-icon {
-    font-size: 48px;
+  .feature-icon {
+    font-size: 14px;
   }
   
-  /* Modal Responsive */
+  .feature-item span {
+    font-size: 12px;
+  }
+  
+  /* Modal responsive */
   .tip-detail-modal .ant-modal-body {
-    padding: var(--space-lg);
+    padding: var(--space-md);
   }
   
   .tip-modal-icon {
     font-size: 48px;
+    margin-bottom: var(--space-md);
   }
   
   .tip-modal-quote {
@@ -1000,15 +1178,17 @@
   }
   
   .tip-modal-description {
-    font-size: 13px;
+    font-size: 12px;
   }
   
   .tip-modal-close-btn {
     height: 36px;
     padding: 0 var(--space-lg);
+    font-size: 13px;
   }
 }
 
+/* Extra Small Devices (under 375px) */
 @media (max-width: 375px) {
   .admin-dash-title {
     font-size: 18px;
@@ -1016,14 +1196,6 @@
   
   .title-icon {
     font-size: 16px;
-  }
-  
-  .admin-dash-stat-icon {
-    font-size: 28px;
-  }
-  
-  .admin-dash-statistic .ant-statistic-content {
-    font-size: 20px;
   }
   
   .action-icon-wrapper {
@@ -1040,16 +1212,12 @@
     font-size: 28px;
   }
   
-  .tip-card-text {
-    font-size: 11px;
+  .welcome-icon {
+    font-size: 36px;
   }
   
   .welcome-title {
     font-size: 16px;
-  }
-  
-  .welcome-description {
-    font-size: 12px;
   }
 }
 
@@ -1079,9 +1247,11 @@
   }
 }
 
-/* Accessibility */
+/* Accessibility - Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -1092,53 +1262,67 @@
 .admin-dash-back-btn:focus-visible,
 .admin-dash-action-card:focus-visible,
 .admin-dash-tip-card:focus-visible,
+.admin-dash-stat-card:focus-visible,
 .tip-modal-close-btn:focus-visible {
   outline: 2px solid var(--primary-orange);
   outline-offset: 2px;
 }
 
-/* Star Icon Color */
-.anticon-star {
-  color: var(--accent-yellow);
-}
-
-/* Loading Skeleton Animation - Only for loading state */
-.admin-dash-stat-skeleton .ant-skeleton-input {
-  animation: shimmer 1.5s infinite;
-  background: linear-gradient(90deg, var(--border-light) 25%, var(--primary-orange-soft) 50%, var(--border-light) 75%);
-  background-size: 1000px 100%;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
+/* Touch-Friendly Targets for Mobile */
+@media (hover: none) and (pointer: coarse) {
+  .admin-dash-back-btn,
+  .admin-dash-action-card,
+  .admin-dash-tip-card,
+  .admin-dash-stat-card {
+    cursor: pointer;
+    min-height: 48px;
   }
-  100% {
-    background-position: 1000px 0;
+  
+  .action-card-link,
+  .tip-card-footer {
+    min-height: 32px;
   }
 }
 
-/* Hover Effects for Better UX */
-.admin-dash-stat-card,
-.admin-dash-action-card,
-.admin-dash-tip-card,
-.admin-dash-welcome-card {
-  will-change: transform;
+/* Fix for Ant Design Row gutter on mobile */
+.ant-row {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
-/* Remove any pulsing or infinite animations */
-.admin-dash-stat-icon,
-.action-icon-wrapper,
-.tip-card-icon,
-.welcome-icon {
-  animation: none !important;
+.ant-row > .ant-col {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
-/* Smooth Transitions for All Interactive Elements */
-button, 
-.ant-btn, 
-.admin-dash-action-card,
-.admin-dash-tip-card,
-.admin-dash-stat-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+/* Override for specific sections to maintain spacing */
+.admin-dash-stats-section .ant-row,
+.admin-dash-actions-section .ant-row,
+.admin-dash-tips-section .ant-row {
+  margin-left: -12px !important;
+  margin-right: -12px !important;
+}
+
+.admin-dash-stats-section .ant-col,
+.admin-dash-actions-section .ant-col,
+.admin-dash-tips-section .ant-col {
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+/* Mobile adjustment for the above override */
+@media (max-width: 576px) {
+  .admin-dash-stats-section .ant-row,
+  .admin-dash-actions-section .ant-row,
+  .admin-dash-tips-section .ant-row {
+    margin-left: -8px !important;
+    margin-right: -8px !important;
+  }
+  
+  .admin-dash-stats-section .ant-col,
+  .admin-dash-actions-section .ant-col,
+  .admin-dash-tips-section .ant-col {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
 }

@@ -14,27 +14,25 @@ import {
   ClockCircleOutlined,
   TableOutlined,
   OrderedListOutlined,
-  DollarOutlined,
   CoffeeOutlined,
   TrophyOutlined,
   HourglassOutlined,
   SyncOutlined,
-  TagOutlined,
-  FieldTimeOutlined
+  ArrowLeftOutlined
 } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import "../styles/kitchen.css";
 
-// API Base URL - Change this to your backend URL
 const API_BASE_URL = 'http://localhost:5000';
 
 function Kitchen() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [preparingTimes, setPreparingTimes] = useState({});
   const [activeTab, setActiveTab] = useState("all");
   const [messageApi, contextHolder] = message.useMessage();
 
-  // Helper function to format price to 2 decimal places
   const formatPrice = (price) => {
     if (!price && price !== 0) return '0.00';
     return Number(price).toFixed(2);
@@ -86,15 +84,15 @@ function Kitchen() {
   const getStatusConfig = (status) => {
     switch (status) {
       case "Pending":
-        return { color: "#f59e0b", icon: <HourglassOutlined />, text: "Pending", class: "pending" };
+        return { icon: <HourglassOutlined />, text: "Pending", class: "pending" };
       case "Preparing":
-        return { color: "#3b82f6", icon: <SyncOutlined spin />, text: "Preparing", class: "preparing" };
+        return { icon: <SyncOutlined spin />, text: "Preparing", class: "preparing" };
       case "Ready":
-        return { color: "#22c55e", icon: <CheckCircleOutlined />, text: "Ready", class: "ready" };
+        return { icon: <CheckCircleOutlined />, text: "Ready", class: "ready" };
       case "Completed":
-        return { color: "#6b7280", icon: <TrophyOutlined />, text: "Completed", class: "completed" };
+        return { icon: <TrophyOutlined />, text: "Completed", class: "completed" };
       default:
-        return { color: "#f59e0b", icon: <HourglassOutlined />, text: "Pending", class: "pending" };
+        return { icon: <HourglassOutlined />, text: "Pending", class: "pending" };
     }
   };
 
@@ -117,11 +115,14 @@ function Kitchen() {
     setActiveTab(tab);
   };
 
+  const goBack = () => {
+    navigate(-1);
+  };
+
   return (
     <div className="kitchen-container">
       {contextHolder}
       
-      {/* Header */}
       <div className="kitchen-header">
         <div className="kitchen-header-left">
           <div className="kitchen-logo">
@@ -132,18 +133,26 @@ function Kitchen() {
             <p className="kitchen-subtitle">Manage and track all incoming orders in real-time</p>
           </div>
         </div>
-        <Button 
-          type="primary"
-          icon={<ReloadOutlined />} 
-          onClick={fetchOrders}
-          loading={loading}
-          className="refresh-btn"
-        >
-          Refresh Orders
-        </Button>
+        <div className="kitchen-header-actions">
+          <Button 
+            icon={<ArrowLeftOutlined />} 
+            onClick={goBack}
+            className="back-btn"
+          >
+            Back
+          </Button>
+          <Button 
+            type="primary"
+            icon={<ReloadOutlined />} 
+            onClick={fetchOrders}
+            loading={loading}
+            className="refresh-btn"
+          >
+            Refresh Orders
+          </Button>
+        </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="kitchen-stats-grid">
         <div className={`stat-card ${activeTab === "all" ? "active" : ""}`} onClick={() => handleStatClick("all")}>
           <div className="stat-icon total">
@@ -192,7 +201,6 @@ function Kitchen() {
         </div>
       </div>
 
-      {/* Orders Section */}
       <div className="orders-section">
         <div className="orders-header">
           <div className="orders-title-wrapper">
@@ -213,14 +221,12 @@ function Kitchen() {
           )}
         </div>
 
-        {/* Loading State */}
         {loading && (
           <div className="kitchen-loading">
-            <Spin size="large" tip="Loading orders..." />
+            <Spin size="large" description="Loading orders..." />
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && orders.length === 0 && (
           <div className="kitchen-empty">
             <Empty
@@ -243,7 +249,6 @@ function Kitchen() {
           </div>
         )}
 
-        {/* No Filtered Orders State */}
         {!loading && orders.length > 0 && filteredOrders.length === 0 && (
           <div className="kitchen-empty-filter">
             <Empty
@@ -265,17 +270,16 @@ function Kitchen() {
           </div>
         )}
 
-        {/* Orders Grid */}
         {!loading && filteredOrders.length > 0 && (
           <div className="orders-grid">
             {filteredOrders.map((order) => {
               const statusConfig = getStatusConfig(order.status);
               const itemCount = order.items?.length || 0;
               const hasMoreThan3Items = itemCount > 3;
+              const isCompleted = order.status === "Completed";
               
               return (
                 <div key={order._id} className={`order-card ${statusConfig.class}`}>
-                  {/* Order Header */}
                   <div className="order-card-header">
                     <div className="order-token-section">
                       <div className="token-badge">
@@ -283,87 +287,98 @@ function Kitchen() {
                         <span className="token-number">{order.tokenNumber}</span>
                       </div>
                     </div>
-                    <div className="order-table-section">
-                      <TableOutlined />
-                      <span>Table {order.tableNumber || "N/A"}</span>
-                    </div>
-                  </div>
-
-                  {/* Status Badge */}
-                  <div className={`status-badge ${statusConfig.class}`}>
-                    {statusConfig.icon}
-                    <span>{statusConfig.text}</span>
-                  </div>
-
-                  {/* Items Section with proper spacing */}
-                  <div className="order-items-container">
-                    <div className="items-header">
-                      <span>ITEM</span>
-                      <span>QTY</span>
-                      <span>PRICE</span>
-                    </div>
-                    <div className={`order-items-list ${hasMoreThan3Items ? 'scrollable' : ''}`}>
-                      {order.items && order.items.map((item, idx) => (
-                        <div key={idx} className="order-item">
-                          <div className="item-name-wrapper">
-                            <Tooltip title={item.name} placement="topLeft">
-                              <span className="item-name">{item.name}</span>
-                            </Tooltip>
-                            {item.specialInstructions && (
-                              <Tooltip title={item.specialInstructions} placement="bottom">
-                                <FieldTimeOutlined className="item-note-icon" />
-                              </Tooltip>
-                            )}
-                          </div>
-                          <span className="item-quantity">x{item.quantity || 1}</span>
-                          <span className="item-price">₹{formatPrice(item.price)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Items count badge for orders with more than 3 items */}
-                  {hasMoreThan3Items && (
-                    <div className="items-count-badge">
-                      <span>{itemCount} total items</span>
-                    </div>
-                  )}
-
-                  {/* Prep Time Input */}
-                  {order.status !== "Completed" && (
-                    <div className="prep-time-wrapper">
-                      <label><ClockCircleOutlined /> Prep Time:</label>
-                      <div className="prep-time-input-group">
-                        <InputNumber
-                          min={1}
-                          max={240}
-                          value={preparingTimes[order._id] || order.preparingTime || 15}
-                          onChange={(val) => {
-                            if (val && val > 0) {
-                              setPreparingTimes({ ...preparingTimes, [order._id]: val });
-                            }
-                          }}
-                          size="small"
-                          className="prep-time-input"
-                        />
-                        <span>minutes</span>
+                    <div className="order-right-side">
+                      <div className="order-table-section">
+                        <TableOutlined />
+                        <span>Table {order.tableNumber || "N/A"}</span>
+                      </div>
+                      <div className={`status-badge ${statusConfig.class}`}>
+                        {statusConfig.icon}
+                        <span>{statusConfig.text}</span>
                       </div>
                     </div>
-                  )}
+                  </div>
 
-                  {/* Order Footer */}
+                  <div className="order-items-section">
+                    <div className="order-items-container">
+                      <div className="items-header">
+                        <span>ITEM</span>
+                        <span>QTY</span>
+                        <span>PRICE</span>
+                      </div>
+                      <div className="order-items-list">
+                        {order.items && order.items.map((item, idx) => (
+                          <div key={idx} className="order-item">
+                            <div className="item-name-wrapper">
+                              <Tooltip title={item.name} placement="topLeft">
+                                <span className="item-name">{item.name}</span>
+                              </Tooltip>
+                              {item.specialInstructions && (
+                                <Tooltip title={item.specialInstructions} placement="bottom">
+                                  <ClockCircleOutlined className="item-note-icon" />
+                                </Tooltip>
+                              )}
+                            </div>
+                            <span className="item-quantity">x{item.quantity || 1}</span>
+                            <span className="item-price">₹{formatPrice(item.price)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {hasMoreThan3Items && (
+                      <div className="items-count-badge">
+                        <span>{itemCount} total items</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="prep-time-wrapper">
+                    {!isCompleted ? (
+                      <>
+                        <label><ClockCircleOutlined /> Prep Time:</label>
+                        <div className="prep-time-input-group">
+                          <InputNumber
+                            min={1}
+                            max={240}
+                            value={preparingTimes[order._id] || order.preparingTime || 15}
+                            onChange={(val) => {
+                              if (val && val > 0) {
+                                setPreparingTimes({ ...preparingTimes, [order._id]: val });
+                              }
+                            }}
+                            size="small"
+                            className="prep-time-input"
+                          />
+                          <span>min</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="prep-time-placeholder">
+                        <CheckCircleOutlined />
+                        <span>Completed</span>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="order-card-footer">
                     <div className="order-total">
-                      <DollarOutlined />
-                      <span>Total: ₹{formatPrice(order.total)}</span>
+                      <span className="rupee-symbol">₹</span>
+                      <span>{formatPrice(order.total)}</span>
                     </div>
                     <div className="order-time">
                       <ClockCircleOutlined />
-                      <span>{new Date(order.createdAt).toLocaleTimeString()}</span>
+                      <span>
+                        {new Date(order.createdAt).toLocaleString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="order-actions">
                     {order.status === "Pending" && (
                       <Button
@@ -386,7 +401,7 @@ function Kitchen() {
                         disabled={loading}
                         block
                       >
-                        Mark as Ready
+                        Mark Ready
                       </Button>
                     )}
                     {order.status === "Ready" && (
@@ -398,7 +413,17 @@ function Kitchen() {
                         disabled={loading}
                         block
                       >
-                        Complete Order
+                        Complete
+                      </Button>
+                    )}
+                    {order.status === "Completed" && (
+                      <Button
+                        className="action-btn btn-completed"
+                        icon={<CheckCircleOutlined />}
+                        disabled
+                        block
+                      >
+                        Completed
                       </Button>
                     )}
                   </div>
